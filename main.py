@@ -48,7 +48,9 @@ class TkinterOptionWrapper:
     Option = collections.namedtuple('_Option', ['text', 'var', 'callback'])
     _descriptions = {
         'randomize_ports':      'Randomize port types',
-        'randomize_production': 'Randomize hex values'}
+        'randomize_production': 'Randomize hex values',
+        'generate_empty':       'Generate an empty board'
+    }
 
     def __init__(self, option_dict):
         self._opts = {}
@@ -198,9 +200,9 @@ class BoardUI(tkinter.Frame):
         'W': 'green yellow',  # wool
         'C': 'sienna4',
         'B': 'sienna4',
-        'H': 'wheat1',  # wheat
-        'G': 'wheat1',
-        'D': 'yellow2',
+        'H': 'yellow2',  # wheat
+        'G': 'yellow2',
+        'D': 'wheat1',
         '?': 'gray'}
 
 
@@ -245,7 +247,11 @@ class Board:
         different graph for testing purposes.
         """
         self.options = options
-        self.tiles   = tiles or self._generate()
+        if (self.options['generate_empty']):
+            self.tiles = self._generate_empty()
+        else:
+            self.tiles = tiles or self._generate()
+
         self.center_tile = self.tiles[center or 10]
         if graph:
             self._graph = graph
@@ -256,6 +262,13 @@ class Board:
 
     def neighbors_for(self, tile):
         return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
+
+    def _generate_empty(self):
+        self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._ports))]
+        empty_terrain = (['D'] * (4+4+4+3+3+1))
+        empty_numbers = ([None] * (4+4+4+3+3+1))
+        tile_data = list(zip(empty_terrain, empty_numbers))
+        return [Tile(id=i, terrain=t, value=v) for i, (t, v) in enumerate(tile_data, 1)]
 
     def _generate(self):
         while True:
@@ -290,7 +303,7 @@ class Board:
 
     _terrain = (['F'] * 4 + ['P'] * 4 + ['H'] * 4 + ['M'] * 3 + ['C'] * 3)
     _numbers = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11]
-    _ports   = ['?', 'O', 'G', '?', 'L', 'B', '?', '?', 'W']
+    _ports   = ['?', 'O', 'G', '?', 'L', '?', 'B', '?', 'W']
     # Ore, Wool, Grain, Lumber, Brick
     _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),
               (2,  3,  'SW'), (2,  13, 'E' ), (2,  14, 'SE'),
@@ -338,7 +351,9 @@ def main():
     root.lift()
     options = {
         'randomize_production': True,
-        'randomize_ports': True}
+        'randomize_ports': True,
+        'generate_empty': True
+    }
     ui = BoardUI(root, options)
     ui.pack()
     ui.draw(Board(options))

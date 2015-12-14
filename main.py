@@ -13,25 +13,26 @@ TODO: Images and patterns
 import tkinter
 import unittest
 
-from ui import BoardUI
-from board import Board
+import views
+import models
 
 
 def main():
-    root = tkinter.Tk()
-    root.lift()
+    mainWindow = tkinter.Tk()
+    mainWindow.lift()
     options = {
         'hex_resource_selection': True,
         'hex_number_selection': False
     }
-    boardUI = BoardUI(root, options)
-    boardUI.pack()
-    boardUI.draw(Board(options))
-    root.mainloop()
+    boardFrame = views.BoardFrame(mainWindow, options)
+    boardFrame.pack()
+    boardFrame.draw(models.Board(options))
+    mainWindow.mainloop()
 
 
 def test():
     unittest.main(exit=False)
+
 
 if __name__ == "__main__":
     main()

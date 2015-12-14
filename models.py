@@ -1,27 +1,10 @@
 import collections
-import random
-import unittest
-import itertools
+
 
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
 
-class ClassicBoardTests(unittest.TestCase):
 
-    def test_tile_iterator(self):
-        options = {
-            'randomize_production': False,
-            'randomize_ports': False}
-        board = Board(options)
-        self.assertEqual([t.value for t in board.tiles if t.value], board._numbers)
-        hexes = collections.Counter([t.terrain for t in board.tiles])
-        self.assertEqual(hexes['F'], 4)
-        self.assertEqual(hexes['P'], 4)
-        self.assertEqual(hexes['H'], 4)
-        self.assertEqual(hexes['M'], 3)
-        self.assertEqual(hexes['C'], 3)
-        self.assertEqual(hexes['D'], 1)
-
-class Board:
+class Board(object):
 
     """Represents a single starting game board.
 
@@ -50,7 +33,7 @@ class Board:
 
     def direction(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)
-                               if e[1] == to_tile.id)
+                    if e[1] == to_tile.id)
 
     def neighbors_for(self, tile):
         return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]

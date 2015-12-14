@@ -4,8 +4,6 @@ import itertools
 import collections
 import functools
 
-import models
-
 
 class BoardFrame(tkinter.Frame):
 

@@ -5,6 +5,9 @@ import gamestates
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
 
 
+Player = collections.namedtuple('Player', ['seat', 'name', 'color'])
+
+
 class Board(object):
 
     """Represents a single game board.
@@ -30,6 +33,7 @@ class Board(object):
         self.options = options
         self.tiles = tiles or self._generate_empty()
         self.state = gamestates.GameStatePreGame(self)
+        self.players = set()
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]

@@ -2,11 +2,10 @@ import collections
 import functools
 import itertools
 import math
-import random
 import tkinter
-import unittest
 
 from board import Board
+
 
 class TkinterOptionWrapper:
 
@@ -33,9 +32,8 @@ class TkinterOptionWrapper:
 
     Option = collections.namedtuple('_Option', ['text', 'var', 'callback'])
     _descriptions = {
-        'randomize_ports':      'Randomize port types',
-        'randomize_production': 'Randomize hex values',
-        'generate_empty':       'Generate an empty board'
+        'hex_resource_selection': 'Cycle hex resource type',
+        'hex_number_selection': 'Cycle number on hex'
     }
 
     def __init__(self, option_dict):
@@ -71,21 +69,21 @@ class BoardUI(tkinter.Frame):
         super(BoardUI, self).__init__(master, *args, **kwargs)
         self.options = options
 
+        self._board = Board(self.options)
+
         canvas = tkinter.Canvas(self, height=600, width=600, background='Royal Blue')
-        button = tkinter.Button(self, text='New', command=self.redraw)
 
         cb_frame = tkinter.Frame(self)
         for option in TkinterOptionWrapper(options):
             option.callback()
             tkinter.Checkbutton(cb_frame, text=option.text, command=option.callback, var=option.var) \
                    .pack(side=tkinter.TOP, fill=tkinter.X)
+
         cb_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
         canvas.pack(side=tkinter.TOP, expand=tkinter.YES, fill=tkinter.BOTH)
-        button.pack(side=tkinter.BOTTOM, expand=tkinter.YES, fill=tkinter.X)
 
         self._canvas = canvas
-        self._button = button
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
 
     def draw(self, board):
@@ -141,7 +139,8 @@ class BoardUI(tkinter.Frame):
         centers = dict((tile_id, (x + offx, y + offy)) for tile_id, (x, y) in centers.items())
         for tile_id, (x, y) in centers.items():
             tile = board.tiles[tile_id - 1]
-            self._draw_tile(x, y, tile.terrain, tile.value)
+            self._draw_tile(x, y, tile.terrain, tile.value, tile)
+            self._canvas.tag_bind(self._tile_tag(tile), '<ButtonPress-1>', func=self.tile_click)
 
         port_centers = [(x + offx, y + offy, t + 180) for x, y, t in port_centers]
         for (x, y, t), value in zip(port_centers, [v for _, _, v in board.ports]):
@@ -149,7 +148,15 @@ class BoardUI(tkinter.Frame):
 
     def redraw(self):
         self._canvas.delete(tkinter.ALL)
-        self.draw(Board(self.options))
+        self.draw(self._board)
+
+    def tile_click(self, event):
+        tag = self._canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+        if self.options.get('hex_resource_selection'):
+            self._board.cycle_hex_type(self._tile_id_from_tag(tag))
+        if self.options.get('hex_number_selection'):
+            self._board.cycle_hex_number(self._tile_id_from_tag(tag))
+        self.redraw()
 
     def _hex_points(self, radius, offset, rotate):
         offx, offy = offset
@@ -160,12 +167,18 @@ class BoardUI(tkinter.Frame):
             points.append((x, y))
         return points
 
-    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black'):
+    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
         points = self._hex_points(radius, offset, rotate)
-        self._canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill)
+        a = self._canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill, tags=tags)
 
-    def _draw_tile(self, x, y, terrain, value):
-        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain])
+    def _tile_tag(self, tile):
+        return 'tile_' + str(tile.id)
+
+    def _tile_id_from_tag(self, tag):
+        return int(tag[len('tile_'):])
+
+    def _draw_tile(self, x, y, terrain, value, tile):
+        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
         if value:
             color = 'red' if value in (6, 8) else 'black'
             self._canvas.create_text(x, y, text=str(value), font=self._hex_font, fill=color)

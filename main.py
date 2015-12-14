@@ -10,25 +10,19 @@ TODO: Docstrings and unittests.
 TODO: Images and patterns
 """
 
-import collections
-import functools
-import itertools
-import math
-import random
 import tkinter
 import unittest
 
-from ui import TkinterOptionWrapper
 from ui import BoardUI
 from board import Board
+
 
 def main():
     root = tkinter.Tk()
     root.lift()
     options = {
-        'randomize_production': True,
-        'randomize_ports': True,
-        'generate_empty': True
+        'hex_resource_selection': True,
+        'hex_number_selection': False
     }
     boardUI = BoardUI(root, options)
     boardUI.pack()

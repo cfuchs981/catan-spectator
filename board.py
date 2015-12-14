@@ -1,9 +1,7 @@
 import collections
-import functools
-import itertools
-import math
 import random
 import unittest
+import itertools
 
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
 
@@ -22,7 +20,6 @@ class ClassicBoardTests(unittest.TestCase):
         self.assertEqual(hexes['M'], 3)
         self.assertEqual(hexes['C'], 3)
         self.assertEqual(hexes['D'], 1)
-
 
 class Board:
 
@@ -45,10 +42,7 @@ class Board:
         different graph for testing purposes.
         """
         self.options = options
-        if (self.options['generate_empty']):
-            self.tiles = self._generate_empty()
-        else:
-            self.tiles = tiles or self._generate()
+        self.tiles = tiles or self._generate_empty()
 
         self.center_tile = self.tiles[center or 10]
         if graph:
@@ -61,31 +55,24 @@ class Board:
     def neighbors_for(self, tile):
         return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
 
+    def cycle_hex_type(self, tile_id):
+        old_tile = self.tiles[tile_id - 1]
+        new_terrain_idx = (self._terrain_codes.index(old_tile.terrain) + 1) % len(self._terrain_codes)
+        new_terrain = self._terrain_codes[new_terrain_idx]
+        self.tiles[tile_id - 1] = Tile(id=tile_id, terrain=new_terrain, value=old_tile.value)
+
+    def cycle_hex_number(self, tile_id):
+        old_tile = self.tiles[tile_id - 1]
+        new_number_idx = (self._number_codes.index(old_tile.value) + 1) % len(self._number_codes)
+        new_number = self._number_codes[new_number_idx]
+        self.tiles[tile_id - 1] = Tile(id=tile_id, terrain=old_tile.terrain, value=new_number)
+
     def _generate_empty(self):
         self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._ports))]
         empty_terrain = (['D'] * (4+4+4+3+3+1))
         empty_numbers = ([None] * (4+4+4+3+3+1))
         tile_data = list(zip(empty_terrain, empty_numbers))
         return [Tile(id=i, terrain=t, value=v) for i, (t, v) in enumerate(tile_data, 1)]
-
-    def _generate(self):
-        while True:
-            terrain = list(self._terrain)
-            numbers = list(self._numbers)
-            ports   = list(self._ports)
-
-            random.shuffle(terrain)
-            if self.options['randomize_production']:
-                random.shuffle(numbers)
-            if self.options['randomize_ports']:
-                random.shuffle(ports)
-
-            self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, ports)]
-            tile_data = list(zip(terrain, numbers))
-            tile_data.insert(random.randrange(len(tile_data) + 1), ('D', None))
-            if self.options['randomize_production'] and not self._check_red_placement(tile_data):
-                continue
-            return [Tile(id=i, terrain=t, value=v) for i, (t, v) in enumerate(tile_data, 1)]
 
     def _check_red_placement(self, tiles):
         for i1, i2, _ in self._graph:
@@ -98,6 +85,9 @@ class Board:
     def _edges_for(self, tile):
         return [e         for e in self._graph if e[0] == tile.id] + \
                [invert(e) for e in self._graph if e[1] == tile.id]
+
+    _terrain_codes = ['F','P','H','M','C','D']
+    _number_codes = [None,2,3,4,5,6,8,9,10,11,12]
 
     _terrain = (['F'] * 4 + ['P'] * 4 + ['H'] * 4 + ['M'] * 3 + ['C'] * 3)
     _numbers = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11]

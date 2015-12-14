@@ -43,42 +43,40 @@ class GameRecord(object):
         # write to timestamp file in self.directory
         pass
 
-    def record_initial_layout(self, players, resources, numbers, ports):
+    def record_pregame(self, players, terrain, numbers, ports):
         """
-        Begins a game recording.
+        Begins a game by recording
+        - file format version
+        - timestamp
+        - players
+        - board layout
 
         :param players: set of 3 or (ideally) 4 #Players
-        :param resources: list of 19 resource types as defined in #models (eg resource.WOOD)
+        :param terrain: list of 19 terrain types as defined in #models (eg resource.WOOD)
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
         self.recordln('CatanGameRecord v{0}'.format(GameRecord.version))
         self.recordln('timestamp: {0}'.format(self.timestamp))
         self._set_players(players)
-        self._set_board_resources(resources)
+        self._set_board_terrain(terrain)
         self._set_board_numbers(numbers)
         self._set_board_ports(ports)
-        self.record('...CATAN!\n\n')
+        self.recordln('...CATAN!')
 
-    def record_pregame(self, players, resources, numbers, ports):
-        """
-        Alias for #record_initial_layout
-        """
-        self.record_initial_layout(players, resources, numbers, ports)
-
-    def record_roll(self, player, roll):
+    def record_player_roll(self, player, roll):
         """
         $color rolls $number
         """
         self.recordln('{0} rolls {1}'.format(player.color, roll))
 
-    def record_is_robbed(self, player):
+    def record_player_is_robbed(self, player):
         """
         $color is robbed
         """
         self.recordln('{0} is robbed'.format(player.color))
 
-    def record_moves_robber_and_steals(self, player, tile_id, victim):
+    def record_player_moves_robber_and_steals(self, player, tile_id, victim):
         """
         $color moves robber to $hex, steals from $color
         """
@@ -88,7 +86,7 @@ class GameRecord(object):
             victim.color
         ))
 
-    def record_buys_settlement(self, player, node_id):
+    def record_player_buys_settlement(self, player, node_id):
         """
         $color buys settlement, builds at $location
         """
@@ -97,7 +95,7 @@ class GameRecord(object):
             node_id
         ))
 
-    def record_buys_city(self, player, node_id):
+    def record_player_buys_city(self, player, node_id):
         """
         $color buys city, builds at $location
         """
@@ -106,7 +104,7 @@ class GameRecord(object):
             node_id
         ))
 
-    def record_buys_dev_card(self, player):
+    def record_player_buys_dev_card(self, player):
         """
         $color buys dev card
         """
@@ -114,7 +112,7 @@ class GameRecord(object):
             player.color
         ))
 
-    def record_buys_road(self, player, node_id_1, node_id_2):
+    def record_player_buys_road(self, player, node_id_1, node_id_2):
         """
         $color buys road, builds from $location to $location
         """
@@ -124,7 +122,7 @@ class GameRecord(object):
             node_id_2
         ))
 
-    def record_trade_with_port(self, player, to_port, port, to_player):
+    def record_player_trades_with_port(self, player, to_port, port, to_player):
         """
         $color trades $number $resources[, $number resources]* to port:$port for $number $resources[, $number resources]*
 
@@ -137,7 +135,7 @@ class GameRecord(object):
         for i, (res, num) in enumerate(to_port.items()):
             if i > 0:
                 self.record(',')
-            self.record('{0} {1}'.format(num, res))
+            self.record('{0} {1}'.format(num, res.value))
         self.record(']')
 
         self.record(' to port:{0} for '.format(port))
@@ -147,12 +145,12 @@ class GameRecord(object):
         for i, (res, num) in enumerate(to_player.items()):
             if i > 0:
                 self.record(',')
-            self.record('{0} {1}'.format(num, res))
+            self.record('{0} {1}'.format(num, res.value))
         self.record(']')
 
         self.record('\n')
 
-    def record_trade_with_player(self, player, to_other, other, to_player):
+    def record_player_trades_with_other(self, player, to_other, other, to_player):
         """
         $color trades [$number $resources, $number resources] to player:$color for [$number $resources, $number resources]
 
@@ -165,7 +163,7 @@ class GameRecord(object):
         for i, (res, num) in enumerate(to_other.items()):
             if i > 0:
                 self.record(',')
-            self.record('{0} {1}'.format(num, res))
+            self.record('{0} {1}'.format(num, res.value))
         self.record(']')
 
         self.record(' to player:{0} for '.format(other.color))
@@ -175,12 +173,12 @@ class GameRecord(object):
         for i, (res, num) in enumerate(to_player.items()):
             if i > 0:
                 self.record(',')
-            self.record('{0} {1}'.format(num, res))
+            self.record('{0} {1}'.format(num, res.value))
         self.record(']')
 
         self.record('\n')
 
-    def record_plays_dev_knight(self, player, tile_id, victim):
+    def record_player_plays_dev_knight(self, player, tile_id, victim):
         """
         $color plays dev card: knight on $hex, steals from $color
         """
@@ -190,7 +188,7 @@ class GameRecord(object):
             victim.color
         ))
 
-    def record_plays_dev_monopoly(self, player, resource):
+    def record_player_plays_dev_monopoly(self, player, resource):
         """
         $color plays dev card: monopoly on $resource
 
@@ -198,16 +196,16 @@ class GameRecord(object):
         """
         self.recordln('{0} plays dev card: monopoly on {1}'.format(
             player.color,
-            resource
+            resource.value
         ))
 
-    def record_plays_dev_victory_point(self, player):
+    def record_player_plays_dev_victory_point(self, player):
         """
         $color plays dev card: victory point
         """
         self.recordln('{0} plays dev card: victory point'.format(player.color))
 
-    def record_plays_dev_road_builder(self, player, node_id_a1, node_id_a2, node_id_b1, node_id_b2):
+    def record_player_plays_dev_road_builder(self, player, node_id_a1, node_id_a2, node_id_b1, node_id_b2):
         """
         $color plays dev card: road builder, builds from $location to $location and $location to $location
         """
@@ -219,27 +217,28 @@ class GameRecord(object):
             node_id_b2
         ))
 
-    def record_ends_turn(self, player):
+    def record_player_ends_turn(self, player):
         """
         $color ends turn
         """
         self.recordln('{0} ends turn'.format(player.color))
 
-    def record_win(self, player):
+    def record_player_wins(self, player):
         self.recordln('{0} wins'.format(player.color))
 
-    def _set_board_resources(self, resources):
-        self.record('resources: {0}'.format(' '.join(resources)))
+    def _set_board_terrain(self, terrain):
+        self.recordln('terrain: {0}'.format(' '.join(t.value for t in terrain)))
 
     def _set_board_numbers(self, numbers):
-        self.record('numbers: {0}'.format(' '.join(numbers)))
+        self.recordln('numbers: {0}'.format(' '.join(str(n.value) for n in numbers)))
 
     def _set_board_ports(self, ports):
-        self.record('ports: {0}'.format(' '.join(ports)))
+        self.recordln('ports: {0}'.format(' '.join(p.value for p in ports)))
 
     def _set_players(self, players):
-        self.record('players: ')
+        self.recordln('players: {0}'.format(len(players)))
+        players = list(players)
+        players.sort(key=lambda p: p.seat)
         for p in players:
-            self.record('[seat: {0}, color: {1}, name: {2}]'.format(p.seat, p.color, p.name))
-        self.record('\n')
+            self.recordln('name: {0}, color: {1}, seat: {2}'.format(p.name, p.color, p.seat))
 

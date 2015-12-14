@@ -4,6 +4,11 @@ from enum import Enum
 
 
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
+NUM_TILES = 3+4+5+4+3
+"""
+Tiles are arranged in counter-clockwise order, spiralling inwards.
+The first tile is the top-left tile.
+"""
 
 
 class Terrain(Enum):
@@ -12,6 +17,7 @@ class Terrain(Enum):
     wheat = 'wheat'
     sheep = 'sheep'
     ore = 'ore'
+    desert = 'desert'
 
 
 class HexNumber(Enum):
@@ -26,6 +32,15 @@ class HexNumber(Enum):
     ten = 10
     eleven = 11
     twelve = 12
+
+
+class Port(Enum):
+    any = '3:1'
+    wood = 'wood2:1'
+    brick = 'brick2:1'
+    wheat = 'wheat2:1'
+    sheep = 'sheep2:1'
+    ore = 'ore2:1'
 
 
 class Player(object):
@@ -95,9 +110,9 @@ class Board(object):
         self.notify_observers()
 
     def _generate_empty(self):
-        self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._ports))]
-        empty_terrain = (['D'] * (4+4+4+3+3+1))
-        empty_numbers = ([None] * (4+4+4+3+3+1))
+        self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._default_ports))]
+        empty_terrain = ([Terrain.desert] * NUM_TILES)
+        empty_numbers = ([HexNumber.none] * NUM_TILES)
         tile_data = list(zip(empty_terrain, empty_numbers))
         return [Tile(id=i, terrain=t, value=v) for i, (t, v) in enumerate(tile_data, 1)]
 
@@ -113,10 +128,7 @@ class Board(object):
         return [e         for e in self._graph if e[0] == tile.id] + \
                [invert(e) for e in self._graph if e[1] == tile.id]
 
-    # _terrain_codes = ['F','P','H','M','C','D']
-    # _number_codes = [None,2,3,4,5,6,8,9,10,11,12]
-
-    _ports = ['?', 'O', 'G', '?', 'L', '?', 'B', '?', 'W']
+    _default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
     _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),
               (2,  3,  'SW'), (2,  13, 'E' ), (2,  14, 'SE'),
               (3,  4,  'SE'), (3,  14, 'E' ),

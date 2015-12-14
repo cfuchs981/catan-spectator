@@ -15,6 +15,7 @@ import unittest
 
 import views
 import models
+import gamestates
 
 
 class CatanGameRecorder(tkinter.Frame):
@@ -22,9 +23,10 @@ class CatanGameRecorder(tkinter.Frame):
     def __init__(self, options, *args, **kwargs):
         super(CatanGameRecorder, self).__init__()
         self.options = options
+        self.board = models.Board(self.options)
 
         toolbar_frame = views.PregameToolbarFrame(self, self.options)
-        board_frame = views.BoardFrame(self, self.options)
+        board_frame = views.BoardFrame(self, self.options, self.board)
 
         board_frame.pack(side=tkinter.LEFT, fill=tkinter.Y)
         toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
@@ -37,6 +39,8 @@ class CatanGameRecorder(tkinter.Frame):
         self.lift()
 
     def start_game(self):
+        self.board.state = gamestates.GameStateInGame(self.board)
+
         self._toolbar_frame.pack_forget()
         self._toolbar_frame = views.GameToolbarFrame(self, {
             'blue': True,
@@ -47,6 +51,8 @@ class CatanGameRecorder(tkinter.Frame):
         self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
     def end_game(self):
+        self.board.state = gamestates.GameStatePreGame(self.board)
+        
         self._toolbar_frame.pack_forget()
         self._toolbar_frame = views.PregameToolbarFrame(self, {
             'hex_resource_selection': True,

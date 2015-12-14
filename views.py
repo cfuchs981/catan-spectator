@@ -9,12 +9,12 @@ import models
 
 class BoardFrame(tkinter.Frame):
 
-    def __init__(self, master, options, *args, **kwargs):
+    def __init__(self, master, options, board, *args, **kwargs):
         super(BoardFrame, self).__init__()
         self.options = options
         self.master = master
 
-        self._board = models.Board(self.options)
+        self._board = board
 
         board_canvas = tkinter.Canvas(self, height=600, width=600, background='Royal Blue')
         board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
@@ -139,7 +139,7 @@ class BoardFrame(tkinter.Frame):
     _tile_padding = 3
     _board_center = (300, 300)
     _angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE')
-    _hex_font     = (('Sans'), 18)
+    _hex_font     = (('Helvetica'), 18)
     _colors = {
         'M': 'gray94',
         'O': 'gray94',

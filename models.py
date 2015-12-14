@@ -1,15 +1,50 @@
 import collections
 import gamestates
+from enum import Enum
 
 
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
 
 
-Player = collections.namedtuple('Player', ['seat', 'name', 'color'])
+class Terrain(Enum):
+    wood = 'wood'
+    brick = 'brick'
+    wheat = 'wheat'
+    sheep = 'sheep'
+    ore = 'ore'
+
+
+class HexNumber(Enum):
+    none = None
+    two = 2
+    three = 3
+    four = 4
+    five = 5
+    six = 6
+    eight = 8
+    nine = 9
+    ten = 10
+    eleven = 11
+    twelve = 12
+
+
+class Player(object):
+    """class Player represents a single player on the game board.
+    :param seat: integer, with 0 being top left, and increasing clockwise
+    :param name: will be lowercased, spaces will be removed
+    :param color: will be lowercased, spaces will be removed
+    """
+
+    def __init__(self, seat, name, color):
+        if not (0 <= seat <= 3):
+            raise Exception("Seat must be on [0,3]")
+        self.seat = seat
+
+        self.name = name.lower().replace(' ', '')
+        self.color = color.lower().replace(' ', '')
 
 
 class Board(object):
-
     """Represents a single game board.
 
     Encapsulates
@@ -78,13 +113,10 @@ class Board(object):
         return [e         for e in self._graph if e[0] == tile.id] + \
                [invert(e) for e in self._graph if e[1] == tile.id]
 
-    _terrain_codes = ['F','P','H','M','C','D']
-    _number_codes = [None,2,3,4,5,6,8,9,10,11,12]
+    # _terrain_codes = ['F','P','H','M','C','D']
+    # _number_codes = [None,2,3,4,5,6,8,9,10,11,12]
 
-    _terrain = (['F'] * 4 + ['P'] * 4 + ['H'] * 4 + ['M'] * 3 + ['C'] * 3)
-    _numbers = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11]
-    _ports   = ['?', 'O', 'G', '?', 'L', '?', 'B', '?', 'W']
-    # Ore, Wool, Grain, Lumber, Brick
+    _ports = ['?', 'O', 'G', '?', 'L', '?', 'B', '?', 'W']
     _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),
               (2,  3,  'SW'), (2,  13, 'E' ), (2,  14, 'SE'),
               (3,  4,  'SE'), (3,  14, 'E' ),

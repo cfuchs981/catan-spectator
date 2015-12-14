@@ -13,17 +13,17 @@ class GameState(object):
 
     def cycle_hex_type(self, tile_id):
         if self.hex_type_change_allowed():
-            old_tile = self.board.tiles[tile_id - 1]
-            new_terrain_idx = (self.board._terrain_codes.index(old_tile.terrain) + 1) % len(self.board._terrain_codes)
-            new_terrain = self.board._terrain_codes[new_terrain_idx]
-            self.board.tiles[tile_id - 1] = models.Tile(id=tile_id, terrain=new_terrain, value=old_tile.value)
+            tile = self.board.tiles[tile_id - 1]
+            next_idx = (list(models.Terrain).index(tile.terrain) + 1) % len(models.Terrain)
+            next_terrain = list(models.Terrain)[next_idx]
+            self.board.tiles[tile_id - 1].terrain = next_terrain
 
     def cycle_hex_number(self, tile_id):
         if self.hex_number_change_allowed():
-            old_tile = self.board.tiles[tile_id - 1]
-            new_number_idx = (self.board._number_codes.index(old_tile.value) + 1) % len(self.board._number_codes)
-            new_number = self.board._number_codes[new_number_idx]
-            self.board.tiles[tile_id - 1] = models.Tile(id=tile_id, terrain=old_tile.terrain, value=new_number)
+            tile = self.board.tiles[tile_id - 1]
+            next_idx = (list(models.HexNumber).index(tile.value) + 1) % len(models.HexNumber)
+            next_hex_number = list(models.HexNumber)[next_idx]
+            tile.value = next_hex_number
 
     ##
     # Begin methods to implement in concrete states

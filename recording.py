@@ -13,8 +13,8 @@ class GameRecord(object):
     """
     version = '0.0.1'
 
-    def __init__(self, directory):
-        self.record_str = str()
+    def __init__(self, directory=None):
+        self._record_str = str()
         self.directory = directory
         self.timestamp = datetime.datetime.now()
 
@@ -22,21 +22,21 @@ class GameRecord(object):
         """
         Writes a string to the record
         """
-        self.record_str += content
+        self._record_str += content
 
     def recordln(self, content):
         """
         Writes a string to the record, appending a newline
         """
-        self.record_str += '{0}\n'.format(content)
+        self._record_str += '{0}\n'.format(content)
 
     def dump(self):
         """
         Dumps the current record to a string, and returns it
         """
-        return self.record_str
+        return self._record_str
 
-    def flush(self):
+    def flush(self, filename=None):
         """
         Writes the current record to a file, and returns the file descriptor
         """
@@ -44,6 +44,14 @@ class GameRecord(object):
         pass
 
     def record_initial_layout(self, players, resources, numbers, ports):
+        """
+        Begins a game recording.
+
+        :param players: set of 3 or (ideally) 4 #Players
+        :param resources: list of 19 resource types as defined in #models (eg resource.WOOD)
+        :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
+        :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
+        """
         self.recordln('CatanGameRecord v{0}'.format(GameRecord.version))
         self.recordln('timestamp: {0}'.format(self.timestamp))
         self._set_players(players)
@@ -51,6 +59,12 @@ class GameRecord(object):
         self._set_board_numbers(numbers)
         self._set_board_ports(ports)
         self.record('...CATAN!\n\n')
+
+    def record_pregame(self, players, resources, numbers, ports):
+        """
+        Alias for #record_initial_layout
+        """
+        self.record_initial_layout(players, resources, numbers, ports)
 
     def record_roll(self, player, roll):
         """

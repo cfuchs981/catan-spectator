@@ -78,12 +78,15 @@ class BoardUI(tkinter.Frame):
             option.callback()
             tkinter.Checkbutton(cb_frame, text=option.text, command=option.callback, var=option.var) \
                    .pack(side=tkinter.TOP, fill=tkinter.X)
+        btn_start_game = tkinter.Button(cb_frame, text='Start Game', command=self.redraw)
+        btn_start_game.pack(side=tkinter.TOP, fill=tkinter.BOTH)
 
         cb_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
         canvas.pack(side=tkinter.TOP, expand=tkinter.YES, fill=tkinter.BOTH)
 
         self._canvas = canvas
+        self._btn_start_game = btn_start_game
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
 
     def draw(self, board):

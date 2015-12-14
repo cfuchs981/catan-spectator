@@ -14,6 +14,7 @@ def get_players():
     players.append(models.Player(seat=3, name='zach', color='orange'))
     return players
 
+
 def get_record_with_random_board():
     record = recording.GameRecord()
 
@@ -40,6 +41,9 @@ def get_record_with_random_board():
 
 
 def test_record_pregame():
+    """
+    Contract describing the game record "pregame"/file-header format
+    """
     record = get_record_with_random_board()
     print(record.dump())
     lines = record.dump().split('\n')
@@ -117,9 +121,26 @@ def test_turn():
 
     record.record_player_roll(player, 2)
     record.record_player_ends_turn(player)
+    print(record.dump())
 
     lines = record.dump().split('\n')
-    assert lines[0] == 'red rolls 2'
-    assert lines[0] == 'red ends turn'
+    assert re.match('red rolls 2', lines[0])
+    assert re.match('red ends turn', lines[1])
 
+
+def test_robber():
+    players = get_players()
+    record = recording.GameRecord()
+
+    roller = players[0]
+    robbed = players[1]
+    victim = players[2]
+    record.record_player_roll(roller, 7)
+    record.record_player_is_robbed(robbed)
+    record.record_player_moves_robber_and_steals(roller, 1, victim)
     print(record.dump())
+
+    lines = record.dump().split('\n')
+    assert re.match('{0} rolls 7'.format(roller.color), lines[0])
+    assert re.match('{0} is robbed'.format(robbed.color), lines[1])
+    assert re.match('{0} moves robber to 1, steals from {1}'.format(roller.color, victim.color), lines[2])

@@ -1,4 +1,5 @@
 import collections
+import gamestates
 
 
 Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
@@ -6,10 +7,12 @@ Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
 
 class Board(object):
 
-    """Represents a single starting game board.
+    """Represents a single game board.
 
-    Encapsulates the layout of the board (which tiles are connected to which),
-    and the values of the tiles (including ports).
+    Encapsulates
+    - the layout of the board (which tiles are connected to which),
+    - the values of the tiles (including ports),
+    - the state of the game
 
     Board.tiles() returns an iterable that gives the tiles in a guaranteed
     connected path that covers every node in the board graph.
@@ -26,10 +29,16 @@ class Board(object):
         """
         self.options = options
         self.tiles = tiles or self._generate_empty()
+        self.state = gamestates.GameStatePreGame(self)
+        self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
         if graph:
             self._graph = graph
+
+    def notify_observers(self):
+        for obs in self.observers:
+            obs.notify(self)
 
     def direction(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)
@@ -39,16 +48,12 @@ class Board(object):
         return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
 
     def cycle_hex_type(self, tile_id):
-        old_tile = self.tiles[tile_id - 1]
-        new_terrain_idx = (self._terrain_codes.index(old_tile.terrain) + 1) % len(self._terrain_codes)
-        new_terrain = self._terrain_codes[new_terrain_idx]
-        self.tiles[tile_id - 1] = Tile(id=tile_id, terrain=new_terrain, value=old_tile.value)
+        self.state.cycle_hex_type(tile_id)
+        self.notify_observers()
 
     def cycle_hex_number(self, tile_id):
-        old_tile = self.tiles[tile_id - 1]
-        new_number_idx = (self._number_codes.index(old_tile.value) + 1) % len(self._number_codes)
-        new_number = self._number_codes[new_number_idx]
-        self.tiles[tile_id - 1] = Tile(id=tile_id, terrain=old_tile.terrain, value=new_number)
+        self.state.cycle_hex_number(tile_id)
+        self.notify_observers()
 
     def _generate_empty(self):
         self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._ports))]
@@ -105,3 +110,4 @@ _direction_pairs = {
 
 def invert(edge):
     return (edge[1], edge[0], _direction_pairs[edge[2]])
+

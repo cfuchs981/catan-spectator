@@ -10,20 +10,22 @@ import models
 class BoardFrame(tkinter.Frame):
 
     def __init__(self, master, options, *args, **kwargs):
-        super(BoardFrame, self).__init__(master, *args, **kwargs)
+        super(BoardFrame, self).__init__()
         self.options = options
+        self.master = master
 
         self._board = models.Board(self.options)
+
         board_canvas = tkinter.Canvas(self, height=600, width=600, background='Royal Blue')
-
-        toolbar_frame = PregameToolbarFrame(self, self.options)
-
-        board_canvas.pack(side=tkinter.LEFT, expand=tkinter.YES, fill=tkinter.BOTH)
-        toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 
         self._board_canvas = board_canvas
-        self._toolbar_frame = toolbar_frame
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
+
+        self._board.observers.add(self)
+
+    def notify(self, observable):
+        self.redraw()
 
     def draw(self, board):
 
@@ -88,24 +90,6 @@ class BoardFrame(tkinter.Frame):
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
         self.draw(self._board)
-
-    def start_game(self):
-        self._toolbar_frame.destroy()
-        self._toolbar_frame = GameToolbarFrame(self, {
-            'blue': True,
-            'red': False,
-            'green': False,
-            'white': False
-        })
-        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-
-    def end_game(self):
-        self._toolbar_frame.destroy()
-        self._toolbar_frame = PregameToolbarFrame(self, {
-            'hex_resource_selection': True,
-            'hex_number_selection': False
-        })
-        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
     def tile_click(self, event):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
@@ -174,8 +158,9 @@ class BoardFrame(tkinter.Frame):
 class PregameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, options, *args, **kwargs):
-        super(PregameToolbarFrame, self).__init__(master, *args, **kwargs)
+        super(PregameToolbarFrame, self).__init__()
         self.options = options
+        self.master = master
 
         for option in TkinterOptionWrapper(options):
             option.callback()
@@ -188,8 +173,9 @@ class PregameToolbarFrame(tkinter.Frame):
 class GameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, players, *args, **kwargs):
-        super(GameToolbarFrame, self).__init__(master, *args, **kwargs)
+        super(GameToolbarFrame, self).__init__()
         self.players = players
+        self.master = master
 
         for option in TkinterOptionWrapper(players):
             option.callback()

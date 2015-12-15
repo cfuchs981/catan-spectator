@@ -1,8 +1,13 @@
+catan-game-recorder
+===================
+
 Record games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.
 
-This project introduces a machine-parsable, human-readable file format for describing a game of Catan.
+This project also introduces a machine-parsable, human-readable file format for describing a game of Catan.
 
 This is a work in progress.
+
+> Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 
 ### Usage
 
@@ -43,6 +48,8 @@ orange rolls 2
 orange ends turn
 red wins
 ```
+
+See `recording.GameRecord` (in `recording.py`) for all available actions, along with their format.
 
 
 ### Attribution

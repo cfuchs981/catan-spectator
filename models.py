@@ -24,6 +24,10 @@ class Game(object):
         self.state = game_state
         self.notify_observers()
 
+    def _set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
+        self.state.dev_card_state = dev_state
+        self.notify_observers()
+
     def start(self, players):
         self.set_players(players)
         self.set_state(states.GameStateInGame(self))
@@ -69,6 +73,7 @@ class Game(object):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self._next_player()
         self.set_state(states.GameStateTurnStart(self))
+        self._set_dev_card_state(states.DevCardNotPlayedState(self))
 
     def _next_player(self):
         return self.players[self._cur_player.seat % len(self.players)]

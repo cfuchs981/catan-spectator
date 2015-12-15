@@ -215,7 +215,7 @@ class GameToolbarFrame(tkinter.Frame):
         frame_trade = TradeFrame(self, self.game)
         frame_play_dev = PlayDevCardFrame(self, self.game)
         frame_end_turn = EndTurnFrame(self, self.game)
-        btn_end_game = tkinter.Button(self, text='Declare Victory', command=master.end_game)
+        btn_end_game = tkinter.Button(self, text='End Game', command=master.end_game)
 
         label_cur_player_name.pack(side=tkinter.TOP, fill=tkinter.X)
         frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
@@ -312,6 +312,8 @@ class BuildFrame(tkinter.Frame):
         self.city = tkinter.Button(self, text="City", command=self.on_build_city)
         self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_build_dev_card)
 
+        self.set_states()
+
         self.label.pack(fill=tkinter.X)
         self.road.pack(fill=tkinter.X, expand=True)
         self.settlement.pack(fill=tkinter.X, expand=True)
@@ -319,7 +321,19 @@ class BuildFrame(tkinter.Frame):
         self.dev_card.pack(fill=tkinter.X, expand=True)
 
     def notify(self, observable):
-        pass
+        self.set_states()
+
+    def set_states(self):
+        """You must roll before building"""
+        if not self.game.state.has_rolled():
+            state = tkinter.DISABLED
+        else:
+            state = tkinter.NORMAL
+
+        self.road.configure(state=state)
+        self.settlement.configure(state=state)
+        self.city.configure(state=state)
+        self.dev_card.configure(state=state)
 
     def on_build_road(self):
         pass
@@ -346,7 +360,7 @@ class TradeFrame(tkinter.Frame):
         self.label_player = tkinter.Label(self, text="Trade with Player")
         self.player_buttons = list()
         for p in self.game.players:
-            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.NORMAL)
+            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
             self.player_buttons.append(button)
         self.set_player_button_states(self._cur_player)
 
@@ -376,15 +390,18 @@ class TradeFrame(tkinter.Frame):
         row += 2
 
     def notify(self, observable):
-        if self._cur_player.color != self.game.get_cur_player().color:
-            # If player has changed, disabled that button (can't trade with yourself)
-            self._cur_player = self.game.get_cur_player()
-            self.set_player_button_states(self._cur_player)
+        # You can't trade with yourself
+        self._cur_player = self.game.get_cur_player()
+        self.set_player_button_states(self._cur_player)
 
     def set_player_button_states(self, current_player):
+        """You can't trade with yourself, and you have to roll before trading"""
+        if not self.game.state.has_rolled():
+            return
+
         for player, button in zip(self.game.players, self.player_buttons):
             if player.color == current_player.color:
-                button.configure(state=tkinter.DISABLED) # can't trade with yourself
+                button.configure(state=tkinter.DISABLED)
             else:
                 button.configure(state=tkinter.NORMAL)
 
@@ -397,9 +414,43 @@ class PlayDevCardFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
-        self.label = tkinter.Label(self, text="Play Dev Card")
+        self.label = tkinter.Label(self, text="Play Dev Card", anchor=tkinter.W)
+        self.knight = tkinter.Button(self, text="Knight", command=self.on_knight)
+        self.monopoly = tkinter.Button(self, text="Monopoly", command=self.on_monopoly)
+        self.road_builder = tkinter.Button(self, text="Road Builder", command=self.on_road_builder)
+        self.victory_point = tkinter.Button(self, text="Victory Point", command=self.on_victory_point)
+
+        self.label.pack(fill=tkinter.X)
+        self.knight.pack(fill=tkinter.X, expand=True)
+        self.monopoly.pack(fill=tkinter.X, expand=True)
+        self.road_builder.pack(fill=tkinter.X, expand=True)
+        self.victory_point.pack(fill=tkinter.X, expand=True)
 
     def notify(self, observable):
+        self.victory_point.configure(state=tkinter.NORMAL)
+
+        if self.game.state.can_play_knight_dev_card():
+            self.knight.configure(state=tkinter.NORMAL)
+        else:
+            self.knight.configure(state=tkinter.DISABLED)
+
+        if self.game.state.can_play_non_knight_dev_card():
+            self.monopoly.configure(state=tkinter.NORMAL)
+            self.road_builder.configure(state=tkinter.NORMAL)
+        else:
+            self.monopoly.configure(state=tkinter.DISABLED)
+            self.road_builder.configure(state=tkinter.DISABLED)
+
+    def on_knight(self):
+        pass
+
+    def on_monopoly(self):
+        pass
+
+    def on_road_builder(self):
+        pass
+
+    def on_victory_point(self):
         pass
 
 

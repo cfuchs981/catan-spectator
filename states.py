@@ -4,6 +4,7 @@ import models
 class GameState(object):
     def __init__(self, game):
         self.game = game
+        self.dev_card_state = DevCardNotPlayedState(self)
 
     def is_in_game(self):
         return False
@@ -43,6 +44,22 @@ class GameStateInGame(GameState):
     def is_in_game(self):
         return True
 
+    def has_played_dev_card(self):
+        return self.dev_card_state.has_played_dev_card()
+
+    def can_play_knight_dev_card(self):
+        return not self.has_played_dev_card()
+
+    def can_play_non_knight_dev_card(self):
+        return self.has_rolled() and not self.has_played_dev_card()
+
+    ##
+    # Child states implement methods below
+    #
+
+    def has_rolled(self):
+        return False
+
     def end_turn_allowed(self):
         if self.can_move_robber() or self.can_steal():
             return False
@@ -60,14 +77,23 @@ class GameStateTurnStart(GameStateInGame):
     def end_turn_allowed(self):
         return False
 
+    def has_rolled(self):
+        return False
+
 
 class GameStateRolled(GameStateInGame):
     def can_move_robber(self):
         return int(self.game.last_roll) == 7
 
+    def has_rolled(self):
+        return True
+
 
 class GameStateMovedRobber(GameStateInGame):
     def can_steal(self):
+        return True
+
+    def has_rolled(self):
         return True
 
 
@@ -75,6 +101,35 @@ class GameStateMovedRobberAndStole(GameStateInGame):
     def end_turn_allowed(self):
         return True
 
+    def has_rolled(self):
+        return True
+
+
+class DevCardPlayabilityState(object):
+    def __init__(self, game):
+        self.game = game
+
+    def has_played_dev_card(self):
+        raise NotImplemented()
+
+    def can_play_dev_card(self):
+        raise NotImplemented()
+
+
+class DevCardNotPlayedState(DevCardPlayabilityState):
+    def has_played_dev_card(self):
+        return False
+
+    def can_play_dev_card(self):
+        return True
+
+
+class DevCardPlayedState(DevCardPlayabilityState):
+    def has_played_dev_card(self):
+        return True
+
+    def can_play_dev_card(self):
+        return False
 
 ##
 # Abstract state class to inherit concrete states from

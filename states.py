@@ -14,9 +14,6 @@ class GameState(object):
         source: http://stackoverflow.com/a/2405617/1817465
         """
         def method(*args):
-            print("tried to handle unknown method " + name)
-            if args:
-                print("it had arguments: " + str(args))
             return None
         return method
 
@@ -145,9 +142,7 @@ class DevCardPlayedState(DevCardPlayabilityState):
     def can_play_dev_card(self):
         return False
 
-##
-# Abstract state class to inherit concrete states from
-#
+
 class BoardState(object):
     def __init__(self, board):
         self.board = board

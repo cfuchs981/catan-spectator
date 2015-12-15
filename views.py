@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import messagebox
 import math
 import itertools
 import collections
@@ -13,6 +14,7 @@ class BoardFrame(tkinter.Frame):
         super(BoardFrame, self).__init__()
         self.master = master
         self.game = game
+        self.game.observers.add(self)
 
         self._board = game.board
 
@@ -22,7 +24,7 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas = board_canvas
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
 
-        self._board.observers.add(self)
+        self.game.observers.add(self)
 
     def tile_click(self, event):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
@@ -225,6 +227,9 @@ class GameToolbarFrame(tkinter.Frame):
         frame_play_dev.pack(side=tkinter.TOP, fill=tkinter.X)
         frame_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
         frame_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
+
+    def set_game(self, game):
+        self.game = game
 
     def notify(self, observable):
         if self._cur_player.color != self.game.get_cur_player().color:
@@ -492,7 +497,12 @@ class EndGameFrame(tkinter.Frame):
         self.end_game.pack(side=tkinter.TOP, fill=tkinter.X)
 
     def on_end_game(self):
-        self.game.end()
+        title = 'End Game Confirmation'
+        message = 'End Game? ({0} ({1}) wins)'.format(
+            self.game.get_cur_player().color, self.game.get_cur_player().name
+        )
+        if messagebox.askyesno(title, message):
+            self.game.end()
 
 
 class TkinterOptionWrapper:

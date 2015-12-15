@@ -15,13 +15,27 @@ class Game(object):
 
         self.state = states.GameStatePreGame(self)
         self.observers = set()
+        self.board.observers.add(self)
+
+    def notify(self, observable):
+        self.notify_observers()
 
     def notify_observers(self):
         for obs in self.observers.copy():
             obs.notify(self)
 
+    def reset(self):
+        self.players = list()
+        self.board.reset()
+        self.record = recording.GameRecord()
+        self.set_state(states.GameStatePreGame(self))
+
     def set_state(self, game_state: states.GameState):
         self.state = game_state
+        if game_state.is_in_game():
+            self.board.state = states.BoardStateLocked(self.board)
+        else:
+            self.board.state = states.BoardStateModifiable(self.board)
         self.notify_observers()
 
     def _set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
@@ -31,7 +45,6 @@ class Game(object):
     def start(self, players):
         self.set_players(players)
         self.set_state(states.GameStateInGame(self))
-        self.board.state = states.BoardStateLocked(self.board)
 
         terrain = list()
         numbers = list()
@@ -45,7 +58,6 @@ class Game(object):
 
     def end(self):
         self.set_state(states.GameStatePostGame(self))
-        self.board.state = states.BoardStateModifiable(self.board)
         self.record.record_player_wins(self._cur_player)
 
     def get_cur_player(self):
@@ -165,10 +177,10 @@ class Board(object):
         tiles and graph are for passing in a pre-defined set of tiles or a
         different graph for testing purposes.
         """
-        self.tiles = tiles or self._generate_empty_tiles()
-        self.players = list()
-        self.ports = ports or self._generate_default_ports()
-        self.state = states.BoardStateModifiable(self)
+        self.tiles = None
+        self.ports = None
+        self.state = None
+        self.reset(tiles=tiles, ports=ports)
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
@@ -178,6 +190,11 @@ class Board(object):
     def notify_observers(self):
         for obs in self.observers:
             obs.notify(self)
+
+    def reset(self, tiles=None, ports=None):
+        self.tiles = tiles or self._generate_empty_tiles()
+        self.ports = ports or self._generate_default_ports()
+        self.state = states.BoardStateModifiable(self)
 
     def direction(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)

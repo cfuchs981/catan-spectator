@@ -26,31 +26,36 @@ class CatanGameRecorder(tkinter.Frame):
         }
         self.game = models.Game(list(), models.Board(), recording.GameRecord())
         self.game.observers.add(self)
-        self._ingame_before = self.game.state.is_in_game()
+        self._in_game = self.game.state.is_in_game()
 
+        self._pregame_toolbar_frame = views.PregameToolbarFrame(self, self.game, options=self.options)
+        self._game_toolbar_frame = None
         board_frame = views.BoardFrame(self, self.game, options=self.options)
-        toolbar_frame = views.PregameToolbarFrame(self, self.game, options=self.options)
-
-        board_frame.pack(side=tkinter.LEFT, fill=tkinter.Y)
-        toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
         board_frame.redraw()
 
         self._board_frame = board_frame
-        self._toolbar_frame = toolbar_frame
+        self._toolbar_frame = self._pregame_toolbar_frame
+
+        self._board_frame.pack(side=tkinter.LEFT, fill=tkinter.Y)
+        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
         self.lift()
 
     def notify(self, observable):
-        if self._ingame_before and not self.game.state.is_in_game():
-            self._toolbar_frame.destroy()
-            self._toolbar_frame = views.PregameToolbarFrame(self, self.game)
+        was_in_game = self._in_game
+        self._in_game = self.game.state.is_in_game()
+        if was_in_game and not self.game.state.is_in_game():
+            # we were in game, now we're not
+            self.game.reset()
+            self._toolbar_frame.pack_forget()
+            self._toolbar_frame = self._pregame_toolbar_frame
             self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-        elif not self._ingame_before and self.game.state.is_in_game():
-            self._toolbar_frame.destroy()
-            self._toolbar_frame = views.GameToolbarFrame(self, self.game)
+        elif not was_in_game and self.game.state.is_in_game():
+            # we were not in game, now we are
+            self._toolbar_frame.pack_forget()
+            self._toolbar_frame = self._game_toolbar_frame or views.GameToolbarFrame(self, self.game)
             self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-        self._ingame_before = self.game.state.is_in_game()
 
 
 def main():

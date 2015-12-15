@@ -4,6 +4,8 @@ import itertools
 import collections
 import functools
 
+from models import Terrain, Port, Player, HexNumber
+
 
 class BoardFrame(tkinter.Frame):
 
@@ -44,19 +46,19 @@ class BoardFrame(tkinter.Frame):
 
         for tile in board.tiles:
             if not last:
-                centers[tile.id] = (0, 0)
+                centers[tile.tile_id] = (0, 0)
                 last = tile
                 continue
 
             # Calculate the center of this tile as an offset from the center of
             # the neighboring tile in the given direction.
-            ref_center = centers[last.id]
+            ref_center = centers[last.tile_id]
             direction = board.direction(last, tile)
             theta = self._angle_order.index(direction) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
-            centers[tile.id] = (ref_center[0] + dx, ref_center[1] + dy)
+            centers[tile.tile_id] = (ref_center[0] + dx, ref_center[1] + dy)
             last = tile
 
         port_centers = []
@@ -78,12 +80,12 @@ class BoardFrame(tkinter.Frame):
         centers = dict((tile_id, (x + offx, y + offy)) for tile_id, (x, y) in centers.items())
         for tile_id, (x, y) in centers.items():
             tile = board.tiles[tile_id - 1]
-            self._draw_tile(x, y, tile.terrain, tile.value, tile)
+            self._draw_tile(x, y, tile.terrain, tile.number, tile)
             self._board_canvas.tag_bind(self._tile_tag(tile), '<ButtonPress-1>', func=self.tile_click)
 
         port_centers = [(x + offx, y + offy, t + 180) for x, y, t in port_centers]
-        for (x, y, t), value in zip(port_centers, [v for _, _, v in board.ports]):
-            self._draw_port(x, y, t, value)
+        for (x, y, t), port in zip(port_centers, [v for _, _, v in board.ports]):
+            self._draw_port(x, y, t, port)
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -111,18 +113,18 @@ class BoardFrame(tkinter.Frame):
         a = self._board_canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill, tags=tags)
 
     def _tile_tag(self, tile):
-        return 'tile_' + str(tile.id)
+        return 'tile_' + str(tile.tile_id)
 
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
 
-    def _draw_tile(self, x, y, terrain, value, tile):
+    def _draw_tile(self, x, y, terrain, number, tile):
         self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
-        if value:
-            color = 'red' if value in (6, 8) else 'black'
-            self._board_canvas.create_text(x, y, text=str(value), font=self._hex_font, fill=color)
+        if number.value:
+            color = 'red' if number.value in (6, 8) else 'black'
+            self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color)
 
-    def _draw_port(self, x, y, angle, value):
+    def _draw_port(self, x, y, angle, port):
         """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
         given by the angle."""
         points = [x, y]
@@ -130,8 +132,8 @@ class BoardFrame(tkinter.Frame):
             x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
             y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
             points.extend([x1, y1])
-        self._board_canvas.create_polygon(*points, fill=self._colors[value])
-        self._board_canvas.create_text(x, y, text=value, font=self._hex_font)
+        self._board_canvas.create_polygon(*points, fill=self._colors[port])
+        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
     _tile_radius  = 50
     _tile_padding = 3
@@ -139,33 +141,48 @@ class BoardFrame(tkinter.Frame):
     _angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE')
     _hex_font     = (('Helvetica'), 18)
     _colors = {
-        'M': 'gray94',
-        'O': 'gray94',
-        'F': 'forest green',
-        'L': 'forest green',
-        'P': 'green yellow',
-        'W': 'green yellow',  # wool
-        'C': 'sienna4',
-        'B': 'sienna4',
-        'H': 'yellow2',  # wheat
-        'G': 'yellow2',
-        'D': 'wheat1',
-        '?': 'gray'}
+        Terrain.ore: 'gray94',
+        Port.ore: 'gray94',
+        Terrain.wood: 'forest green',
+        Port.wood: 'forest green',
+        Terrain.sheep: 'green yellow',
+        Port.sheep: 'green yellow',
+        Terrain.brick: 'sienna4',
+        Port.brick: 'sienna4',
+        Terrain.wheat: 'yellow2',
+        Port.wheat: 'yellow2',
+        Terrain.desert: 'wheat1',
+        Port.any: 'gray'}
 
 
 class PregameToolbarFrame(tkinter.Frame):
 
-    def __init__(self, master, options, *args, **kwargs):
+    def __init__(self, master, options=None, *args, **kwargs):
         super(PregameToolbarFrame, self).__init__()
-        self.options = options
+        self.options = options or dict()
+        self.options.update({
+            'hex_resource_selection': True,
+            'hex_number_selection': False
+        })
         self.master = master
 
-        for option in TkinterOptionWrapper(options):
+        for option in TkinterOptionWrapper(self.options):
             option.callback()
-            tkinter.Checkbutton(self, text=option.text, command=option.callback, var=option.var) \
+            tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
-        btn_start_game = tkinter.Button(self, text='Start Game', command=master.start_game)
-        btn_start_game.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+
+        defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
+        self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
+        for (entry, var), default in zip(self.player_entries_vars, defaults):
+            var.set(default)
+            entry.config(textvariable=var)
+            entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+
+        start_game = functools.partial(master.start_game,
+                                       [Player(i, var.get().split(' ')[0], var.get().split(' ')[1])
+                                        for i, (_, var) in enumerate(self.player_entries_vars, 1)])
+        btn_start_game = tkinter.Button(self, text='Start Game', command=start_game)
+        btn_start_game.pack(side=tkinter.TOP, fill=tkinter.X)
 
 
 class GameToolbarFrame(tkinter.Frame):
@@ -177,10 +194,10 @@ class GameToolbarFrame(tkinter.Frame):
 
         for option in TkinterOptionWrapper(players):
             option.callback()
-            tkinter.Checkbutton(self, text=option.text, command=option.callback, var=option.var) \
+            tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
         btn_end_game = tkinter.Button(self, text='End Game', command=master.end_game)
-        btn_end_game.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+        btn_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
 
 
 class TkinterOptionWrapper:
@@ -209,11 +226,7 @@ class TkinterOptionWrapper:
     Option = collections.namedtuple('_Option', ['text', 'var', 'callback'])
     _descriptions = {
         'hex_resource_selection': 'Cycle hex resource type',
-        'hex_number_selection': 'Cycle number on hex',
-        'blue': 'Blue player',
-        'red': 'Red player',
-        'green': 'Green player',
-        'white': 'White player'
+        'hex_number_selection': 'Cycle number on hex'
     }
 
     def __init__(self, option_dict):
@@ -225,12 +238,11 @@ class TkinterOptionWrapper:
         # create a specific callable instance.
         def cb_template(name, var):
             option_dict[name] = var.get()
-
         for name, value in option_dict.items():
             var = tkinter.BooleanVar()
             var.set(value)
             cb = functools.partial(cb_template, name, var)
-            self._opts[name] = self.Option(self._descriptions[name], var, cb)
+            self._opts[name] = self.Option(self._descriptions.get(name) or name, var, cb)
 
     def __getattr__(self, name):
         attr = self.__dict__.get(name)
@@ -239,6 +251,6 @@ class TkinterOptionWrapper:
         return attr
 
     def __iter__(self):
-        for opt in self._opts.values():
+        for opt in sorted(self._opts.values()):
             yield opt
 

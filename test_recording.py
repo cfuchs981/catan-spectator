@@ -4,14 +4,26 @@ import random
 import re
 
 from models import Terrain, HexNumber, Port
+"""
+TODO
+- buy settlement
+- buy city
+- buy dev card
+- buy road
+- play dev card: knight
+- play dev card: monopoly
+- play dev card: victory point
+- play dev card: road builder
+- wins
+"""
 
 
 def get_players():
     players = list()
-    players.append(models.Player(seat=0, name='yurick', color='green'))
-    players.append(models.Player(seat=1, name='ross', color='red'))
-    players.append(models.Player(seat=2, name='josh', color='blue'))
-    players.append(models.Player(seat=3, name='zach', color='orange'))
+    players.append(models.Player(seat=1, name='yurick', color='green'))
+    players.append(models.Player(seat=2, name='ross', color='red'))
+    players.append(models.Player(seat=3, name='josh', color='blue'))
+    players.append(models.Player(seat=4, name='zach', color='orange'))
     return players
 
 
@@ -66,7 +78,7 @@ def test_record_pregame():
     i += 1
 
     for _ in range(num_players):
-        if not re.match('name: \w+, color: \w+, seat: \d', lines[i]):
+        if not re.match('name: \w+, color: \w+, seat: [1-4]', lines[i]):
             print ('Player line must contain name, color, and seat.\n{0}'.format(
                 lines[i]
             ))
@@ -138,9 +150,11 @@ def test_robber():
     record.record_player_roll(roller, 7)
     record.record_player_is_robbed(robbed)
     record.record_player_moves_robber_and_steals(roller, 1, victim)
+    record.record_player_ends_turn(roller)
     print(record.dump())
 
     lines = record.dump().split('\n')
     assert re.match('{0} rolls 7'.format(roller.color), lines[0])
     assert re.match('{0} is robbed'.format(robbed.color), lines[1])
     assert re.match('{0} moves robber to 1, steals from {1}'.format(roller.color, victim.color), lines[2])
+    assert re.match('{0} ends turn'.format(roller.color), lines[3])

@@ -16,14 +16,14 @@ class GameState(object):
             tile = self.board.tiles[tile_id - 1]
             next_idx = (list(models.Terrain).index(tile.terrain) + 1) % len(models.Terrain)
             next_terrain = list(models.Terrain)[next_idx]
-            self.board.tiles[tile_id - 1].terrain = next_terrain
+            tile.terrain = next_terrain
 
     def cycle_hex_number(self, tile_id):
         if self.hex_number_change_allowed():
             tile = self.board.tiles[tile_id - 1]
-            next_idx = (list(models.HexNumber).index(tile.value) + 1) % len(models.HexNumber)
+            next_idx = (list(models.HexNumber).index(tile.number) + 1) % len(models.HexNumber)
             next_hex_number = list(models.HexNumber)[next_idx]
-            tile.value = next_hex_number
+            tile.number = next_hex_number
 
     ##
     # Begin methods to implement in concrete states

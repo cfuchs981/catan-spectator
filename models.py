@@ -3,12 +3,17 @@ import gamestates
 from enum import Enum
 
 
-Tile = collections.namedtuple('Tile', ['id', 'terrain', 'value'])
+class Tile(object):
+    """
+    Tiles are arranged in counter-clockwise order, spiralling inwards.
+    The first tile is the top-left tile.
+    """
+    def __init__(self, tile_id, terrain, number):
+        self.tile_id = tile_id
+        self.terrain = terrain
+        self.number = number
+
 NUM_TILES = 3+4+5+4+3
-"""
-Tiles are arranged in counter-clockwise order, spiralling inwards.
-The first tile is the top-left tile.
-"""
 
 
 class Terrain(Enum):
@@ -45,14 +50,14 @@ class Port(Enum):
 
 class Player(object):
     """class Player represents a single player on the game board.
-    :param seat: integer, with 0 being top left, and increasing clockwise
+    :param seat: integer, with 1 being top left, and increasing clockwise
     :param name: will be lowercased, spaces will be removed
     :param color: will be lowercased, spaces will be removed
     """
 
     def __init__(self, seat, name, color):
-        if not (0 <= seat <= 3):
-            raise Exception("Seat must be on [0,3]")
+        if not (1 <= seat <= 4):
+            raise Exception("Seat must be on [1,4]")
         self.seat = seat
 
         self.name = name.lower().replace(' ', '')
@@ -83,7 +88,7 @@ class Board(object):
         self.options = options
         self.tiles = tiles or self._generate_empty()
         self.state = gamestates.GameStatePreGame(self)
-        self.players = set()
+        self.players = list()
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
@@ -96,7 +101,7 @@ class Board(object):
 
     def direction(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)
-                    if e[1] == to_tile.id)
+                    if e[1] == to_tile.tile_id)
 
     def neighbors_for(self, tile):
         return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
@@ -110,11 +115,11 @@ class Board(object):
         self.notify_observers()
 
     def _generate_empty(self):
-        self.ports = [(tile, dir, value) for (tile, dir), value in zip(self._port_locations, list(self._default_ports))]
+        self.ports = [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
         empty_terrain = ([Terrain.desert] * NUM_TILES)
         empty_numbers = ([HexNumber.none] * NUM_TILES)
         tile_data = list(zip(empty_terrain, empty_numbers))
-        return [Tile(id=i, terrain=t, value=v) for i, (t, v) in enumerate(tile_data, 1)]
+        return [Tile(i, t, n) for i, (t, n) in enumerate(tile_data, 1)]
 
     def _check_red_placement(self, tiles):
         for i1, i2, _ in self._graph:
@@ -125,8 +130,8 @@ class Board(object):
         return True
 
     def _edges_for(self, tile):
-        return [e         for e in self._graph if e[0] == tile.id] + \
-               [invert(e) for e in self._graph if e[1] == tile.id]
+        return [e         for e in self._graph if e[0] == tile.tile_id] + \
+               [invert(e) for e in self._graph if e[1] == tile.tile_id]
 
     _default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
     _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),

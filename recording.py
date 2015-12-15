@@ -10,6 +10,8 @@ class GameRecord(object):
 
     Use #dump to get the record as a string.
     Use #flush to write the record to a file.
+
+    TODO record private information as well (which dev card picked up, which card stolen)
     """
     version = '0.0.1'
 

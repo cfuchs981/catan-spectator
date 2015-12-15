@@ -14,6 +14,10 @@ class GameStateInGame(GameState):
     pass
 
 
+class GameStatePostGame(GameState):
+    pass
+
+
 ##
 # Abstract state class to inherit concrete states from
 #

@@ -149,14 +149,15 @@ class Board(object):
     get from the origin tile to the destination tile.
     """
 
-    def __init__(self, tiles=None, graph=None, center=1):
+    def __init__(self, tiles=None, ports=None, graph=None, center=1):
         """
         options is a dict names to boolean values.
         tiles and graph are for passing in a pre-defined set of tiles or a
         different graph for testing purposes.
         """
-        self.tiles = tiles or self._generate_empty()
+        self.tiles = tiles or self._generate_empty_tiles()
         self.players = list()
+        self.ports = ports or self._generate_default_ports()
         self.state = states.BoardStateModifiable(self)
         self.observers = set()
 
@@ -183,12 +184,14 @@ class Board(object):
         self.state.cycle_hex_number(tile_id)
         self.notify_observers()
 
-    def _generate_empty(self):
-        self.ports = [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
+    def _generate_empty_tiles(self):
         empty_terrain = ([Terrain.desert] * NUM_TILES)
         empty_numbers = ([HexNumber.none] * NUM_TILES)
         tile_data = list(zip(empty_terrain, empty_numbers))
         return [Tile(i, t, n) for i, (t, n) in enumerate(tile_data, 1)]
+
+    def _generate_default_ports(self):
+        return [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
 
     def _check_red_placement(self, tiles):
         for i1, i2, _ in self._graph:

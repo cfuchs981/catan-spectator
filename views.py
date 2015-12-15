@@ -306,7 +306,31 @@ class BuildFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
+        self.label = tkinter.Label(self, text="Build", anchor=tkinter.W)
+        self.road = tkinter.Button(self, text="Road", command=self.on_build_road)
+        self.settlement = tkinter.Button(self, text="Settlement", command=self.on_build_settlement)
+        self.city = tkinter.Button(self, text="City", command=self.on_build_city)
+        self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_build_dev_card)
+
+        self.label.pack(fill=tkinter.X)
+        self.road.pack(fill=tkinter.X, expand=True)
+        self.settlement.pack(fill=tkinter.X, expand=True)
+        self.city.pack(fill=tkinter.X, expand=True)
+        self.dev_card.pack(fill=tkinter.X, expand=True)
+
     def notify(self, observable):
+        pass
+
+    def on_build_road(self):
+        pass
+
+    def on_build_settlement(self):
+        pass
+
+    def on_build_city(self):
+        pass
+
+    def on_build_dev_card(self):
         pass
 
 
@@ -316,10 +340,53 @@ class TradeFrame(tkinter.Frame):
         super(TradeFrame, self).__init__(master)
         self.master = master
         self.game = game
+        self._cur_player = self.game.get_cur_player()
         self.game.observers.add(self)
 
+        self.label_player = tkinter.Label(self, text="Trade with Player")
+        self.player_buttons = list()
+        for p in self.game.players:
+            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.NORMAL)
+            self.player_buttons.append(button)
+        self.set_player_button_states(self._cur_player)
+
+        self.label_port = tkinter.Label(self, text="Trade with Port")
+        self.port_buttons = list()
+        for p in list(Port):
+            button = tkinter.Button(self, text='{0}'.format(p.value), state=tkinter.DISABLED)
+            self.port_buttons.append(button)
+
+        ##
+        # Place elements in frame
+        #
+
+        row = 0
+        self.label_player.grid(row=row, sticky=tkinter.W)
+        row += 1
+
+        for i, button in enumerate(self.player_buttons):
+            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
+        row += 2
+
+        self.label_port.grid(row=row, sticky=tkinter.W)
+        row += 1
+
+        for i, button in enumerate(self.port_buttons):
+            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
+        row += 2
+
     def notify(self, observable):
-        pass
+        if self._cur_player.color != self.game.get_cur_player().color:
+            # If player has changed, disabled that button (can't trade with yourself)
+            self._cur_player = self.game.get_cur_player()
+            self.set_player_button_states(self._cur_player)
+
+    def set_player_button_states(self, current_player):
+        for player, button in zip(self.game.players, self.player_buttons):
+            if player.color == current_player.color:
+                button.configure(state=tkinter.DISABLED) # can't trade with yourself
+            else:
+                button.configure(state=tkinter.NORMAL)
 
 
 class PlayDevCardFrame(tkinter.Frame):
@@ -329,6 +396,8 @@ class PlayDevCardFrame(tkinter.Frame):
         self.master = master
         self.game = game
         self.game.observers.add(self)
+
+        self.label = tkinter.Label(self, text="Play Dev Card")
 
     def notify(self, observable):
         pass

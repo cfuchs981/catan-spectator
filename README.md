@@ -15,7 +15,8 @@ $ python3 main.py
 
 ### File Format
 
-Each `.catan` file contains all publicly known information in the game. Therefore, each `.catan` file contains sufficient to 'replay' a game (from a spectator's point of view).
+Each `.catan` file contains all publicly known information in the game.
+Therefore, each `.catan` file contains sufficient information to 'replay' a game (from a spectator's point of view).
 
 The header begins with a version, and ends with `...CATAN!`. The game begins after that.
 

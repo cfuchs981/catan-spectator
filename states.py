@@ -6,6 +6,20 @@ class GameState(object):
         self.game = game
         self.dev_card_state = DevCardNotPlayedState(self)
 
+    def __getattr__(self, name):
+        """Return false for methods called on GameStates which don't have those methods.
+        This should be ok, since __getattr__ is only called as a last resort
+        i.e. if there are no attributes in the instance that match the name
+
+        source: http://stackoverflow.com/a/2405617/1817465
+        """
+        def method(*args):
+            print("tried to handle unknown method " + name)
+            if args:
+                print("it had arguments: " + str(args))
+            return None
+        return method
+
     def is_in_game(self):
         return False
 

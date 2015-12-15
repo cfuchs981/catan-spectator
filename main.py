@@ -25,6 +25,8 @@ class CatanGameRecorder(tkinter.Frame):
             'hex_number_selection': False
         }
         self.game = models.Game(list(), models.Board(), recording.GameRecord())
+        self.game.observers.add(self)
+        self._ingame_before = self.game.state.is_in_game()
 
         board_frame = views.BoardFrame(self, self.game, options=self.options)
         toolbar_frame = views.PregameToolbarFrame(self, self.game, options=self.options)
@@ -39,19 +41,16 @@ class CatanGameRecorder(tkinter.Frame):
 
         self.lift()
 
-    def start_game(self, players):
-        self.game.start(players)
-
-        self._toolbar_frame.destroy()
-        self._toolbar_frame = views.GameToolbarFrame(self, self.game)
-        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-
-    def end_game(self):
-        self.game.end()
-
-        self._toolbar_frame.destroy()
-        self._toolbar_frame = views.PregameToolbarFrame(self, self.game)
-        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+    def notify(self, observable):
+        if self._ingame_before and not self.game.state.is_in_game():
+            self._toolbar_frame.destroy()
+            self._toolbar_frame = views.PregameToolbarFrame(self, self.game)
+            self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        elif not self._ingame_before and self.game.state.is_in_game():
+            self._toolbar_frame.destroy()
+            self._toolbar_frame = views.GameToolbarFrame(self, self.game)
+            self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        self._ingame_before = self.game.state.is_in_game()
 
 
 def main():

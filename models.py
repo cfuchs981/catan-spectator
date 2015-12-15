@@ -17,7 +17,7 @@ class Game(object):
         self.observers = set()
 
     def notify_observers(self):
-        for obs in self.observers:
+        for obs in self.observers.copy():
             obs.notify(self)
 
     def set_state(self, game_state: states.GameState):
@@ -138,6 +138,11 @@ class Player(object):
 
         self.name = name.lower().replace(' ', '')
         self.color = color.lower().replace(' ', '')
+
+    def __eq__(self, other):
+        return (self.color == other.color
+                and self.name == other.name
+                and self.seat == other.seat)
 
 
 class Board(object):

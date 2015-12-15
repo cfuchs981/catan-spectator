@@ -9,12 +9,12 @@ from models import Terrain, Port, Player, HexNumber
 
 class BoardFrame(tkinter.Frame):
 
-    def __init__(self, master, options, board, *args, **kwargs):
+    def __init__(self, master, game, options=None, *args, **kwargs):
         super(BoardFrame, self).__init__()
-        self.options = options
         self.master = master
+        self.game = game
 
-        self._board = board
+        self._board = game.board
 
         board_canvas = tkinter.Canvas(self, height=600, width=600, background='Royal Blue')
         board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
@@ -24,11 +24,18 @@ class BoardFrame(tkinter.Frame):
 
         self._board.observers.add(self)
 
+    def tile_click(self, event):
+        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+        if self.master.options.get('hex_resource_selection'):
+            self._board.cycle_hex_type(self._tile_id_from_tag(tag))
+        if self.master.options.get('hex_number_selection'):
+            self._board.cycle_hex_number(self._tile_id_from_tag(tag))
+        self.redraw()
+
     def notify(self, observable):
         self.redraw()
 
     def draw(self, board):
-
         """Render the board to the canvas widget.
 
         Taking the center of the first tile as 0, 0 we follow the path of tiles
@@ -91,32 +98,9 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.delete(tkinter.ALL)
         self.draw(self._board)
 
-    def tile_click(self, event):
-        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
-        if self.options.get('hex_resource_selection'):
-            self._board.cycle_hex_type(self._tile_id_from_tag(tag))
-        if self.options.get('hex_number_selection'):
-            self._board.cycle_hex_number(self._tile_id_from_tag(tag))
-        self.redraw()
-
-    def _hex_points(self, radius, offset, rotate):
-        offx, offy = offset
-        points = []
-        for theta in (60 * n for n in range(6)):
-            x = (math.cos(math.radians(theta + rotate)) * radius) + offx
-            y = (math.sin(math.radians(theta + rotate)) * radius) + offy
-            points.append((x, y))
-        return points
-
     def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
         points = self._hex_points(radius, offset, rotate)
         a = self._board_canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill, tags=tags)
-
-    def _tile_tag(self, tile):
-        return 'tile_' + str(tile.tile_id)
-
-    def _tile_id_from_tag(self, tag):
-        return int(tag[len('tile_'):])
 
     def _draw_tile(self, x, y, terrain, number, tile):
         self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
@@ -134,6 +118,21 @@ class BoardFrame(tkinter.Frame):
             points.extend([x1, y1])
         self._board_canvas.create_polygon(*points, fill=self._colors[port])
         self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
+
+    def _hex_points(self, radius, offset, rotate):
+        offx, offy = offset
+        points = []
+        for theta in (60 * n for n in range(6)):
+            x = (math.cos(math.radians(theta + rotate)) * radius) + offx
+            y = (math.sin(math.radians(theta + rotate)) * radius) + offy
+            points.append((x, y))
+        return points
+
+    def _tile_tag(self, tile):
+        return 'tile_' + str(tile.tile_id)
+
+    def _tile_id_from_tag(self, tag):
+        return int(tag[len('tile_'):])
 
     _tile_radius  = 50
     _tile_padding = 3
@@ -157,14 +156,16 @@ class BoardFrame(tkinter.Frame):
 
 class PregameToolbarFrame(tkinter.Frame):
 
-    def __init__(self, master, options=None, *args, **kwargs):
+    def __init__(self, master, game, options=None, *args, **kwargs):
         super(PregameToolbarFrame, self).__init__()
+        self.master = master
+        self.game = game
+
         self.options = options or dict()
         self.options.update({
             'hex_resource_selection': True,
             'hex_number_selection': False
         })
-        self.master = master
 
         for option in TkinterOptionWrapper(self.options):
             option.callback()
@@ -187,22 +188,21 @@ class PregameToolbarFrame(tkinter.Frame):
 
 class GameToolbarFrame(tkinter.Frame):
 
-    def __init__(self, master, players, record, *args, **kwargs):
+    def __init__(self, master, game, *args, **kwargs):
         super(GameToolbarFrame, self).__init__()
         self.master = master
-        self.players = players
-        self.record = record
+        self.game = game
 
         self.options = {
             p.name : i == 1
-            for i, p in enumerate(players, 1)
+            for i, p in enumerate(self.game.players, 1)
         }
         for option in TkinterOptionWrapper(self.options):
             option.callback()
             tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
 
-        frame_roll = RollFrame(self, self.record)
+        frame_roll = RollFrame(self, self.game)
         frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
 
         btn_end_game = tkinter.Button(self, text='End Game', command=master.end_game)
@@ -211,21 +211,20 @@ class GameToolbarFrame(tkinter.Frame):
 
 class RollFrame(tkinter.Frame):
 
-    def __init__(self, master, board, record, *args, **kwargs):
+    def __init__(self, master, game, *args, **kwargs):
         super(RollFrame, self).__init__()
         self.master = master
-        self.board = board
-        self.record = record
+        self.game = game
 
-        spinner = tkinter.Spinbox(self, values=(2,3,4,5,6,7,8,9,10,11,12))
+        spinner = tkinter.Spinbox(self, values=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
         spinner.pack(side=tkinter.LEFT)
 
-        button = tkinter.Button(self, command=functools.partial(self.record.record_player_roll,
-                                                                self.board.current_player(),
+        button = tkinter.Button(self, command=functools.partial(game.roll,
                                                                 spinner.get()))
+        button.pack(side=tkinter.RIGHT)
+
 
 class TkinterOptionWrapper:
-
     """Dynamically hook up the board options to tkinter checkbuttons.
 
     Tkinter checkbuttons use a tkinter 'var' object to store the checkbutton
@@ -249,8 +248,8 @@ class TkinterOptionWrapper:
 
     Option = collections.namedtuple('_Option', ['text', 'var', 'callback'])
     _descriptions = {
-        'hex_resource_selection': 'Cycle hex resource type',
-        'hex_number_selection': 'Cycle number on hex'
+        'hex_resource_selection': 'Cycle hex resource',
+        'hex_number_selection': 'Cycle hex number'
     }
 
     def __init__(self, option_dict):

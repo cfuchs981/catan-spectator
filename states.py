@@ -1,10 +1,23 @@
 import models
 
 
-##
-# Abstract state class to inherit concrete game states from
-#
 class GameState(object):
+    def __init__(self, game):
+        self.game = game
+
+
+class GameStatePreGame(GameState):
+    pass
+
+
+class GameStateInGame(GameState):
+    pass
+
+
+##
+# Abstract state class to inherit concrete states from
+#
+class BoardState(object):
     def __init__(self, board):
         self.board = board
 
@@ -35,7 +48,7 @@ class GameState(object):
         raise NotImplemented()
 
 
-class GameStatePreGame(GameState):
+class BoardStateModifiable(BoardState):
     def hex_number_change_allowed(self):
         return True
 
@@ -43,7 +56,7 @@ class GameStatePreGame(GameState):
         return True
 
 
-class GameStateInGame(GameState):
+class BoardStateLocked(BoardState):
     def hex_number_change_allowed(self):
         return False
 

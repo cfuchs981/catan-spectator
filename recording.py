@@ -16,7 +16,7 @@ class GameRecord(object):
     """
     version = '0.0.1'
 
-    def __init__(self, auto_flush=False, use_stdout=True):
+    def __init__(self, auto_flush=True, use_stdout=True):
         self._record_str = str()
 
         self._chars_flushed = 0

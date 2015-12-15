@@ -1,12 +1,57 @@
 import collections
-import gamestates
+import states
+import recording
 from enum import Enum
 
 
 class Game(object):
 
-    def __init__(self, players, board):
-        pass
+    def __init__(self, players: list, board, record: recording.GameRecord):
+        self.players = players
+        self.board = board
+        self.record = record
+        self._cur_player = None # set in #set_players
+
+        self.state = states.GameStatePreGame(self)
+        self.observers = set()
+
+    def notify_observers(self):
+        for obs in self.observers:
+            obs.notify()
+
+    def start(self, players):
+        self.set_players(players)
+        self.state = states.GameStateInGame(self)
+
+        terrain = list()
+        numbers = list()
+        ports = list()
+        for tile in self.board.tiles:
+            terrain.append(tile.terrain)
+            numbers.append(tile.number)
+        for _, _, port in self.board.ports:
+            ports.append(port)
+        self.record.record_pregame(self.players, terrain, numbers, ports)
+
+    def end(self):
+        self.state = states.GameStatePostGame(self)
+        self.record.record_player_wins(self._cur_player)
+
+    def set_players(self, players):
+        self.players = list(players)
+        self._cur_player = self.players[0]
+        self.notify_observers()
+
+    def roll(self, roll):
+        self.record.record_player_roll(self._cur_player, roll)
+
+    def end_turn(self):
+        self.record.record_player_ends_turn(self._cur_player)
+        self._cur_player = self._next_player()
+        self.notify_observers()
+
+    def _next_player(self):
+        return self.players[self._cur_player.seat % len(self.players)]
 
 
 class Tile(object):
@@ -75,8 +120,7 @@ class Board(object):
 
     Encapsulates
     - the layout of the board (which tiles are connected to which),
-    - the values of the tiles (including ports),
-    - the state of the game
+    - the values of the tiles (including ports)
 
     Board.tiles() returns an iterable that gives the tiles in a guaranteed
     connected path that covers every node in the board graph.
@@ -85,16 +129,15 @@ class Board(object):
     get from the origin tile to the destination tile.
     """
 
-    def __init__(self, options, tiles=None, graph=None, center=1):
+    def __init__(self, tiles=None, graph=None, center=1):
         """
         options is a dict names to boolean values.
         tiles and graph are for passing in a pre-defined set of tiles or a
         different graph for testing purposes.
         """
-        self.options = options
         self.tiles = tiles or self._generate_empty()
-        self.state = gamestates.GameStatePreGame(self)
         self.players = list()
+        self.state = states.BoardStateModifiable(self)
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]

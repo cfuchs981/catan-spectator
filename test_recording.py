@@ -107,17 +107,16 @@ def test_record_pregame():
     i += 1
 
     if not re.match('...CATAN!', lines[i]):
-        print('Second-last line must be "...CATAN!".\n{0}'.format(lines[i]))
+        print('Last line must be "...CATAN!".\n{0}'.format(lines[i]))
         return False
     i += 1
 
-    if not re.match('', lines[i]):
-        print('Last line must be terminating newline.\n')
+    if len(lines[i]) > 0:
         return False
     i += 1
 
     if len(lines) > i:
-        print('Must not contain trailing lines afer "...CATAN!\\n". Found {0} lines, should have been {1}.\n{2}'.format(
+        print('Must not contain trailing lines. Found {0} lines, should have been {1}.\n{2}'.format(
             len(lines),
             i,
             lines[i]
@@ -128,7 +127,7 @@ def test_record_pregame():
 
 
 def test_turn():
-    player = models.Player(0, 'ross', 'red')
+    player = models.Player(1, 'ross', 'red')
     record = recording.GameRecord()
 
     record.record_player_roll(player, 2)

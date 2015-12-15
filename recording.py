@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 
 class GameRecord(object):
@@ -15,35 +16,58 @@ class GameRecord(object):
     """
     version = '0.0.1'
 
-    def __init__(self, directory=None):
+    def __init__(self, auto_flush=False, use_stdout=True):
         self._record_str = str()
-        self.directory = directory
+
+        self._chars_flushed = 0
+        self._auto_flush = auto_flush
+        self._use_stdout = use_stdout
+
         self.timestamp = datetime.datetime.now()
+        self.player_names = list()
 
     def record(self, content):
         """
         Writes a string to the record
         """
         self._record_str += content
+        if self._auto_flush:
+            self.flush(use_stdout=self._use_stdout)
 
     def recordln(self, content):
+        """Writes a string to the record, appending a newline
         """
-        Writes a string to the record, appending a newline
-        """
-        self._record_str += '{0}\n'.format(content)
+        self.record('{0}\n'.format(content))
 
     def dump(self):
-        """
-        Dumps the current record to a string, and returns it
+        """Dumps the entire record to a string, and returns it
         """
         return self._record_str
 
-    def flush(self, filename=None):
+    def _latest(self):
+        """Gets all characters written to _record_str since the last flush()
         """
-        Writes the current record to a file, and returns the file descriptor
+        return self._record_str[self._chars_flushed:]
+
+    def filename(self):
+        """Returns a unique string based on the timestamp and players involved
         """
-        # write to timestamp file in self.directory
-        pass
+        return '{}-{}.catan'.format(self.timestamp.isoformat(), '-'.join(self.player_names))
+
+    def flush(self, use_stdout=False):
+        """Appends the latest updates to file, or optionally to stdout instead
+        """
+        latest = self._latest()
+        self._chars_flushed += len(latest)
+        if use_stdout:
+            file = sys.stdout
+        else:
+            file = open(self.filename(), 'a')
+
+        print(latest, file=file, flush=True, end='')
+
+        if not use_stdout:
+            file.close()
 
     def record_pregame(self, players, terrain, numbers, ports):
         """
@@ -60,10 +84,10 @@ class GameRecord(object):
         """
         self.recordln('CatanGameRecord v{0}'.format(GameRecord.version))
         self.recordln('timestamp: {0}'.format(self.timestamp))
-        self._set_players(players)
-        self._set_board_terrain(terrain)
-        self._set_board_numbers(numbers)
-        self._set_board_ports(ports)
+        self._record_players(players)
+        self._record_board_terrain(terrain)
+        self._record_board_numbers(numbers)
+        self._record_board_ports(ports)
         self.recordln('...CATAN!')
 
     def record_player_roll(self, player, roll):
@@ -228,19 +252,20 @@ class GameRecord(object):
     def record_player_wins(self, player):
         self.recordln('{0} wins'.format(player.color))
 
-    def _set_board_terrain(self, terrain):
+    def _record_board_terrain(self, terrain):
         self.recordln('terrain: {0}'.format(' '.join(t.value for t in terrain)))
 
-    def _set_board_numbers(self, numbers):
+    def _record_board_numbers(self, numbers):
         self.recordln('numbers: {0}'.format(' '.join(str(n.value) for n in numbers)))
 
-    def _set_board_ports(self, ports):
+    def _record_board_ports(self, ports):
         self.recordln('ports: {0}'.format(' '.join(p.value for p in ports)))
 
-    def _set_players(self, players):
+    def _record_players(self, players):
         self.recordln('players: {0}'.format(len(players)))
         players = list(players)
         players.sort(key=lambda p: p.seat)
         for p in players:
+            self.player_names.append(p.name)
             self.recordln('name: {0}, color: {1}, seat: {2}'.format(p.name, p.color, p.seat))
 

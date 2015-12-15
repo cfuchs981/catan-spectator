@@ -187,18 +187,42 @@ class PregameToolbarFrame(tkinter.Frame):
 
 class GameToolbarFrame(tkinter.Frame):
 
-    def __init__(self, master, players, *args, **kwargs):
+    def __init__(self, master, players, record, *args, **kwargs):
         super(GameToolbarFrame, self).__init__()
-        self.players = players
         self.master = master
+        self.players = players
+        self.record = record
 
-        for option in TkinterOptionWrapper(players):
+        self.options = {
+            p.name : i == 1
+            for i, p in enumerate(players, 1)
+        }
+        for option in TkinterOptionWrapper(self.options):
             option.callback()
             tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
+
+        frame_roll = RollFrame(self, self.record)
+        frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
+
         btn_end_game = tkinter.Button(self, text='End Game', command=master.end_game)
         btn_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
 
+
+class RollFrame(tkinter.Frame):
+
+    def __init__(self, master, board, record, *args, **kwargs):
+        super(RollFrame, self).__init__()
+        self.master = master
+        self.board = board
+        self.record = record
+
+        spinner = tkinter.Spinbox(self, values=(2,3,4,5,6,7,8,9,10,11,12))
+        spinner.pack(side=tkinter.LEFT)
+
+        button = tkinter.Button(self, command=functools.partial(self.record.record_player_roll,
+                                                                self.board.current_player(),
+                                                                spinner.get()))
 
 class TkinterOptionWrapper:
 

@@ -3,6 +3,12 @@ import gamestates
 from enum import Enum
 
 
+class Game(object):
+
+    def __init__(self, players, board):
+        pass
+
+
 class Tile(object):
     """
     Tiles are arranged in counter-clockwise order, spiralling inwards.

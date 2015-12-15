@@ -277,8 +277,8 @@ class RobberFrame(tkinter.Frame):
         self.move_robber = tkinter.Button(self, text="Move Robber", state=tkinter.DISABLED, command=self.on_move_robber)
         self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
 
-        self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
-        self.steal.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+        self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        self.steal.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
     def notify(self, observable):
         if self.game.state.can_move_robber():
@@ -346,7 +346,7 @@ class EndTurnFrame(tkinter.Frame):
         self.end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
 
     def notify(self, observable):
-        if self.game.state.end_turn_allowed():
+        if self.game.state.is_in_game() and self.game.state.end_turn_allowed():
             self.end_turn.configure(state=tkinter.NORMAL)
         else:
             self.end_turn.configure(state=tkinter.DISABLED)

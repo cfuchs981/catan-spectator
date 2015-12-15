@@ -6,26 +6,32 @@ class GameState(object):
         self.game = game
 
     def is_in_game(self):
-        raise NotImplemented()
+        return False
 
-"""
-Pre-game states
-"""
+
 class GameStatePreGame(GameState):
+    """
+    All PRE-GAME states inherit from this state.
+
+    Child states should follow the rules defined by GameStateInGame.
+    """
     def is_in_game(self):
         return False
 
-"""
-Post-game states
-"""
+
 class GameStatePostGame(GameState):
+    """
+    All POST-GAME states inherit from this state.
+
+    Child states should follow the rules defined by GameStateInGame.
+    """
     def is_in_game(self):
         return False
 
 
 class GameStateInGame(GameState):
     """
-    All in-game states inherit from this state.
+    All IN-GAME states inherit from this state.
 
     Child in-game states MUST NOT define methods other than those defined here.
 

@@ -167,11 +167,13 @@ class PregameToolbarFrame(tkinter.Frame):
             'hex_number_selection': False
         })
 
+        tkinter.Label(self, text="Board Setup", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         for option in TkinterOptionWrapper(self.options):
             option.callback()
             tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
 
+        tkinter.Label(self, text="Players (name color)", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
         self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
         for (entry, var), default in zip(self.player_entries_vars, defaults):
@@ -179,11 +181,18 @@ class PregameToolbarFrame(tkinter.Frame):
             entry.config(textvariable=var)
             entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
 
-        start_game = functools.partial(master.start_game,
-                                       [Player(i, var.get().split(' ')[0], var.get().split(' ')[1])
-                                        for i, (_, var) in enumerate(self.player_entries_vars, 1)])
-        btn_start_game = tkinter.Button(self, text='Start Game', command=start_game)
+        btn_start_game = tkinter.Button(self, text='Start Game', command=self.on_start_game)
         btn_start_game.pack(side=tkinter.TOP, fill=tkinter.X)
+
+    def on_start_game(self):
+        def get_name(var):
+            return var.get().split(' ')[0]
+
+        def get_color(var):
+            return var.get().split(' ')[1]
+
+        self.master.start_game([Player(i, get_name(var), get_color(var))
+                                for i, (_, var) in enumerate(self.player_entries_vars, 1)])
 
 
 class GameToolbarFrame(tkinter.Frame):
@@ -193,35 +202,72 @@ class GameToolbarFrame(tkinter.Frame):
         self.master = master
         self.game = game
 
-        self.options = {
-            p.name : i == 1
-            for i, p in enumerate(self.game.players, 1)
-        }
-        for option in TkinterOptionWrapper(self.options):
-            option.callback()
-            tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
-                .pack(side=tkinter.TOP, fill=tkinter.X)
+        self.game.observers.add(self)
 
+        self._cur_player = self.game.get_cur_player()
+        self._cur_player_name = tkinter.StringVar()
+        self.set_cur_player_name()
+
+        label_cur_player_name = tkinter.Label(self, textvariable=self._cur_player_name, anchor=tkinter.W)
         frame_roll = RollFrame(self, self.game)
-        frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_build = BuildFrame(self, self.game)
+        self.btn_end_turn = tkinter.Button(self, text='End Turn', state=tkinter.DISABLED, command=self.game.end_turn)
+        btn_end_game = tkinter.Button(self, text='Declare Victory', command=master.end_game)
 
-        btn_end_game = tkinter.Button(self, text='End Game', command=master.end_game)
+        label_cur_player_name.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
+        self.btn_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
         btn_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
+
+    def notify(self, observable):
+        if self._cur_player.color != self.game.get_cur_player().color:
+            self.set_cur_player_name()
+        if self.game.state.end_turn_allowed():
+            self.btn_end_turn.configure(state=tkinter.NORMAL)
+        else:
+            self.btn_end_turn.configure(state=tkinter.DISABLED)
+
+    def set_cur_player_name(self):
+        self._cur_player = self.game.get_cur_player()
+        self._cur_player_name.set('Current Player: {0} ({1})'.format(
+            self._cur_player.color,
+            self._cur_player.name
+        ))
 
 
 class RollFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(RollFrame, self).__init__()
+        super(RollFrame, self).__init__(master)
         self.master = master
         self.game = game
+        self._cur_player = self.game.get_cur_player()
+        self.game.observers.add(self)
 
-        spinner = tkinter.Spinbox(self, values=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
-        spinner.pack(side=tkinter.LEFT)
+        self.roll = tkinter.StringVar()
+        self.spinner = tkinter.Spinbox(self, values=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), textvariable=self.roll)
+        self.button = tkinter.Button(self, text="Roll", command=self.on_roll)
 
-        button = tkinter.Button(self, command=functools.partial(game.roll,
-                                                                spinner.get()))
-        button.pack(side=tkinter.RIGHT)
+        self.spinner.pack(side=tkinter.LEFT)
+        self.button.pack(side=tkinter.RIGHT)
+
+    def notify(self, observable):
+        if self._cur_player.color != self.game.get_cur_player().color:
+            self.button.configure(state=tkinter.NORMAL)
+            self.spinner.configure(state=tkinter.NORMAL)
+            self._cur_player = self.game.get_cur_player()
+
+    def on_roll(self):
+        self.button.configure(state=tkinter.DISABLED)
+        self.spinner.configure(state=tkinter.DISABLED)
+        self.game.roll(self.roll.get())
+
+
+class BuildFrame(tkinter.Frame):
+
+    def __init__(self, master, game):
+        self.master = master
+        self.game = game
 
 
 class TkinterOptionWrapper:

@@ -42,18 +42,15 @@ class CatanGameRecorder(tkinter.Frame):
     def start_game(self, players):
         self.game.start(players)
 
-        self._toolbar_frame.pack_forget()
+        self._toolbar_frame.destroy()
         self._toolbar_frame = views.GameToolbarFrame(self, self.game)
         self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
     def end_game(self):
-        self.game.end()#winner)
-        self.game.state = states.BoardStateModifiable(self.game)
+        self.game.end()
 
-        # self.record.record_player_wins(winner)
-
-        self._toolbar_frame.pack_forget()
-        self._toolbar_frame = views.PregameToolbarFrame(self)
+        self._toolbar_frame.destroy()
+        self._toolbar_frame = views.PregameToolbarFrame(self, self.game)
         self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
 

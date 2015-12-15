@@ -17,11 +17,16 @@ class Game(object):
 
     def notify_observers(self):
         for obs in self.observers:
-            obs.notify()
+            obs.notify(self)
+
+    def set_state(self, game_state: states.GameState):
+        self.state = game_state
+        self.notify_observers()
 
     def start(self, players):
         self.set_players(players)
-        self.state = states.GameStateInGame(self)
+        self.set_state(states.GameStateInGame(self))
+        self.board.state = states.BoardStateLocked(self.board)
 
         terrain = list()
         numbers = list()
@@ -34,8 +39,12 @@ class Game(object):
         self.record.record_pregame(self.players, terrain, numbers, ports)
 
     def end(self):
-        self.state = states.GameStatePostGame(self)
+        self.set_state(states.GameStatePostGame(self))
+        self.board.state = states.BoardStateModifiable(self.board)
         self.record.record_player_wins(self._cur_player)
+
+    def get_cur_player(self):
+        return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
 
     def set_players(self, players):
         self.players = list(players)
@@ -44,10 +53,12 @@ class Game(object):
 
     def roll(self, roll):
         self.record.record_player_roll(self._cur_player, roll)
+        self.set_state(states.GameStateRolled(self))
 
     def end_turn(self):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self._next_player()
+        self.set_state(states.GameStateTurnStart(self))
         self.notify_observers()
 
     def _next_player(self):

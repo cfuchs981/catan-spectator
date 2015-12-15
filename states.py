@@ -5,17 +5,41 @@ class GameState(object):
     def __init__(self, game):
         self.game = game
 
+    def is_in_game(self):
+        raise NotImplemented()
+
+    def end_turn_allowed(self):
+        if not self.is_in_game():
+            return False
+        raise NotImplemented()
+
 
 class GameStatePreGame(GameState):
-    pass
+    def is_in_game(self):
+        return False
 
 
 class GameStateInGame(GameState):
-    pass
+    def is_in_game(self):
+        return True
+
+    def end_turn_allowed(self):
+        return False
+
+
+class GameStateTurnStart(GameStateInGame):
+    def end_turn_allowed(self):
+        return False
+
+
+class GameStateRolled(GameStateInGame):
+    def end_turn_allowed(self):
+        return True
 
 
 class GameStatePostGame(GameState):
-    pass
+    def is_in_game(self):
+        return False
 
 
 ##

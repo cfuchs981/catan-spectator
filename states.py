@@ -8,22 +8,45 @@ class GameState(object):
     def is_in_game(self):
         raise NotImplemented()
 
-    def end_turn_allowed(self):
-        if not self.is_in_game():
-            return False
-        raise NotImplemented()
-
-
+"""
+Pre-game states
+"""
 class GameStatePreGame(GameState):
+    def is_in_game(self):
+        return False
+
+"""
+Post-game states
+"""
+class GameStatePostGame(GameState):
     def is_in_game(self):
         return False
 
 
 class GameStateInGame(GameState):
+    """
+    All in-game states inherit from this state.
+
+    Child in-game states MUST NOT define methods other than those defined here.
+
+    Methods defined in this base class return default values.
+    If a state requires a non-default value, override the method and implement it yourself.
+
+    Again, this base class must define a default implementation for ALL methods which any subclass defines.
+    """
     def is_in_game(self):
         return True
 
     def end_turn_allowed(self):
+        if self.can_move_robber() or self.can_steal():
+            return False
+
+        return True
+
+    def can_move_robber(self):
+        return False
+
+    def can_steal(self):
         return False
 
 
@@ -33,13 +56,18 @@ class GameStateTurnStart(GameStateInGame):
 
 
 class GameStateRolled(GameStateInGame):
-    def end_turn_allowed(self):
+    def can_move_robber(self):
+        return int(self.game.last_roll) == 7
+
+
+class GameStateMovedRobber(GameStateInGame):
+    def can_steal(self):
         return True
 
 
-class GameStatePostGame(GameState):
-    def is_in_game(self):
-        return False
+class GameStateMovedRobberAndStole(GameStateInGame):
+    def end_turn_allowed(self):
+        return True
 
 
 ##

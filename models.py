@@ -11,6 +11,7 @@ class Game(object):
         self.board = board
         self.record = record
         self._cur_player = None # set in #set_players
+        self.last_roll = None # set in #roll
 
         self.state = states.GameStatePreGame(self)
         self.observers = set()
@@ -53,13 +54,21 @@ class Game(object):
 
     def roll(self, roll):
         self.record.record_player_roll(self._cur_player, roll)
+        self.last_roll = roll
         self.set_state(states.GameStateRolled(self))
+
+    def move_robber(self):
+        # TODO actually move the robber instead of pretending
+        self.set_state(states.GameStateMovedRobber(self))
+
+    def steal(self):
+        # TODO actually steal instead of pretending
+        self.set_state(states.GameStateMovedRobberAndStole(self))
 
     def end_turn(self):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self._next_player()
         self.set_state(states.GameStateTurnStart(self))
-        self.notify_observers()
 
     def _next_player(self):
         return self.players[self._cur_player.seat % len(self.players)]

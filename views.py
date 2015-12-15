@@ -210,22 +210,25 @@ class GameToolbarFrame(tkinter.Frame):
 
         label_cur_player_name = tkinter.Label(self, textvariable=self._cur_player_name, anchor=tkinter.W)
         frame_roll = RollFrame(self, self.game)
+        frame_robber = RobberFrame(self, self.game)
         frame_build = BuildFrame(self, self.game)
-        self.btn_end_turn = tkinter.Button(self, text='End Turn', state=tkinter.DISABLED, command=self.game.end_turn)
+        frame_trade = TradeFrame(self, self.game)
+        frame_play_dev = PlayDevCardFrame(self, self.game)
+        frame_end_turn = EndTurnFrame(self, self.game)
         btn_end_game = tkinter.Button(self, text='Declare Victory', command=master.end_game)
 
         label_cur_player_name.pack(side=tkinter.TOP, fill=tkinter.X)
         frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
-        self.btn_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_robber.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_build.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_trade.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_play_dev.pack(side=tkinter.TOP, fill=tkinter.X)
+        frame_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
         btn_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
 
     def notify(self, observable):
         if self._cur_player.color != self.game.get_cur_player().color:
             self.set_cur_player_name()
-        if self.game.state.end_turn_allowed():
-            self.btn_end_turn.configure(state=tkinter.NORMAL)
-        else:
-            self.btn_end_turn.configure(state=tkinter.DISABLED)
 
     def set_cur_player_name(self):
         self._cur_player = self.game.get_cur_player()
@@ -263,11 +266,93 @@ class RollFrame(tkinter.Frame):
         self.game.roll(self.roll.get())
 
 
+class RobberFrame(tkinter.Frame):
+
+    def __init__(self, master, game):
+        super(RobberFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+        self.move_robber = tkinter.Button(self, text="Move Robber", state=tkinter.DISABLED, command=self.on_move_robber)
+        self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
+
+        self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+        self.steal.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+
+    def notify(self, observable):
+        if self.game.state.can_move_robber():
+            self.move_robber.configure(state=tkinter.NORMAL)
+        else:
+            self.move_robber.configure(state=tkinter.DISABLED)
+
+        if self.game.state.can_steal():
+            self.steal.configure(state=tkinter.NORMAL)
+        else:
+            self.steal.configure(state=tkinter.DISABLED)
+
+    def on_move_robber(self):
+        self.game.move_robber()
+
+    def on_steal(self):
+        self.game.steal()
+
+
 class BuildFrame(tkinter.Frame):
 
     def __init__(self, master, game):
+        super(BuildFrame, self).__init__(master)
         self.master = master
         self.game = game
+        self.game.observers.add(self)
+
+    def notify(self, observable):
+        pass
+
+
+class TradeFrame(tkinter.Frame):
+
+    def __init__(self, master, game):
+        super(TradeFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+    def notify(self, observable):
+        pass
+
+
+class PlayDevCardFrame(tkinter.Frame):
+
+    def __init__(self, master, game):
+        super(PlayDevCardFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+    def notify(self, observable):
+        pass
+
+
+class EndTurnFrame(tkinter.Frame):
+
+    def __init__(self, master, game):
+        super(EndTurnFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+        self.end_turn = tkinter.Button(self, text='End Turn', state=tkinter.DISABLED, command=self.on_end_turn)
+        self.end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
+
+    def notify(self, observable):
+        if self.game.state.end_turn_allowed():
+            self.end_turn.configure(state=tkinter.NORMAL)
+        else:
+            self.end_turn.configure(state=tkinter.DISABLED)
+
+    def on_end_turn(self):
+        self.game.end_turn()
 
 
 class TkinterOptionWrapper:

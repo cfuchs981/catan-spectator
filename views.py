@@ -156,10 +156,10 @@ class BoardFrame(tkinter.Frame):
         Port.any: 'gray'}
 
 
-class PregameToolbarFrame(tkinter.Frame):
+class SetupGameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, options=None, *args, **kwargs):
-        super(PregameToolbarFrame, self).__init__()
+        super(SetupGameToolbarFrame, self).__init__()
         self.master = master
         self.game = game
 
@@ -477,7 +477,7 @@ class EndTurnFrame(tkinter.Frame):
         self.end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
 
     def notify(self, observable):
-        if self.game.state.end_turn_allowed():
+        if self.game.state.can_end_turn():
             self.end_turn.configure(state=tkinter.NORMAL)
         else:
             self.end_turn.configure(state=tkinter.DISABLED)

@@ -28,14 +28,14 @@ class CatanGameRecorder(tkinter.Frame):
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
-        self._pregame_toolbar_frame = views.PregameToolbarFrame(self, self.game, options=self.options)
+        self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self, self.game, options=self.options)
         self._game_toolbar_frame = None
         board_frame = views.BoardFrame(self, self.game, options=self.options)
 
         board_frame.redraw()
 
         self._board_frame = board_frame
-        self._toolbar_frame = self._pregame_toolbar_frame
+        self._toolbar_frame = self._setup_game_toolbar_frame
 
         self._board_frame.pack(side=tkinter.LEFT, fill=tkinter.Y)
         self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
@@ -47,9 +47,8 @@ class CatanGameRecorder(tkinter.Frame):
         self._in_game = self.game.state.is_in_game()
         if was_in_game and not self.game.state.is_in_game():
             # we were in game, now we're not
-            self.game.reset()
             self._toolbar_frame.pack_forget()
-            self._toolbar_frame = self._pregame_toolbar_frame
+            self._toolbar_frame = self._setup_game_toolbar_frame
             self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         elif not was_in_game and self.game.state.is_in_game():
             # we were not in game, now we are

@@ -47,7 +47,7 @@ class Game(object):
             numbers.append(tile.number)
         for _, _, port in self.board.ports:
             ports.append(port)
-        self.record.record_pregame(self.players, terrain, numbers, ports)
+        self.record.record_initial_game_info(self.players, terrain, numbers, ports)
 
     def _set_players(self, players):
         self.players = list(players)

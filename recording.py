@@ -69,7 +69,7 @@ class GameRecord(object):
         if not use_stdout:
             file.close()
 
-    def record_pregame(self, players, terrain, numbers, ports):
+    def record_initial_game_info(self, players, terrain, numbers, ports):
         """
         Begins a game by recording
         - file format version

@@ -48,7 +48,7 @@ def get_record_with_random_board():
     terrain.insert(desert, Terrain.desert)
     numbers.insert(desert, HexNumber.none)
 
-    record.record_pregame(players, terrain, numbers, ports)
+    record.record_initial_game_info(players, terrain, numbers, ports)
     return record
 
 

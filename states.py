@@ -106,13 +106,17 @@ class GameStatePreGame(GameStateInGame):
         """No rolling in the pregame"""
         return True
 
+    def can_end_turn(self):
+        raise NotImplemented()
+
 
 class GameStatePreGamePlaceSettlement(GameStatePreGame):
     """
     - AFTER a player's turn has started
     - BEFORE the player has placed an initial settlement
     """
-    pass
+    def can_end_turn(self):
+        return False
 
 
 class GameStatePreGamePlaceRoad(GameStatePreGame):
@@ -120,7 +124,13 @@ class GameStatePreGamePlaceRoad(GameStatePreGame):
     - AFTER a player has placed an initial settlement
     - BEFORE the player has placed an initial road
     """
-    pass
+    def can_end_turn(self):
+        return False
+
+
+class GameStatePreGameHasPlacedRoad(GameStatePreGame):
+    def can_end_turn(self):
+        return True
 
 
 class GameStateBeginTurn(GameStateInGame):

@@ -256,10 +256,15 @@ class RollFrame(tkinter.Frame):
         self.spinner = tkinter.Spinbox(self, values=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), textvariable=self.roll)
         self.button = tkinter.Button(self, text="Roll", command=self.on_roll)
 
+        self.set_states()
+
         self.spinner.pack(side=tkinter.LEFT)
         self.button.pack(side=tkinter.RIGHT)
 
     def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
         if self._cur_player.color != self.game.get_cur_player().color:
             self.button.configure(state=tkinter.NORMAL)
             self.spinner.configure(state=tkinter.NORMAL)
@@ -282,10 +287,15 @@ class RobberFrame(tkinter.Frame):
         self.move_robber = tkinter.Button(self, text="Move Robber", state=tkinter.DISABLED, command=self.on_move_robber)
         self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
 
+        self.set_states()
+
         self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
         self.steal.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
     def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
         if self.game.state.can_move_robber():
             self.move_robber.configure(state=tkinter.NORMAL)
         else:
@@ -473,10 +483,15 @@ class EndTurnFrame(tkinter.Frame):
         self.label = tkinter.Label(self, text='--')
         self.end_turn = tkinter.Button(self, text='End Turn', state=tkinter.DISABLED, command=self.on_end_turn)
 
+        self.set_states()
+
         self.label.pack()
         self.end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
 
     def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
         if self.game.state.can_end_turn():
             self.end_turn.configure(state=tkinter.NORMAL)
         else:

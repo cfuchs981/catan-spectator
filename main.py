@@ -8,12 +8,10 @@ TODO: Docstrings and unittests.
 """
 
 import tkinter
-import collections
+import logging
 
 import views
 import models
-import states
-import recording
 
 
 class CatanGameRecorder(tkinter.Frame):
@@ -24,7 +22,7 @@ class CatanGameRecorder(tkinter.Frame):
             'hex_resource_selection': True,
             'hex_number_selection': False
         }
-        self.game = models.Game(list(), models.Board(), recording.GameRecord())
+        self.game = models.Game()
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
@@ -58,6 +56,9 @@ class CatanGameRecorder(tkinter.Frame):
 
 
 def main():
+    logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
+                        datefmt='%H:%M:%S',
+                        level=logging.INFO)
     app = CatanGameRecorder()
     app.mainloop()
 

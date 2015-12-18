@@ -1,4 +1,5 @@
 import models
+import logging
 
 
 class GameState(object):
@@ -14,6 +15,7 @@ class GameState(object):
         """
         def method(*args):
             return None
+        logging.debug('Method {0} not found'.format(name))
         return method
 
     def is_in_game(self):
@@ -43,7 +45,11 @@ class GameStateInGame(GameState):
 
     def next_player(self):
         """Compare to GameStatePreGame's implementation, which uses snake draft"""
-        return self.game._next_player(snake=False)
+        logging.warning('turn={}, players={}'.format(
+            self.game._cur_turn,
+            self.game.players
+        ))
+        return self.game.players[(self.game._cur_turn + 1) % len(self.game.players)]
 
     def begin_turn(self):
         """Compare to GameStatePreGame's implementation, which uses GameStatePreGamePlaceSettlement"""
@@ -52,11 +58,8 @@ class GameStateInGame(GameState):
     def is_in_game(self):
         return True
 
-    def can_play_knight_dev_card(self):
-        return self.dev_card_state.can_play_dev_card()
-
-    def can_play_non_knight_dev_card(self):
-        return self.has_rolled() and self.dev_card_state.can_play_dev_card()
+    def is_in_pregame(self):
+        return False
 
     def has_rolled(self):
         return self.game.last_player_to_roll == self.game.get_cur_player()
@@ -73,11 +76,41 @@ class GameStateInGame(GameState):
     # Otherwise, these defaults will be used.
     #
 
+    def can_roll(self):
+        return not self.has_rolled()
+
     def can_move_robber(self):
         return False
 
     def can_steal(self):
         return False
+
+    def can_buy_road(self):
+        return self.has_rolled()
+
+    def can_buy_settlement(self):
+        return self.has_rolled()
+
+    def can_buy_city(self):
+        return self.has_rolled()
+
+    def can_buy_dev_card(self):
+        return self.has_rolled()
+
+    def can_trade(self):
+        return self.has_rolled()
+
+    def can_play_knight(self):
+        return self.dev_card_state.can_play_dev_card()
+
+    def can_play_monopoly(self):
+        return self.has_rolled() and self.dev_card_state.can_play_dev_card()
+
+    def can_play_road_builder(self):
+        return self.has_rolled() and self.dev_card_state.can_play_dev_card()
+
+    def can_play_victory_point(self):
+        return True
 
 
 class GameStatePreGame(GameStateInGame):
@@ -88,26 +121,61 @@ class GameStatePreGame(GameStateInGame):
 
     In other words, it is the placing of the initial settlements and roads, in snake draft order.
     """
+    def is_in_pregame(self):
+        return True
+
     def next_player(self):
-        return self.game._next_player(snake=True)
+        snake = self.game.players.copy()
+        snake += list(reversed(snake))
+        try:
+            return snake[self.game._cur_turn + 1]
+        except IndexError:
+            self.game.set_state(GameStateBeginTurn(self.game))
+            return self.game.state.next_player()
 
     def begin_turn(self):
         self.game.set_state(GameStatePreGamePlaceSettlement(self.game))
 
-    def can_play_knight_dev_card(self):
+    def can_play_knight(self):
         """No dev cards in the pregame"""
         return False
 
-    def can_play_non_knight_dev_card(self):
+    def can_play_monopoly(self):
         """No dev cards in the pregame"""
         return False
 
-    def has_rolled(self):
+    def can_play_road_builder(self):
+        """No dev cards in the pregame"""
+        return False
+
+    def can_play_victory_point(self):
+        """No dev cards in the pregame"""
+        return False
+
+    def can_roll(self):
         """No rolling in the pregame"""
-        return True
+        return False
+
+    def can_buy_road(self):
+        raise NotImplemented()
+
+    def can_buy_settlement(self):
+        raise NotImplemented()
+
+    def can_buy_city(self):
+        """No cities in the pregame"""
+        return False
+
+    def can_buy_dev_card(self):
+        """No dev cards in the pregame"""
+        return False
 
     def can_end_turn(self):
         raise NotImplemented()
+
+    def can_trade(self):
+        """No trading in the pregame"""
+        return False
 
 
 class GameStatePreGamePlaceSettlement(GameStatePreGame):
@@ -115,6 +183,12 @@ class GameStatePreGamePlaceSettlement(GameStatePreGame):
     - AFTER a player's turn has started
     - BEFORE the player has placed an initial settlement
     """
+    def can_buy_settlement(self):
+        return True
+
+    def can_buy_road(self):
+        return False
+
     def can_end_turn(self):
         return False
 
@@ -124,13 +198,14 @@ class GameStatePreGamePlaceRoad(GameStatePreGame):
     - AFTER a player has placed an initial settlement
     - BEFORE the player has placed an initial road
     """
-    def can_end_turn(self):
+    def can_buy_settlement(self):
         return False
 
-
-class GameStatePreGameHasPlacedRoad(GameStatePreGame):
-    def can_end_turn(self):
+    def can_buy_road(self):
         return True
+
+    def can_end_turn(self):
+        return False
 
 
 class GameStateBeginTurn(GameStateInGame):
@@ -188,10 +263,10 @@ class GameStateStealing(GameStateInGame):
         self.is_stealing = True
 
     def steal(self):
-        self.game.set_state(GameStateNormalTurn(self.game))
+        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
 
 
-class GameStateNormalTurn(GameStateInGame):
+class GameStateDuringTurnAfterRoll(GameStateInGame):
     """
     The most common state.
 

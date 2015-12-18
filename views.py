@@ -7,6 +7,12 @@ import functools
 
 from models import Terrain, Port, Player, HexNumber
 
+can_do = {
+    True: tkinter.NORMAL,
+    False: tkinter.DISABLED,
+    None: tkinter.DISABLED
+}
+
 
 class BoardFrame(tkinter.Frame):
 
@@ -249,7 +255,6 @@ class RollFrame(tkinter.Frame):
         super(RollFrame, self).__init__(master)
         self.master = master
         self.game = game
-        self._cur_player = self.game.get_cur_player()
         self.game.observers.add(self)
 
         self.roll = tkinter.StringVar()
@@ -265,10 +270,8 @@ class RollFrame(tkinter.Frame):
         self.set_states()
 
     def set_states(self):
-        if self._cur_player.color != self.game.get_cur_player().color:
-            self.button.configure(state=tkinter.NORMAL)
-            self.spinner.configure(state=tkinter.NORMAL)
-            self._cur_player = self.game.get_cur_player()
+        self.spinner.configure(state=can_do[self.game.state.can_roll()])
+        self.button.configure(state=can_do[self.game.state.can_roll()])
 
     def on_roll(self):
         self.button.configure(state=tkinter.DISABLED)
@@ -322,10 +325,10 @@ class BuildFrame(tkinter.Frame):
         self.game.observers.add(self)
 
         self.label = tkinter.Label(self, text="Build", anchor=tkinter.W)
-        self.road = tkinter.Button(self, text="Road", command=self.on_build_road)
-        self.settlement = tkinter.Button(self, text="Settlement", command=self.on_build_settlement)
-        self.city = tkinter.Button(self, text="City", command=self.on_build_city)
-        self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_build_dev_card)
+        self.road = tkinter.Button(self, text="Road", command=self.on_buy_road)
+        self.settlement = tkinter.Button(self, text="Settlement", command=self.on_buy_settlement)
+        self.city = tkinter.Button(self, text="City", command=self.on_buy_city)
+        self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_buy_dev_card)
 
         self.set_states()
 
@@ -339,27 +342,23 @@ class BuildFrame(tkinter.Frame):
         self.set_states()
 
     def set_states(self):
-        """You must roll before building"""
-        if not self.game.state.has_rolled():
-            state = tkinter.DISABLED
-        else:
-            state = tkinter.NORMAL
+        self.road.configure(state=can_do[self.game.state.can_buy_road()])
+        self.settlement.configure(state=can_do[self.game.state.can_buy_settlement()])
+        self.city.configure(state=can_do[self.game.state.can_buy_city()])
+        self.dev_card.configure(state=can_do[self.game.state.can_buy_dev_card()])
 
-        self.road.configure(state=state)
-        self.settlement.configure(state=state)
-        self.city.configure(state=state)
-        self.dev_card.configure(state=state)
+    def on_buy_road(self):
+        # todo UI for placing the road
+        self.game.buy_road(node_from=None, node_to=None)
 
-    def on_build_road(self):
+    def on_buy_settlement(self):
+        # todo UI for placing the settlement
+        self.game.buy_settlement(node=None)
+
+    def on_buy_city(self):
         pass
 
-    def on_build_settlement(self):
-        pass
-
-    def on_build_city(self):
-        pass
-
-    def on_build_dev_card(self):
+    def on_buy_dev_card(self):
         pass
 
 
@@ -413,10 +412,10 @@ class TradeFrame(tkinter.Frame):
     def set_states(self, current_player):
         """You can't trade with yourself, and you have to roll before trading"""
         for player, button in zip(self.game.players, self.player_buttons):
-            if not self.game.state.has_rolled() or player == current_player:
-                button.configure(state=tkinter.DISABLED)
-            else:
+            if self.game.state.can_trade() and player != current_player:
                 button.configure(state=tkinter.NORMAL)
+            else:
+                button.configure(state=tkinter.DISABLED)
 
 
 class PlayDevCardFrame(tkinter.Frame):
@@ -445,19 +444,10 @@ class PlayDevCardFrame(tkinter.Frame):
         self.set_states()
 
     def set_states(self):
-        self.victory_point.configure(state=tkinter.NORMAL)
-
-        if self.game.state.can_play_knight_dev_card():
-            self.knight.configure(state=tkinter.NORMAL)
-        else:
-            self.knight.configure(state=tkinter.DISABLED)
-
-        if self.game.state.can_play_non_knight_dev_card():
-            self.monopoly.configure(state=tkinter.NORMAL)
-            self.road_builder.configure(state=tkinter.NORMAL)
-        else:
-            self.monopoly.configure(state=tkinter.DISABLED)
-            self.road_builder.configure(state=tkinter.DISABLED)
+        self.knight.configure(state=can_do[self.game.state.can_play_knight()])
+        self.monopoly.configure(state=can_do[self.game.state.can_play_monopoly()])
+        self.road_builder.configure(state=can_do[self.game.state.can_play_road_builder()])
+        self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
     def on_knight(self):
         pass

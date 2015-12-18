@@ -1,5 +1,4 @@
-import itertools
-import collections
+import logging
 import states
 import recording
 from enum import Enum
@@ -7,18 +6,21 @@ from enum import Enum
 
 class Game(object):
 
-    def __init__(self, players: list, board, record: recording.GameRecord):
-        self.players = players
-        self.board = board
-        self.record = record
+    def __init__(self, players=None, board=None, record=None):
+        self.observers = set()
+        self.players = players or list()
+        self.board = board or Board()
+        self.record = record or recording.GameRecord()
+
+        self.state = None
         self._cur_player = None # set in #set_players
         self.last_roll = None # set in #roll
         self.last_player_to_roll = None # set in #roll
-        self._cur_turn = 0 # set in #end_turn
+        self._cur_turn = 0 # incremented in #end_turn
 
-        self.state = states.GameStateNotInGame(self)
-        self.observers = set()
         self.board.observers.add(self)
+
+        self.set_state(states.GameStateNotInGame(self))
 
     def notify(self, observable):
         self.notify_observers()
@@ -27,7 +29,24 @@ class Game(object):
         for obs in self.observers.copy():
             obs.notify(self)
 
+    def reset(self):
+        self.players = list()
+        self.board.reset()
+        self.record = recording.GameRecord()
+        self.state = None
+
+        self.last_roll = None
+        self.last_player_to_roll = None
+        self._cur_player = None
+        self._cur_turn = 0
+
+        self.set_state(states.GameStateNotInGame(self))
+
     def set_state(self, game_state: states.GameState):
+        logging.info('now {0}, was {1}'.format(
+            type(game_state).__name__,
+            type(self.state).__name__
+        ))
         self.state = game_state
         if game_state.is_in_game():
             self.board.state = states.BoardStateLocked(self.board)
@@ -35,9 +54,13 @@ class Game(object):
             self.board.state = states.BoardStateModifiable(self.board)
         self.notify_observers()
 
+    def _set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
+        self.state.dev_card_state = dev_state
+        self.notify_observers()
+
     def start(self, players):
-        self._set_players(players)
-        self.set_state(states.GameStatePreGame(self))
+        self.set_players(players)
+        self.set_state(states.GameStatePreGamePlaceSettlement(self))
 
         terrain = list()
         numbers = list()
@@ -49,51 +72,51 @@ class Game(object):
             ports.append(port)
         self.record.record_initial_game_info(self.players, terrain, numbers, ports)
 
-    def _set_players(self, players):
-        self.players = list(players)
-        self._cur_player = self.players[0]
-        self.notify_observers()
-
     def end(self):
-        self.record.record_player_wins(self._cur_player)
-        self._reset()
-
-    def _reset(self):
-        self.players = list()
-        self.board.reset()
-        self.record = recording.GameRecord()
         self.set_state(states.GameStateNotInGame(self))
+        self.record.record_player_wins(self._cur_player)
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
 
+    def set_players(self, players):
+        self.players = list(players)
+        self._cur_player = self.players[0]
+        self.notify_observers()
+
     def roll(self, roll):
         self.record.record_player_roll(self._cur_player, roll)
         self.last_roll = roll
-        self.last_player_to_roll = self.get_cur_player()
-        self.set_state(states.GameStateNormalTurn(self))
+        self.last_player_to_roll = self._cur_player
+        self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def move_robber(self):
-        # TODO actually move the robber instead of pretending
         self.state.move_robber()
 
     def steal(self):
-        # TODO actually steal instead of pretending
         self.state.steal()
+
+    def buy_road(self, node_from, node_to):
+        #self.assert_legal_road(node_from, node_to)
+        self.record.record_player_buys_road(self._cur_player, node_from, node_to)
+        if self.state.is_in_pregame():
+            self.end_turn()
+
+    def buy_settlement(self, node):
+        #self.assert_legal_settlement(node)
+        self.record.record_player_buys_settlement(self._cur_player, node)
+        if self.state.is_in_pregame():
+            self.set_state(states.GameStatePreGamePlaceRoad(self))
 
     def end_turn(self):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self.state.next_player()
         self._cur_turn += 1
-        self.state.begin_turn()
-
-    def _next_player(self, snake=False):
-        if snake:
-            snake_order = self.players.copy()
-            snake_order.append(list(reversed(snake_order)))
-            return snake_order[self._cur_turn % len(snake_order)]
+        if self.state.is_in_pregame():
+            self.set_state(states.GameStatePreGamePlaceSettlement(self))
         else:
-            return self.players[self._cur_turn % len(self.players)]
+            self.set_state(states.GameStateBeginTurn(self))
+        self._set_dev_card_state(states.DevCardNotPlayedState(self))
 
 
 class Tile(object):
@@ -157,9 +180,14 @@ class Player(object):
         self.color = color.lower().replace(' ', '')
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return (self.color == other.color
                 and self.name == other.name
                 and self.seat == other.seat)
+
+    def __repr__(self):
+        return '{} ({})'.format(self.color, self.name)
 
 
 class Board(object):

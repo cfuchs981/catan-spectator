@@ -52,7 +52,7 @@ def get_record_with_random_board():
     return record
 
 
-def test_record_pregame():
+def test_record_intial_game_info():
     """
     Contract describing the game record "pregame"/file-header format
     """

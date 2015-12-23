@@ -1,4 +1,4 @@
-Record games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.
+Transcribe games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.
 
 This project introduces a machine-parsable, human-readable file format for describing a game of Catan.
 

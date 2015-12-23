@@ -1,5 +1,5 @@
-catan-game-recorder
-===================
+catan-spectator
+---------------
 
 Transcribe games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.
 

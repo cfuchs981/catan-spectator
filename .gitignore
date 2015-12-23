@@ -38,3 +38,4 @@ nosetests.xml
 venv
 catan-game-recorder.iml
 ignore
+catan-spectator.iml

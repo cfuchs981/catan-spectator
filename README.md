@@ -16,7 +16,7 @@ $ python3 main.py
 ```
 
 ### Demo
-![Demo](/doc/gifs/demo.gif)
+![Demo](/doc/gifs/demo2.gif)
 
 ### File Format
 

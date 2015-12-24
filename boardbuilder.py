@@ -17,16 +17,14 @@ def get_opts(opts):
               'terrain': 'empty', # random|empty|default
               'numbers': 'empty', # random|empty|default
               'ports': 'default', # random|empty|default
+              'pieces': None
               }
     _opts.update(opts)
     return _opts
 
 def build(opts=None):
     board = Board()
-    opts = get_opts(opts)
-    board.tiles = _generate_tiles(opts['terrain'], opts['numbers'])
-    board.ports = _generate_ports(opts['ports'])
-    board.state = states.BoardStateModifiable(board)
+    modify(board, opts)
     return board
 
 def reset(board, opts=None):
@@ -37,6 +35,7 @@ def modify(board, opts=None):
     board.tiles = _generate_tiles(opts['terrain'], opts['numbers'])
     board.ports = _generate_ports(opts['ports'])
     board.state = states.BoardStateModifiable(board)
+    board.pieces = opts['pieces'] or dict()
 
 def _generate_tiles(terrain_opts, numbers_opts):
     terrain = None

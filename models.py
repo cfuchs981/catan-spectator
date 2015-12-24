@@ -195,13 +195,19 @@ class Port(Enum):
     ore = 'ore2:1'
 
 
+class Piece(Enum):
+    settlement = 'settlement'
+    road = 'road'
+    city = 'city'
+    robber = 'robber'
+
+
 class Player(object):
     """class Player represents a single player on the game board.
     :param seat: integer, with 1 being top left, and increasing clockwise
     :param name: will be lowercased, spaces will be removed
     :param color: will be lowercased, spaces will be removed
     """
-
     def __init__(self, seat, name, color):
         if not (1 <= seat <= 4):
             raise Exception("Seat must be on [1,4]")
@@ -264,8 +270,24 @@ class Board(object):
             'ports': ports or 'default', # random|empty|default
         })
 
+    def can_place_piece(self, piece, coord):
+        if piece == Piece.city:
+            logging.warning('"Place city" not yet implemented')
+        else:
+            logging.debug('Can\'t place piece={} on coord={}'.format(
+                piece.value, hex(coord)
+            ))
+            return self.pieces.get(coord) is None
+
     def place_piece(self, piece, coord):
-        logging.warning('"Place piece" not implemented')
+        if not self.can_place_piece(piece, coord):
+            logging.critical('ILLEGAL: Attempted to place piece={} on coord={}'.format(
+                piece.value, hex(coord)
+            ))
+        logging.debug('Placed piece={} on coord={}'.format(
+            piece.value, hex(coord)
+        ))
+        self.pieces[coord] = piece
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)
@@ -279,7 +301,13 @@ class Board(object):
         coord_from = self._tile_id_to_coord[from_tile.tile_id]
         coord_to = self._tile_id_to_coord[to_tile.tile_id]
         offset = coord_to - coord_from
-        return self._tile_offset_map[offset]
+        direction = self._tile_offset_map[offset]
+        logging.debug('Tile direction: {}->{} is {}'.format(
+            from_tile.tile_id,
+            to_tile.tile_id,
+            direction
+        ))
+        return direction
 
     def adjacent_tiles(self, tile):
         coord = self.tile_coord(tile)

@@ -124,6 +124,20 @@ class Game(object):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
 
+    def play_monopoly(self, resource):
+        self.set_dev_card_state(states.DevCardPlayedState(self))
+        self.record.record_player_plays_dev_monopoly(self._cur_player, resource)
+
+    def play_road_builder(self, node_a1, node_a2, node_b1, node_b2):
+        self.set_dev_card_state(states.DevCardPlayedState(self))
+        self.record.record_player_plays_dev_road_builder(self._cur_player,
+                                                         node_a1, node_a2,
+                                                         node_b1, node_b2)
+
+    def play_victory_point(self):
+        self.set_dev_card_state(states.DevCardPlayedState(self))
+        self.record.record_player_plays_dev_victory_point(self._cur_player)
+
     def end_turn(self):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self.state.next_player()

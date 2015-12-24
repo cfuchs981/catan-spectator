@@ -447,13 +447,15 @@ class PlayDevCardFrame(tkinter.Frame):
         self.game.play_knight()
 
     def on_monopoly(self):
-        pass
+        resource = Terrain.brick # todo get resource from dropdown dialog
+        self.game.play_monopoly(resource)
 
     def on_road_builder(self):
-        pass
+        # todo UI for choosing where both roads go, pass them to Game
+        self.game.play_road_builder(None, None, None, None)
 
     def on_victory_point(self):
-        pass
+        self.game.play_victory_point()
 
 
 class EndTurnFrame(tkinter.Frame):

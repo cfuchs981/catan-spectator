@@ -252,8 +252,7 @@ class Board(object):
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
-        if graph:
-            self._graph = graph
+        self._graph = graph or self._graph
 
     def notify_observers(self):
         for obs in self.observers:
@@ -278,8 +277,10 @@ class Board(object):
         self.notify_observers()
 
     def direction_to_tile(self, from_tile, to_tile):
-        return next(e[2] for e in self._edges_for(from_tile)
-                    if e[1] == to_tile.tile_id)
+        coord_from = self._tile_id_to_coord(from_tile)
+        coord_to = self._tile_id_to_coord(to_tile)
+        offset = coord_to - coord_from
+        return self._tile_offset_map[offset]
 
     def adjacent_tiles(self, tile):
         coord = self.tile_coord(tile)
@@ -300,13 +301,6 @@ class Board(object):
                            coord+0x10, coord+0x21, coord+0x12]
         return adjacent_coords
 
-    def adjacent_edges(self, tile):
-        coord = self.tile_coord(tile)
-        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
-        adjacent_coords = [coord-0x10, coord-0x11, coord-0x01,
-                           coord+0x10, coord+0x11, coord+0x01]
-        return adjacent_coords
-
     def _legal_tile_coords(self):
         return set(self._tile_id_to_coord.values())
 
@@ -325,29 +319,16 @@ class Board(object):
             hex(coord)
         ))
 
-    def _edges_for(self, tile):
-        return [e         for e in self._graph if e[0] == tile.tile_id] + \
-               [invert(e) for e in self._graph if e[1] == tile.tile_id]
-
     _default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
-    _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),
-              (2,  3,  'SW'), (2,  13, 'E' ), (2,  14, 'SE'),
-              (3,  4,  'SE'), (3,  14, 'E' ),
-              (4,  5,  'SE'), (4,  14, 'NE'), (4,  15, 'E' ),
-              (5,  6,  'E' ), (5,  15, 'NE'),
-              (6,  7,  'E' ), (6,  15, 'NW'), (6,  16, 'NE'),
-              (7,  8,  'NE'), (7,  16, 'NW'),
-              (8,  9,  'NE'), (8,  16, 'W' ), (8,  17, 'NW'),
-              (9,  10, 'NW'), (9,  17, 'W' ),
-              (10, 11, 'NW'), (10, 17, 'SW'), (10, 18, 'W' ),
-              (11, 12, 'W' ), (11, 18, 'SW'),
-              (12, 13, 'SW'), (12, 18, 'SE'),
-              (13, 14, 'SW'), (13, 18, 'E' ), (13, 19, 'SE'),
-              (14, 15, 'SE'), (14, 19, 'E' ),
-              (15, 16, 'E' ), (15, 19, 'NE'),
-              (16, 17, 'NE'), (16, 19, 'NW'),
-              (17, 18, 'NW'), (17, 19, 'W' ),
-              (18, 19, 'SW')]
+    _tile_offset_map = {
+        -0x20: 'NW',
+        -0x22: 'W',
+        -0x02: 'SW',
+        +0x20: 'SE',
+        +0x22: 'E',
+        +0x02: 'NE'
+    }
+
     # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
     _tile_id_to_coord = {
         1: 0x37, 12: 0x59, 11: 0x7B,

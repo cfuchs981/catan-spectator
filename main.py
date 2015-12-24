@@ -58,7 +58,7 @@ class CatanGameRecorder(tkinter.Frame):
 def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
                         datefmt='%H:%M:%S',
-                        level=logging.INFO)
+                        level=logging.DEBUG)
     app = CatanGameRecorder()
     app.mainloop()
 

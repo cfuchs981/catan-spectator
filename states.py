@@ -218,52 +218,82 @@ class GameStateBeginTurn(GameStateInGame):
         return False
 
 
-class GameStateCanMoveRobber(GameStateInGame):
+class GameStateMoveRobber(GameStateInGame):
     """
     Defined as
     - AFTER the rolling of a 7, or the playing of a knight
-    - BEFORE the player has begun moving the robber
+    - BEFORE the player has moved the robber
     """
+    def can_end_turn(self):
+        return False
+
     def can_move_robber(self):
         return True
 
+    def can_buy_road(self):
+        return False
 
-class GameStateMovingRobber(GameStateInGame):
+    def can_buy_settlement(self):
+        return False
+
+    def can_buy_city(self):
+        return False
+
+    def can_buy_dev_card(self):
+        return False
+
+    def can_trade(self):
+        return False
+
+    def can_play_knight(self):
+        return False
+
+    def can_play_monopoly(self):
+        return False
+
+    def can_play_road_builder(self):
+        return False
+
+
+class GameStateSteal(GameStateInGame):
     """
     Defined as
-    - AFTER the player has begun moving the robber
-    - BEFORE the robber has been placed on a tile
-    """
-    def __init__(self, *args, **kwargs):
-        super(GameStateMovingRobber, self).__init__(*args, **kwargs)
-        self.is_moving_robber = True
-
-    def move_robber(self):
-        self.game.set_state(GameStateStealing(self.game))
-
-
-class GameStateMovedRobber(GameStateInGame):
-    """
-    Defined as
-    - AFTER the robber has been placed on a tile
-    - BEFORE the player has begun to steal
-    """
-    def can_steal(self):
-        return True
-
-
-class GameStateStealing(GameStateInGame):
-    """
-    Defined as
-    - AFTER the player has begun to steal
+    - AFTER the player has moved the robber
     - BEFORE the player has stolen a card
     """
     def __init__(self, *args, **kwargs):
-        super(GameStateStealing, self).__init__(*args, **kwargs)
+        super(GameStateSteal, self).__init__(*args, **kwargs)
         self.is_stealing = True
 
-    def steal(self):
-        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
+    def can_end_turn(self):
+        return False
+
+    def can_steal(self):
+        return True
+
+    def can_buy_road(self):
+        return False
+
+    def can_buy_settlement(self):
+        return False
+
+    def can_buy_city(self):
+        return False
+
+    def can_buy_dev_card(self):
+        return False
+
+    def can_trade(self):
+        return False
+
+    def can_play_knight(self):
+        return False
+
+    def can_play_monopoly(self):
+        return False
+
+    def can_play_road_builder(self):
+        return False
 
 
 class GameStateDuringTurnAfterRoll(GameStateInGame):

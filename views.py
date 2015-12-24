@@ -299,21 +299,14 @@ class RobberFrame(tkinter.Frame):
         self.set_states()
 
     def set_states(self):
-        if self.game.state.can_move_robber():
-            self.move_robber.configure(state=tkinter.NORMAL)
-        else:
-            self.move_robber.configure(state=tkinter.DISABLED)
-
-        if self.game.state.can_steal():
-            self.steal.configure(state=tkinter.NORMAL)
-        else:
-            self.steal.configure(state=tkinter.DISABLED)
+        self.move_robber.configure(state=can_do[self.game.state.can_move_robber()])
+        self.steal.configure(state=can_do[self.game.state.can_steal()])
 
     def on_move_robber(self):
-        self.game.move_robber()
+        self.game.move_robber(None)
 
     def on_steal(self):
-        self.game.steal()
+        self.game.steal(None)
 
 
 class BuildFrame(tkinter.Frame):

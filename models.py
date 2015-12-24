@@ -17,6 +17,7 @@ class Game(object):
         self.last_roll = None # set in #roll
         self.last_player_to_roll = None # set in #roll
         self._cur_turn = 0 # incremented in #end_turn
+        self.robber_tile = None # set in #move_robber
 
         self.board.observers.add(self)
 
@@ -88,13 +89,22 @@ class Game(object):
         self.record.record_player_roll(self._cur_player, roll)
         self.last_roll = roll
         self.last_player_to_roll = self._cur_player
+        if int(roll) == 7:
+            self.set_state(states.GameStateMoveRobber(self))
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
+
+    def move_robber(self, tile):
+        self.robber_tile = tile
+        self.set_state(states.GameStateSteal(self))
+
+    def steal(self, victim):
+        self.record.record_player_moves_robber_and_steals(
+            self.get_cur_player(),
+            self.robber_tile,
+            Player(1, "name", "color") # todo use real victim
+        )
         self.set_state(states.GameStateDuringTurnAfterRoll(self))
-
-    def move_robber(self):
-        self.state.move_robber()
-
-    def steal(self):
-        self.state.steal()
 
     def buy_road(self, node_from, node_to):
         #self.assert_legal_road(node_from, node_to)

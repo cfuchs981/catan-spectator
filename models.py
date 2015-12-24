@@ -234,7 +234,6 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-
     def __init__(self, tiles=None, ports=None, graph=None, center=1):
         """
         options is a dict names to boolean values.
@@ -260,12 +259,53 @@ class Board(object):
         self.ports = ports or self._generate_default_ports()
         self.state = states.BoardStateModifiable(self)
 
-    def direction(self, from_tile, to_tile):
+    def direction_to_tile(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)
                     if e[1] == to_tile.tile_id)
 
-    def neighbors_for(self, tile):
-        return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
+    def adjacent_tiles(self, tile):
+        coord = self.tile_coord(tile)
+        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
+        adjacent_coords = [coord-0x20, coord-0x22, coord-0x02,
+                           coord+0x20, coord+0x22, coord+0x02]
+        legal_coords = self._legal_tile_coords()
+        adjacent_coords = [coord for coord in adjacent_coords
+                           if coord in legal_coords]
+        adjacent_tiles = map(self._tile_id_from_coord, adjacent_coords)
+        logging.debug('tile={}, adjacent_tiles={}'.format(tile, adjacent_tiles))
+        return adjacent_tiles
+
+    def adjacent_nodes(self, tile):
+        coord = self.tile_coord(tile)
+        # clockwise from top. See Appendix A of JSettlers2 dissertation
+        adjacent_coords = [coord+0x01, coord-0x10, coord-0x01,
+                           coord+0x10, coord+0x21, coord+0x12]
+        return adjacent_coords
+
+    def adjacent_edges(self, tile):
+        coord = self.tile_coord(tile)
+        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
+        adjacent_coords = [coord-0x10, coord-0x11, coord-0x01,
+                           coord+0x10, coord+0x11, coord+0x01]
+        return adjacent_coords
+
+    def _legal_tile_coords(self):
+        return set(self._tile_id_to_coord.values())
+
+    def tile_coord(self, tile):
+        if tile.tile_id not in self._tile_id_to_coord:
+            raise Exception('Tile coord conversion failed, tile_id={} not found in map'.format(
+                tile.tile_id
+            ))
+        return self._tile_id_to_coord[tile.tile_id]
+
+    def _tile_id_from_coord(self, coord):
+        for i, c in self._tile_id_to_coord.items():
+            if c == coord:
+                return i
+        raise Exception('Tile id lookup failed, coord={} not found in map'.format(
+            hex(coord)
+        ))
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)
@@ -315,6 +355,15 @@ class Board(object):
               (16, 17, 'NE'), (16, 19, 'NW'),
               (17, 18, 'NW'), (17, 19, 'W' ),
               (18, 19, 'SW')]
+    # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
+    _tile_id_to_coord = {
+        1: 0x37, 12: 0x59, 11: 0x7B,
+        2: 0x35, 13: 0x57, 18: 0x79 , 10: 0x9B,
+        3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
+        4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
+        5: 0x73, 6: 0x95, 7: 0xB7
+    }
+
     _port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
                        (5, 'SW'), (6,  'SE'), (8,  'SE'),
                        (9, 'E' ), (10, 'NE'), (12, 'NE')]

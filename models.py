@@ -1,4 +1,5 @@
 import logging
+import boardbuilder
 import states
 import recording
 from enum import Enum
@@ -234,16 +235,20 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-    def __init__(self, tiles=None, ports=None, graph=None, center=1):
+    def __init__(self, terrain=None, ports=None, pieces=None, graph=None, center=1):
         """
-        options is a dict names to boolean values.
-        tiles and graph are for passing in a pre-defined set of tiles or a
-        different graph for testing purposes.
+        method Board creates a new board.
+        :param tiles:
+        :param ports:
+        :param graph:
+        :param center:
+        :return:
         """
         self.tiles = None
         self.ports = None
         self.state = None
-        self.reset(tiles=tiles, ports=ports)
+        self.pieces = None
+        self.reset(terrain=terrain, ports=ports, pieces=pieces)
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
@@ -254,10 +259,23 @@ class Board(object):
         for obs in self.observers:
             obs.notify(self)
 
-    def reset(self, tiles=None, ports=None):
-        self.tiles = tiles or self._generate_empty_tiles()
-        self.ports = ports or self._generate_default_ports()
-        self.state = states.BoardStateModifiable(self)
+    def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
+        boardbuilder.reset(self, opts={
+            'terrain': terrain or 'empty', # random|empty|default
+            'numbers': numbers or 'empty', # random|empty|default
+            'ports': ports or 'default', # random|empty|default
+        })
+
+    def place_piece(self, piece, coord):
+        logging.warning('"Place piece" not implemented')
+
+    def cycle_hex_type(self, tile_id):
+        self.state.cycle_hex_type(tile_id)
+        self.notify_observers()
+
+    def cycle_hex_number(self, tile_id):
+        self.state.cycle_hex_number(tile_id)
+        self.notify_observers()
 
     def direction_to_tile(self, from_tile, to_tile):
         return next(e[2] for e in self._edges_for(from_tile)
@@ -306,31 +324,6 @@ class Board(object):
         raise Exception('Tile id lookup failed, coord={} not found in map'.format(
             hex(coord)
         ))
-
-    def cycle_hex_type(self, tile_id):
-        self.state.cycle_hex_type(tile_id)
-        self.notify_observers()
-
-    def cycle_hex_number(self, tile_id):
-        self.state.cycle_hex_number(tile_id)
-        self.notify_observers()
-
-    def _generate_empty_tiles(self):
-        empty_terrain = ([Terrain.desert] * NUM_TILES)
-        empty_numbers = ([HexNumber.none] * NUM_TILES)
-        tile_data = list(zip(empty_terrain, empty_numbers))
-        return [Tile(i, t, n) for i, (t, n) in enumerate(tile_data, 1)]
-
-    def _generate_default_ports(self):
-        return [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
-
-    def _check_red_placement(self, tiles):
-        for i1, i2, _ in self._graph:
-            t1 = tiles[i1 - 1]
-            t2 = tiles[i2 - 1]
-            if all(t[1] in (6, 8) for t in [t1, t2]):
-                return False
-        return True
 
     def _edges_for(self, tile):
         return [e         for e in self._graph if e[0] == tile.tile_id] + \

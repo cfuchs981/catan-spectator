@@ -37,12 +37,6 @@ class GameStateInGame(GameState):
     Look at the comments separating the methods below for directions on
     what to override, implement, etc in subclasses.
     """
-    def __init__(self, *args, **kwargs):
-        super(GameStateInGame, self).__init__(*args, **kwargs)
-        self.dev_card_state = DevCardNotPlayedState(self)
-        self.is_moving_robber = False
-        self.is_stealing = False
-
     def next_player(self):
         """Compare to GameStatePreGame's implementation, which uses snake draft"""
         logging.warning('turn={}, players={}'.format(
@@ -101,13 +95,13 @@ class GameStateInGame(GameState):
         return self.has_rolled()
 
     def can_play_knight(self):
-        return self.dev_card_state.can_play_dev_card()
+        return self.game.dev_card_state.can_play_dev_card()
 
     def can_play_monopoly(self):
-        return self.has_rolled() and self.dev_card_state.can_play_dev_card()
+        return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
 
     def can_play_road_builder(self):
-        return self.has_rolled() and self.dev_card_state.can_play_dev_card()
+        return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
 
     def can_play_victory_point(self):
         return True
@@ -221,7 +215,7 @@ class GameStateBeginTurn(GameStateInGame):
 class GameStateMoveRobber(GameStateInGame):
     """
     Defined as
-    - AFTER the rolling of a 7, or the playing of a knight
+    - AFTER the rolling of a 7
     - BEFORE the player has moved the robber
     """
     def can_end_turn(self):
@@ -230,6 +224,13 @@ class GameStateMoveRobber(GameStateInGame):
     def can_move_robber(self):
         return True
 
+    def move_robber(self, tile):
+        self.game.robber_tile = tile
+        self.game.set_state(GameStateSteal(self.game))
+
+    def can_roll(self):
+        return False
+
     def can_buy_road(self):
         return False
 
@@ -253,6 +254,17 @@ class GameStateMoveRobber(GameStateInGame):
 
     def can_play_road_builder(self):
         return False
+
+
+class GameStateMoveRobberUsingKnight(GameStateMoveRobber):
+    """
+    Defined as
+    - AFTER the playing of a knight
+    - BEFORE the player has moved the robber
+    """
+    def move_robber(self, tile):
+        self.game.robber_tile = tile
+        self.game.set_state(GameStateStealUsingKnight(self.game))
 
 
 class GameStateSteal(GameStateInGame):
@@ -261,15 +273,22 @@ class GameStateSteal(GameStateInGame):
     - AFTER the player has moved the robber
     - BEFORE the player has stolen a card
     """
-    def __init__(self, *args, **kwargs):
-        super(GameStateSteal, self).__init__(*args, **kwargs)
-        self.is_stealing = True
-
     def can_end_turn(self):
         return False
 
     def can_steal(self):
         return True
+
+    def steal(self, victim):
+        self.game.record.record_player_moves_robber_and_steals(
+            self.game.get_cur_player(),
+            self.game.robber_tile,
+            victim
+        )
+        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
+
+    def can_roll(self):
+        return False
 
     def can_buy_road(self):
         return False
@@ -294,6 +313,21 @@ class GameStateSteal(GameStateInGame):
 
     def can_play_road_builder(self):
         return False
+
+
+class GameStateStealUsingKnight(GameStateSteal):
+    """
+    Defined as
+    - AFTER the player has moved the robber using the knight
+    - BEFORE the player has stolen a card using the knight
+    """
+    def steal(self, victim):
+        self.game.record.record_player_plays_dev_knight(
+            self.game.get_cur_player(),
+            self.game.robber_tile,
+            victim
+        )
+        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
 
 
 class GameStateDuringTurnAfterRoll(GameStateInGame):

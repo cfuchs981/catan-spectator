@@ -22,6 +22,7 @@ class Game(object):
         self.board.observers.add(self)
 
         self.set_state(states.GameStateNotInGame(self))
+        self.set_dev_card_state(states.DevCardNotPlayedState(self))
 
     def notify(self, observable):
         self.notify_observers()
@@ -55,8 +56,8 @@ class Game(object):
             self.board.state = states.BoardStateModifiable(self.board)
         self.notify_observers()
 
-    def _set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
-        self.state.dev_card_state = dev_state
+    def set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
+        self.dev_card_state = dev_state
         self.notify_observers()
 
     def start(self, players):
@@ -95,16 +96,11 @@ class Game(object):
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def move_robber(self, tile):
-        self.robber_tile = tile
-        self.set_state(states.GameStateSteal(self))
+        self.state.move_robber(tile)
 
     def steal(self, victim):
-        self.record.record_player_moves_robber_and_steals(
-            self.get_cur_player(),
-            self.robber_tile,
-            Player(1, "name", "color") # todo use real victim
-        )
-        self.set_state(states.GameStateDuringTurnAfterRoll(self))
+        victim = Player(1, "name", "color") # todo use real victim
+        self.state.steal(victim)
 
     def buy_road(self, node_from, node_to):
         #self.assert_legal_road(node_from, node_to)
@@ -118,15 +114,20 @@ class Game(object):
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))
 
+    def play_knight(self):
+        self.set_dev_card_state(states.DevCardPlayedState(self))
+        self.set_state(states.GameStateMoveRobberUsingKnight(self))
+
     def end_turn(self):
         self.record.record_player_ends_turn(self._cur_player)
         self._cur_player = self.state.next_player()
         self._cur_turn += 1
+
+        self.set_dev_card_state(states.DevCardNotPlayedState(self))
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
         else:
             self.set_state(states.GameStateBeginTurn(self))
-        self._set_dev_card_state(states.DevCardNotPlayedState(self))
 
 
 class Tile(object):

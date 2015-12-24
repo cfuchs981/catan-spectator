@@ -443,7 +443,7 @@ class PlayDevCardFrame(tkinter.Frame):
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
     def on_knight(self):
-        pass
+        self.game.play_knight()
 
     def on_monopoly(self):
         pass

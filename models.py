@@ -114,6 +114,12 @@ class Game(object):
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))
 
+    def buy_city(self, node):
+        self.record.record_player_buys_city(self._cur_player, node)
+
+    def buy_dev_card(self):
+        self.record.record_player_buys_dev_card(self._cur_player)
+
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))

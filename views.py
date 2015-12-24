@@ -349,10 +349,11 @@ class BuildFrame(tkinter.Frame):
         self.game.buy_settlement(node=None)
 
     def on_buy_city(self):
-        pass
+        # todo UI for placing the city
+        self.game.buy_city(node=None)
 
     def on_buy_dev_card(self):
-        pass
+        self.game.buy_dev_card()
 
 
 class TradeFrame(tkinter.Frame):

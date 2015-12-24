@@ -17,7 +17,6 @@ TODO
 - wins
 """
 
-
 def get_players():
     players = list()
     players.append(models.Player(seat=1, name='yurick', color='green'))

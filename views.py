@@ -1,3 +1,4 @@
+import logging
 import tkinter
 from tkinter import messagebox
 import math
@@ -56,6 +57,16 @@ class BoardFrame(tkinter.Frame):
         is at 0, 0.
         """
 
+        terrain_centers = self._draw_terrain(board)
+        self._draw_numbers(board, terrain_centers)
+        self._draw_ports(board, terrain_centers)
+        self._draw_pieces(board, terrain_centers)
+
+    def redraw(self):
+        self._board_canvas.delete(tkinter.ALL)
+        self.draw(self._board)
+
+    def _draw_terrain(self, board):
         centers = {}
         last = None
 
@@ -76,45 +87,65 @@ class BoardFrame(tkinter.Frame):
             centers[tile.tile_id] = (ref_center[0] + dx, ref_center[1] + dy)
             last = tile
 
+        centers = self._fixup_terrain_centers(centers)
+        for tile_id, (x, y) in centers.items():
+            tile = board.tiles[tile_id - 1]
+            self._draw_tile(x, y, tile.terrain, tile)
+            self._board_canvas.tag_bind(self._tile_tag(tile), '<ButtonPress-1>', func=self.tile_click)
+
+        return centers
+
+    def _draw_numbers(self, board, terrain_centers):
+        for tile_id, (x, y) in terrain_centers.items():
+            tile = board.tiles[tile_id - 1]
+            self._draw_number(x, y, tile.number, tile)
+        logging.debug('"Draw numbers" view method not yet implemented')
+
+    def _draw_ports(self, board, terrain_centers):
         port_centers = []
         for tile_id, dirn, value in board.ports:
-            ref_center = centers[tile_id]
+            ref_center = terrain_centers[tile_id]
             theta = self._angle_order.index(dirn) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
             port_centers.append((ref_center[0] + dx, ref_center[1] + dy, theta))
 
-        offx, offy = self._board_center
-
-        # Temporary hack to center the board. Not generic to different board types.
-        radius = 4 * self._center_to_edge + 2 * self._tile_padding
-        offx += radius * math.cos(math.radians(240))
-        offy += radius * math.sin(math.radians(240))
-
-        centers = dict((tile_id, (x + offx, y + offy)) for tile_id, (x, y) in centers.items())
-        for tile_id, (x, y) in centers.items():
-            tile = board.tiles[tile_id - 1]
-            self._draw_tile(x, y, tile.terrain, tile.number, tile)
-            self._board_canvas.tag_bind(self._tile_tag(tile), '<ButtonPress-1>', func=self.tile_click)
-
-        port_centers = [(x + offx, y + offy, t + 180) for x, y, t in port_centers]
+        port_centers = self._fixup_port_centers(port_centers)
         for (x, y, t), port in zip(port_centers, [v for _, _, v in board.ports]):
             self._draw_port(x, y, t, port)
 
-    def redraw(self):
-        self._board_canvas.delete(tkinter.ALL)
-        self.draw(self._board)
+    def _draw_pieces(self, board, terrain_centers):
+        logging.debug('"Draw pieces" view method not yet implemented')
+
+    def _fixup_offset(self):
+        offx, offy = self._board_center
+        radius = 4 * self._center_to_edge + 2 * self._tile_padding
+        offx += radius * math.cos(math.radians(240))
+        offy += radius * math.sin(math.radians(240))
+        return (offx, offy)
+
+    def _fixup_terrain_centers(self, centers):
+        offx, offy = self._fixup_offset()
+        return dict((tile_id, (x + offx, y + offy)) for tile_id, (x, y) in centers.items())
+
+    def _fixup_port_centers(self, centers):
+        offx, offy = self._fixup_offset()
+        return [(x + offx, y + offy, t + 180) for x, y, t in centers]
+
+    def _draw_tile(self, x, y, terrain: Terrain, tile):
+        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
 
     def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
         points = self._hex_points(radius, offset, rotate)
         a = self._board_canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill, tags=tags)
 
-    def _draw_tile(self, x, y, terrain, number, tile):
-        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
-        if number.value:
-            color = 'red' if number.value in (6, 8) else 'black'
-            self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color)
+    def _draw_number(self, x, y, number: HexNumber, tile):
+        if number is HexNumber.none:
+            return
+        logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
+        color = 'red' if number.value in (6, 8) else 'black'
+        self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 
     def _draw_port(self, x, y, angle, port):
         """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction

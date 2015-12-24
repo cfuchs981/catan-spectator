@@ -68,7 +68,7 @@ class BoardFrame(tkinter.Frame):
             # Calculate the center of this tile as an offset from the center of
             # the neighboring tile in the given direction.
             ref_center = centers[last.tile_id]
-            direction = board.direction(last, tile)
+            direction = board.direction_to_tile(last, tile)
             theta = self._angle_order.index(direction) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))

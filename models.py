@@ -234,38 +234,38 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-
-    def __init__(self, tiles=None, ports=None, graph=None, center=1):
+    def __init__(self, terrain=None, ports=None, pieces=None, center=1):
         """
-        options is a dict names to boolean values.
-        tiles and graph are for passing in a pre-defined set of tiles or a
-        different graph for testing purposes.
+        method Board creates a new board.
+        :param tiles:
+        :param ports:
+        :param graph:
+        :param center:
+        :return:
         """
         self.tiles = None
         self.ports = None
         self.state = None
-        self.reset(tiles=tiles, ports=ports)
+        self.pieces = None
+        self.reset(terrain=terrain, ports=ports, pieces=pieces)
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
-        if graph:
-            self._graph = graph
 
     def notify_observers(self):
         for obs in self.observers:
             obs.notify(self)
 
-    def reset(self, tiles=None, ports=None):
-        self.tiles = tiles or self._generate_empty_tiles()
-        self.ports = ports or self._generate_default_ports()
-        self.state = states.BoardStateModifiable(self)
+    def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
+        import boardbuilder
+        boardbuilder.reset(self, opts={
+            'terrain': terrain or 'empty', # random|empty|default
+            'numbers': numbers or 'empty', # random|empty|default
+            'ports': ports or 'default', # random|empty|default
+        })
 
-    def direction(self, from_tile, to_tile):
-        return next(e[2] for e in self._edges_for(from_tile)
-                    if e[1] == to_tile.tile_id)
-
-    def neighbors_for(self, tile):
-        return [self.tiles[e[1] - 1] for e in self._edges_for(tile)]
+    def place_piece(self, piece, coord):
+        logging.warning('"Place piece" not implemented')
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)
@@ -275,55 +275,63 @@ class Board(object):
         self.state.cycle_hex_number(tile_id)
         self.notify_observers()
 
-    def _generate_empty_tiles(self):
-        empty_terrain = ([Terrain.desert] * NUM_TILES)
-        empty_numbers = ([HexNumber.none] * NUM_TILES)
-        tile_data = list(zip(empty_terrain, empty_numbers))
-        return [Tile(i, t, n) for i, (t, n) in enumerate(tile_data, 1)]
+    def direction_to_tile(self, from_tile, to_tile):
+        coord_from = self._tile_id_to_coord[from_tile.tile_id]
+        coord_to = self._tile_id_to_coord[to_tile.tile_id]
+        offset = coord_to - coord_from
+        return self._tile_offset_map[offset]
 
-    def _generate_default_ports(self):
-        return [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
+    def adjacent_tiles(self, tile):
+        coord = self.tile_coord(tile)
+        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
+        adjacent_coords = [coord-0x20, coord-0x22, coord-0x02,
+                           coord+0x20, coord+0x22, coord+0x02]
+        legal_coords = self._legal_tile_coords()
+        adjacent_coords = [coord for coord in adjacent_coords
+                           if coord in legal_coords]
+        adjacent_tiles = map(self._tile_id_from_coord, adjacent_coords)
+        logging.debug('tile={}, adjacent_tiles={}'.format(tile, adjacent_tiles))
+        return adjacent_tiles
 
-    def _check_red_placement(self, tiles):
-        for i1, i2, _ in self._graph:
-            t1 = tiles[i1 - 1]
-            t2 = tiles[i2 - 1]
-            if all(t[1] in (6, 8) for t in [t1, t2]):
-                return False
-        return True
+    def adjacent_nodes(self, tile):
+        coord = self.tile_coord(tile)
+        # clockwise from top. See Appendix A of JSettlers2 dissertation
+        adjacent_coords = [coord+0x01, coord-0x10, coord-0x01,
+                           coord+0x10, coord+0x21, coord+0x12]
+        return adjacent_coords
 
-    def _edges_for(self, tile):
-        return [e         for e in self._graph if e[0] == tile.tile_id] + \
-               [invert(e) for e in self._graph if e[1] == tile.tile_id]
+    def _legal_tile_coords(self):
+        return set(self._tile_id_to_coord.values())
 
-    _default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
-    _graph = [(1,  2,  'SW'), (1,  12, 'E' ), (1,  13, 'SE'),
-              (2,  3,  'SW'), (2,  13, 'E' ), (2,  14, 'SE'),
-              (3,  4,  'SE'), (3,  14, 'E' ),
-              (4,  5,  'SE'), (4,  14, 'NE'), (4,  15, 'E' ),
-              (5,  6,  'E' ), (5,  15, 'NE'),
-              (6,  7,  'E' ), (6,  15, 'NW'), (6,  16, 'NE'),
-              (7,  8,  'NE'), (7,  16, 'NW'),
-              (8,  9,  'NE'), (8,  16, 'W' ), (8,  17, 'NW'),
-              (9,  10, 'NW'), (9,  17, 'W' ),
-              (10, 11, 'NW'), (10, 17, 'SW'), (10, 18, 'W' ),
-              (11, 12, 'W' ), (11, 18, 'SW'),
-              (12, 13, 'SW'), (12, 18, 'SE'),
-              (13, 14, 'SW'), (13, 18, 'E' ), (13, 19, 'SE'),
-              (14, 15, 'SE'), (14, 19, 'E' ),
-              (15, 16, 'E' ), (15, 19, 'NE'),
-              (16, 17, 'NE'), (16, 19, 'NW'),
-              (17, 18, 'NW'), (17, 19, 'W' ),
-              (18, 19, 'SW')]
-    _port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
-                       (5, 'SW'), (6,  'SE'), (8,  'SE'),
-                       (9, 'E' ), (10, 'NE'), (12, 'NE')]
+    def tile_coord(self, tile):
+        if tile.tile_id not in self._tile_id_to_coord:
+            raise Exception('Tile coord conversion failed, tile_id={} not found in map'.format(
+                tile.tile_id
+            ))
+        return self._tile_id_to_coord[tile.tile_id]
 
-_direction_pairs = {
-    'E': 'W', 'SW': 'NE', 'SE': 'NW',
-    'W': 'E', 'NE': 'SW', 'NW': 'SE'}
+    def _tile_id_from_coord(self, coord):
+        for i, c in self._tile_id_to_coord.items():
+            if c == coord:
+                return i
+        raise Exception('Tile id lookup failed, coord={} not found in map'.format(
+            hex(coord)
+        ))
 
+    _tile_offset_map = {
+        -0x20: 'NW',
+        -0x22: 'W',
+        -0x02: 'SW',
+        +0x20: 'SE',
+        +0x22: 'E',
+        +0x02: 'NE'
+    }
 
-def invert(edge):
-    return (edge[1], edge[0], _direction_pairs[edge[2]])
-
+    # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
+    _tile_id_to_coord = {
+        1: 0x37, 12: 0x59, 11: 0x7B,
+        2: 0x35, 13: 0x57, 18: 0x79 , 10: 0x9B,
+        3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
+        4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
+        5: 0x73, 6: 0x95, 7: 0xB7
+    }

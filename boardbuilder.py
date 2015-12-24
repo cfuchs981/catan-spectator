@@ -8,8 +8,9 @@ Use #build to build a new board with the passed options.
 Use #modify to modify an existing board instead of building a new one.
 This will reset the board. #reset is an alias.
 """
+import logging
 import states
-from models import Board, Terrain, HexNumber, Tile, NUM_TILES
+from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES
 
 def get_opts(opts):
     _opts = { # defaults
@@ -56,12 +57,13 @@ def _generate_tiles(terrain_opts, numbers_opts):
 
 def _generate_ports(port_opts):
     if port_opts == 'default':
-        return [(tile, dir, port) for (tile, dir), port in zip(self._port_locations, list(self._default_ports))]
+        return [(tile, dir, port) for (tile, dir), port in zip(_port_locations, list(_default_ports))]
+
+_default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
 
 def _check_red_placement(tiles):
-    for i1, i2, _ in _graph:
-        t1 = tiles[i1 - 1]
-        t2 = tiles[i2 - 1]
-        if all(t[1] in (6, 8) for t in [t1, t2]):
-            return False
-    return True
+    logging.warning('"Check red placement" not yet implemented')
+
+_port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
+                   (5, 'SW'), (6,  'SE'), (8,  'SE'),
+                   (9, 'E' ), (10, 'NE'), (12, 'NE')]

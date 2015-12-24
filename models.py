@@ -1,5 +1,4 @@
 import logging
-import boardbuilder
 import states
 import recording
 from enum import Enum
@@ -235,7 +234,7 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-    def __init__(self, terrain=None, ports=None, pieces=None, graph=None, center=1):
+    def __init__(self, terrain=None, ports=None, pieces=None, center=1):
         """
         method Board creates a new board.
         :param tiles:
@@ -252,13 +251,13 @@ class Board(object):
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
-        self._graph = graph or self._graph
 
     def notify_observers(self):
         for obs in self.observers:
             obs.notify(self)
 
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
+        import boardbuilder
         boardbuilder.reset(self, opts={
             'terrain': terrain or 'empty', # random|empty|default
             'numbers': numbers or 'empty', # random|empty|default
@@ -277,8 +276,8 @@ class Board(object):
         self.notify_observers()
 
     def direction_to_tile(self, from_tile, to_tile):
-        coord_from = self._tile_id_to_coord(from_tile)
-        coord_to = self._tile_id_to_coord(to_tile)
+        coord_from = self._tile_id_to_coord[from_tile.tile_id]
+        coord_to = self._tile_id_to_coord[to_tile.tile_id]
         offset = coord_to - coord_from
         return self._tile_offset_map[offset]
 
@@ -319,7 +318,6 @@ class Board(object):
             hex(coord)
         ))
 
-    _default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
     _tile_offset_map = {
         -0x20: 'NW',
         -0x22: 'W',
@@ -337,16 +335,3 @@ class Board(object):
         4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
         5: 0x73, 6: 0x95, 7: 0xB7
     }
-
-    _port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
-                       (5, 'SW'), (6,  'SE'), (8,  'SE'),
-                       (9, 'E' ), (10, 'NE'), (12, 'NE')]
-
-_direction_pairs = {
-    'E': 'W', 'SW': 'NE', 'SE': 'NW',
-    'W': 'E', 'NE': 'SW', 'NW': 'SE'}
-
-
-def invert(edge):
-    return (edge[1], edge[0], _direction_pairs[edge[2]])
-

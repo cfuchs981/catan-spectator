@@ -151,6 +151,31 @@ class Game(object):
             self.set_state(states.GameStateBeginTurn(self))
 
 
+class Player(object):
+    """class Player represents a single player on the game board.
+    :param seat: integer, with 1 being top left, and increasing clockwise
+    :param name: will be lowercased, spaces will be removed
+    :param color: will be lowercased, spaces will be removed
+    """
+    def __init__(self, seat, name, color):
+        if not (1 <= seat <= 4):
+            raise Exception("Seat must be on [1,4]")
+        self.seat = seat
+
+        self.name = name.lower().replace(' ', '')
+        self.color = color.lower().replace(' ', '')
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (self.color == other.color
+                and self.name == other.name
+                and self.seat == other.seat)
+
+    def __repr__(self):
+        return '{} ({})'.format(self.color, self.name)
+
+
 class Tile(object):
     """
     Tiles are arranged in counter-clockwise order, spiralling inwards.
@@ -196,36 +221,21 @@ class Port(Enum):
     ore = 'ore2:1'
 
 
-class Piece(Enum):
+class PieceType(Enum):
     settlement = 'settlement'
     road = 'road'
     city = 'city'
     robber = 'robber'
 
 
-class Player(object):
-    """class Player represents a single player on the game board.
-    :param seat: integer, with 1 being top left, and increasing clockwise
-    :param name: will be lowercased, spaces will be removed
-    :param color: will be lowercased, spaces will be removed
+class Piece(object):
+    """class Piece represents a single game piece on the board.
+
+    Allowed types are described in enum PieceType
     """
-    def __init__(self, seat, name, color):
-        if not (1 <= seat <= 4):
-            raise Exception("Seat must be on [1,4]")
-        self.seat = seat
-
-        self.name = name.lower().replace(' ', '')
-        self.color = color.lower().replace(' ', '')
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (self.color == other.color
-                and self.name == other.name
-                and self.seat == other.seat)
-
-    def __repr__(self):
-        return '{} ({})'.format(self.color, self.name)
+    def __init__(self, type: PieceType, owner: Player):
+        self.type = type
+        self.owner = owner
 
 
 class Board(object):
@@ -241,7 +251,7 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-    def __init__(self, terrain=None, ports=None, pieces=None, center=1):
+    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, center=1):
         """
         method Board creates a new board.
         :param tiles:
@@ -254,7 +264,7 @@ class Board(object):
         self.ports = None
         self.state = None
         self.pieces = None
-        self.reset(terrain=terrain, ports=ports, pieces=pieces)
+        self.reset(terrain=terrain, numbers=numbers, ports=ports, pieces=pieces)
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
@@ -273,7 +283,7 @@ class Board(object):
         })
 
     def can_place_piece(self, piece, coord):
-        if piece == Piece.city:
+        if piece.type == PieceType.city:
             logging.warning('"Place city" not yet implemented')
         else:
             logging.debug('Can\'t place piece={} on coord={}'.format(

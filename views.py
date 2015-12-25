@@ -5,8 +5,9 @@ import math
 import itertools
 import collections
 import functools
+import hexgrid
 
-from models import Terrain, Port, Player, HexNumber, Piece
+from models import Terrain, Port, Player, HexNumber, Piece, PieceType
 
 can_do = {
     True: tkinter.NORMAL,
@@ -79,8 +80,8 @@ class BoardFrame(tkinter.Frame):
             # Calculate the center of this tile as an offset from the center of
             # the neighboring tile in the given direction.
             ref_center = centers[last.tile_id]
-            direction = board.direction_to_tile(last, tile)
-            theta = self._angle_order.index(direction) * 60
+            direction = hexgrid.direction_to_tile(last, tile)
+            theta = self._tile_angle_order.index(direction) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
@@ -106,7 +107,7 @@ class BoardFrame(tkinter.Frame):
         port_centers = []
         for tile_id, dirn, port in board.ports:
             tile_x, tile_y = terrain_centers[tile_id]
-            theta = self._angle_order.index(dirn) * 60
+            theta = self._tile_angle_order.index(dirn) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
@@ -119,15 +120,23 @@ class BoardFrame(tkinter.Frame):
             self._draw_port(x, y, angle, port)
 
     def _draw_pieces(self, board, terrain_centers):
-        # todo convert hex coords to x,y coords
         for coord, piece in board.pieces.items():
             x, y = self._get_piece_center(coord, piece, terrain_centers)
-            if piece == Piece.settlement:
-                self._board_canvas.create_rectangle()
-        logging.debug('"Draw pieces" view method not yet implemented')
+            if piece.type == PieceType.settlement:
+                self._board_canvas.create_rectangle(x-10, y-10, x+10, y+10, outline=piece.owner.color)
+            elif piece.type == PieceType.city:
+                self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20, outline=piece.owner.color)
 
-    def _get_piece_center(self, coord, piece, terrain_centers):
-        self.board._tile_id_from_coord(self.board._)
+    def _get_piece_center(self, piece_coord, piece, terrain_centers):
+        tile_ids = terrain_centers.keys()
+        tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
+        tile_coord = hexgrid.tile_id_to_coord(tile_id)
+        direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
+        angle = 30 + 60*self._node_angle_order.index(direction)
+        terrain_x, terrain_y = terrain_centers[tile_id]
+        dx = math.cos(math.radians(angle)) * self._tile_radius
+        dy = math.sin(math.radians(angle)) * self._tile_radius
+        return terrain_x + dx, terrain_y + dy
 
     def _fixup_offset(self):
         offx, offy = self._board_center
@@ -186,7 +195,8 @@ class BoardFrame(tkinter.Frame):
     _tile_radius  = 50
     _tile_padding = 3
     _board_center = (300, 300)
-    _angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE')
+    _tile_angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
+    _node_angle_order  = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {
         Terrain.ore: 'gray94',

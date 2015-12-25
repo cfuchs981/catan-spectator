@@ -1,9 +1,9 @@
 import logging
 
-def direction_to_tile(self, from_tile, to_tile):
+def direction_to_tile(from_tile, to_tile):
     coord_from = tile_id_to_coord(from_tile.tile_id)
     coord_to = tile_id_to_coord(to_tile.tile_id)
-    direction = tile_offset_to_direction(coord_to - coord_from)
+    direction = tile_tile_offset_to_direction(coord_to - coord_from)
     # logging.debug('Tile direction: {}->{} is {}'.format(
     #     from_tile.tile_id,
     #     to_tile.tile_id,
@@ -11,11 +11,25 @@ def direction_to_tile(self, from_tile, to_tile):
     # ))
     return direction
 
-def tile_offset_to_direction(offset):
+def tile_tile_offset_to_direction(offset):
     try:
-        return _tile_offset_to_direction[offset]
+        return _tile_tile_offsets[offset]
     except KeyError:
-        logging.critical('Attempted getting direction of non-existent tile offset={:x}'.format(offset))
+        logging.critical('Attempted getting direction of non-existent tile-tile offset={:x}'.format(offset))
+        return 'ZZ'
+
+def tile_node_offset_to_direction(offset):
+    try:
+        return _tile_node_offsets[offset]
+    except KeyError:
+        logging.critical('Attempted getting direction of non-existent tile-node offset={:x}'.format(offset))
+        return 'ZZ'
+
+def tile_edge_offset_to_direction(offset):
+    try:
+        return _tile_edge_offsets[offset]
+    except KeyError:
+        logging.critical('Attempted getting direction of non-existent tile-edge offset={:x}'.format(offset))
         return 'ZZ'
 
 def tile_id_to_coord(tile_id):
@@ -31,19 +45,44 @@ def tile_id_from_coord(coord):
             return i
     raise Exception('Tile id lookup failed, coord={} not found in map'.format(hex(coord)))
 
+def nearest_tile_to_node(tile_ids, node_coord):
+    """Takes a list of tile ids and a node coordinate.
+    Returns the id of a tile which is touching the node"""
+    for tile_id in tile_ids:
+        if node_coord - tile_id_to_coord(tile_id) in _tile_node_offsets.keys():
+            return tile_id
+
 def legal_tile_ids():
     return set(_tile_id_to_coord.keys())
 
 def legal_tile_coords():
     return set(_tile_id_to_coord.values())
 
-_tile_offset_to_direction = {
+_tile_tile_offsets = {
     -0x20: 'NW',
     -0x22: 'W',
     -0x02: 'SW',
     +0x20: 'SE',
     +0x22: 'E',
-    +0x02: 'NE'
+    +0x02: 'NE',
+}
+
+_tile_node_offsets = {
+    +0x01: 'N',
+    -0x10: 'NW',
+    -0x01: 'SW',
+    +0x10: 'S',
+    +0x21: 'SE',
+    +0x12: 'NE',
+}
+
+_tile_edge_offsets = {
+    -0x10: 'NW',
+    -0x11: 'W',
+    -0x01: 'SW',
+    +0x10: 'SE',
+    +0x11: 'E',
+    +0x01: 'NE',
 }
 
 _tile_id_to_coord = {

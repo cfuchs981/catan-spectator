@@ -54,10 +54,9 @@ See `recording.GameRecord` (in `recording.py`) for all available actions, along 
 
 ### Attribution
 
-Originally based off of [fruitnuke/catan](https://github.com/fruitnuke/catan), a catan board generator
+This codebase was originally [fruitnuke/catan](https://github.com/fruitnuke/catan), a catan board generator
 
-Uses hexagonal grid system based off of [jdmonin/JSettlers2](https://github.com/jdmonin/JSettlers2), a catan implementation used for research
-
+Hexagonal grid system based off of [jdmonin/JSettlers2](https://github.com/jdmonin/JSettlers2), a catan implementation used for research
 
 ### License
 

@@ -112,8 +112,8 @@ class BoardFrame(tkinter.Frame):
             port_centers.append((ref_center[0] + dx, ref_center[1] + dy, theta))
 
         port_centers = self._fixup_port_centers(port_centers)
-        for (x, y, t), port in zip(port_centers, [v for _, _, v in board.ports]):
-            self._draw_port(x, y, t, port)
+        for (x, y, angle), port in zip(port_centers, [port for _, _, port in board.ports]):
+            self._draw_port(x, y, angle, port)
 
     def _draw_pieces(self, board, terrain_centers):
         logging.debug('"Draw pieces" view method not yet implemented')
@@ -131,7 +131,7 @@ class BoardFrame(tkinter.Frame):
 
     def _fixup_port_centers(self, centers):
         offx, offy = self._fixup_offset()
-        return [(x + offx, y + offy, t + 180) for x, y, t in centers]
+        return [(x + offx, y + offy, angle + 180) for x, y, angle in centers]
 
     def _draw_tile(self, x, y, terrain: Terrain, tile):
         self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
@@ -174,7 +174,7 @@ class BoardFrame(tkinter.Frame):
         return int(tag[len('tile_'):])
 
     _tile_radius  = 50
-    _tile_padding = 3
+    _tile_padding = 1
     _board_center = (300, 300)
     _angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE')
     _hex_font     = (('Helvetica'), 18)

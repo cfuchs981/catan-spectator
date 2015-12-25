@@ -58,11 +58,11 @@ def _generate_ports(port_opts):
     if port_opts == 'default':
         return [(tile, dir, port) for (tile, dir), port in zip(_port_locations, list(_default_ports))]
 
-_default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
-
 def _check_red_placement(tiles):
     logging.warning('"Check red placement" not yet implemented')
 
 _port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
                    (5, 'SW'), (6,  'SE'), (8,  'SE'),
                    (9, 'E' ), (10, 'NE'), (12, 'NE')]
+
+_default_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]

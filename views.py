@@ -123,9 +123,19 @@ class BoardFrame(tkinter.Frame):
         for coord, piece in board.pieces.items():
             x, y = self._get_piece_center(coord, piece, terrain_centers)
             if piece.type == PieceType.settlement:
-                self._board_canvas.create_rectangle(x-10, y-10, x+10, y+10, outline=piece.owner.color)
+                self._draw_settlement(x, y, piece)
             elif piece.type == PieceType.city:
-                self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20, outline=piece.owner.color)
+                self._draw_city(x, y, piece)
+
+    def _draw_settlement(self, x, y, piece):
+        self._board_canvas.create_rectangle(x-10, y-10, x+10, y+10,
+                                            outline='white',
+                                            activefill=piece.owner.color)
+
+    def _draw_city(self, x, y, piece):
+        self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
+                                            outline=piece.owner.color,
+                                            activefill=piece.owner.color)
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         tile_ids = terrain_centers.keys()

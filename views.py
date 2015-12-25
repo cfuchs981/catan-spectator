@@ -67,9 +67,9 @@ class BoardFrame(tkinter.Frame):
         self.draw(self._board)
 
     def _draw_terrain(self, board):
+        logging.debug('Drawing terrain (resource tiles)')
         centers = {}
         last = None
-
         for tile in board.tiles:
             if not last:
                 centers[tile.tile_id] = (0, 0)
@@ -93,26 +93,29 @@ class BoardFrame(tkinter.Frame):
             self._draw_tile(x, y, tile.terrain, tile)
             self._board_canvas.tag_bind(self._tile_tag(tile), '<ButtonPress-1>', func=self.tile_click)
 
-        return centers
+        return dict(centers)
 
     def _draw_numbers(self, board, terrain_centers):
+        logging.debug('Drawing numbers')
         for tile_id, (x, y) in terrain_centers.items():
             tile = board.tiles[tile_id - 1]
             self._draw_number(x, y, tile.number, tile)
-        logging.debug('"Draw numbers" view method not yet implemented')
 
     def _draw_ports(self, board, terrain_centers):
+        logging.debug('Drawing ports')
         port_centers = []
-        for tile_id, dirn, value in board.ports:
-            ref_center = terrain_centers[tile_id]
+        for tile_id, dirn, port in board.ports:
+            tile_x, tile_y = terrain_centers[tile_id]
             theta = self._angle_order.index(dirn) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
-            port_centers.append((ref_center[0] + dx, ref_center[1] + dy, theta))
+            logging.debug('tile_id={}, port={}, x+dx={}+{}, y+dy={}+{}'.format(tile_id, port, tile_x, dx, tile_y, dy))
+            port_centers.append((tile_x + dx, tile_y + dy, theta))
 
         port_centers = self._fixup_port_centers(port_centers)
         for (x, y, angle), port in zip(port_centers, [port for _, _, port in board.ports]):
+            logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
             self._draw_port(x, y, angle, port)
 
     def _draw_pieces(self, board, terrain_centers):
@@ -129,9 +132,8 @@ class BoardFrame(tkinter.Frame):
         offx, offy = self._fixup_offset()
         return dict((tile_id, (x + offx, y + offy)) for tile_id, (x, y) in centers.items())
 
-    def _fixup_port_centers(self, centers):
-        offx, offy = self._fixup_offset()
-        return [(x + offx, y + offy, angle + 180) for x, y, angle in centers]
+    def _fixup_port_centers(self, port_centers):
+        return [(x, y, angle + 180) for x, y, angle in port_centers]
 
     def _draw_tile(self, x, y, terrain: Terrain, tile):
         self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
@@ -174,7 +176,7 @@ class BoardFrame(tkinter.Frame):
         return int(tag[len('tile_'):])
 
     _tile_radius  = 50
-    _tile_padding = 1
+    _tile_padding = 3
     _board_center = (300, 300)
     _angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE')
     _hex_font     = (('Helvetica'), 18)

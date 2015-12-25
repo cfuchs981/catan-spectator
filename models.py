@@ -302,11 +302,11 @@ class Board(object):
         coord_to = self._tile_id_to_coord[to_tile.tile_id]
         offset = coord_to - coord_from
         direction = self._tile_offset_map[offset]
-        logging.debug('Tile direction: {}->{} is {}'.format(
-            from_tile.tile_id,
-            to_tile.tile_id,
-            direction
-        ))
+        # logging.debug('Tile direction: {}->{} is {}'.format(
+        #     from_tile.tile_id,
+        #     to_tile.tile_id,
+        #     direction
+        # ))
         return direction
 
     def adjacent_tiles(self, tile):

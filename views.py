@@ -6,7 +6,7 @@ import itertools
 import collections
 import functools
 
-from models import Terrain, Port, Player, HexNumber
+from models import Terrain, Port, Player, HexNumber, Piece
 
 can_do = {
     True: tkinter.NORMAL,
@@ -119,7 +119,15 @@ class BoardFrame(tkinter.Frame):
             self._draw_port(x, y, angle, port)
 
     def _draw_pieces(self, board, terrain_centers):
+        # todo convert hex coords to x,y coords
+        for coord, piece in board.pieces.items():
+            x, y = self._get_piece_center(coord, piece, terrain_centers)
+            if piece == Piece.settlement:
+                self._board_canvas.create_rectangle()
         logging.debug('"Draw pieces" view method not yet implemented')
+
+    def _get_piece_center(self, coord, piece, terrain_centers):
+        self.board._tile_id_from_coord(self.board._)
 
     def _fixup_offset(self):
         offx, offy = self._board_center

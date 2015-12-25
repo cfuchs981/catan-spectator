@@ -1,4 +1,5 @@
 import logging
+import hexgrid
 import states
 import recording
 from enum import Enum
@@ -268,6 +269,7 @@ class Board(object):
             'terrain': terrain or 'empty', # random|empty|default
             'numbers': numbers or 'empty', # random|empty|default
             'ports': ports or 'default', # random|empty|default
+            'pieces': pieces or 'empty', # empty|debug
         })
 
     def can_place_piece(self, piece, coord):
@@ -297,69 +299,22 @@ class Board(object):
         self.state.cycle_hex_number(tile_id)
         self.notify_observers()
 
-    def direction_to_tile(self, from_tile, to_tile):
-        coord_from = self._tile_id_to_coord[from_tile.tile_id]
-        coord_to = self._tile_id_to_coord[to_tile.tile_id]
-        offset = coord_to - coord_from
-        direction = self._tile_offset_map[offset]
-        # logging.debug('Tile direction: {}->{} is {}'.format(
-        #     from_tile.tile_id,
-        #     to_tile.tile_id,
-        #     direction
-        # ))
-        return direction
-
-    def adjacent_tiles(self, tile):
-        coord = self.tile_coord(tile)
+    def adjacent_tiles(self, tile_id):
+        coord = hexgrid.tile_id_to_coord(tile_id)
         # clockwise from top-left. See Appendix A of JSettlers2 dissertation
         adjacent_coords = [coord-0x20, coord-0x22, coord-0x02,
                            coord+0x20, coord+0x22, coord+0x02]
-        legal_coords = self._legal_tile_coords()
+        legal_coords = hexgrid.legal_tile_coords()
         adjacent_coords = [coord for coord in adjacent_coords
                            if coord in legal_coords]
-        adjacent_tiles = map(self._tile_id_from_coord, adjacent_coords)
-        logging.debug('tile={}, adjacent_tiles={}'.format(tile, adjacent_tiles))
+        adjacent_tiles = map(hexgrid.tile_id_from_coord, adjacent_coords)
+        logging.debug('tile={}, adjacent_tiles={}'.format(tile_id, adjacent_tiles))
         return adjacent_tiles
 
-    def adjacent_nodes(self, tile):
-        coord = self.tile_coord(tile)
+    def adjacent_nodes(self, tile_id):
+        coord = hexgrid.tile_id_to_coord(tile_id)
         # clockwise from top. See Appendix A of JSettlers2 dissertation
         adjacent_coords = [coord+0x01, coord-0x10, coord-0x01,
                            coord+0x10, coord+0x21, coord+0x12]
         return adjacent_coords
 
-    def _legal_tile_coords(self):
-        return set(self._tile_id_to_coord.values())
-
-    def tile_coord(self, tile):
-        if tile.tile_id not in self._tile_id_to_coord:
-            raise Exception('Tile coord conversion failed, tile_id={} not found in map'.format(
-                tile.tile_id
-            ))
-        return self._tile_id_to_coord[tile.tile_id]
-
-    def _tile_id_from_coord(self, coord):
-        for i, c in self._tile_id_to_coord.items():
-            if c == coord:
-                return i
-        raise Exception('Tile id lookup failed, coord={} not found in map'.format(
-            hex(coord)
-        ))
-
-    _tile_offset_map = {
-        -0x20: 'NW',
-        -0x22: 'W',
-        -0x02: 'SW',
-        +0x20: 'SE',
-        +0x22: 'E',
-        +0x02: 'NE'
-    }
-
-    # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
-    _tile_id_to_coord = {
-        1: 0x37, 12: 0x59, 11: 0x7B,
-        2: 0x35, 13: 0x57, 18: 0x79 , 10: 0x9B,
-        3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
-        4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
-        5: 0x73, 6: 0x95, 7: 0xB7
-    }

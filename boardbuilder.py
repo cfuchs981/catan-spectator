@@ -10,7 +10,8 @@ This will reset the board. #reset is an alias.
 """
 import logging
 import states
-from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES
+from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece
+
 
 def get_opts(opts):
     _opts = { # defaults
@@ -35,7 +36,7 @@ def modify(board, opts=None):
     board.tiles = _generate_tiles(opts['terrain'], opts['numbers'])
     board.ports = _generate_ports(opts['ports'])
     board.state = states.BoardStateModifiable(board)
-    board.pieces = opts['pieces'] or dict()
+    board.pieces = _generate_pieces(opts['pieces'])
 
 def _generate_tiles(terrain_opts, numbers_opts):
     terrain = None
@@ -57,6 +58,15 @@ def _generate_tiles(terrain_opts, numbers_opts):
 def _generate_ports(port_opts):
     if port_opts == 'default':
         return [(tile, dir, port) for (tile, dir), port in zip(_port_locations, list(_default_ports))]
+
+def _generate_pieces(pieces_opts):
+    if pieces_opts == 'empty':
+        return dict()
+    elif pieces_opts == 'debug':
+        return {
+            0x67: Piece.settlement,
+            0x87: Piece.settlement
+        }
 
 def _check_red_placement(tiles):
     logging.warning('"Check red placement" not yet implemented')

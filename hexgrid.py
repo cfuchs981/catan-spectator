@@ -59,16 +59,32 @@ def nearest_tile_to_node(tile_ids, node_coord):
         if node_coord - tile_id_to_coord(tile_id) in _tile_node_offsets.keys():
             return tile_id
 
+def edges_touching_tile(tile_id):
+    """Takes a tile id, returns a list of edge coordinates touching the tile"""
+    coord = tile_id_to_coord(tile_id)
+    edges = []
+    for offset in _tile_edge_offsets.keys():
+        edges.append(coord + offset)
+    logging.debug('tile_id={}, edges touching={}'.format(tile_id, edges))
+    return edges
+
 def nodes_touching_tile(tile_id):
     """Takes a tile id, returns a list of node coordinates touching the tile"""
     coord = tile_id_to_coord(tile_id)
     nodes = []
     for offset in _tile_node_offsets.keys():
         nodes.append(coord + offset)
-    logging.debug('tile_id={}, nodes touching={}'.format(
-        tile_id, nodes
-    ))
+    logging.debug('tile_id={}, nodes touching={}'.format(tile_id, nodes))
     return nodes
+
+def legal_edge_coords():
+    """Returns all legal edge coordinates on the hexgrid"""
+    edges = set()
+    for tile_id in legal_tile_ids():
+        for edge in edges_touching_tile(tile_id):
+            edges.add(edge)
+    logging.debug('Legal edge coords({})={}'.format(len(edges), edges))
+    return edges
 
 def legal_node_coords():
     """Returns all legal node coordinates on the hexgrid"""
@@ -76,9 +92,7 @@ def legal_node_coords():
     for tile_id in legal_tile_ids():
         for node in nodes_touching_tile(tile_id):
             nodes.add(node)
-    logging.debug('Legal node coords={}'.format(
-        nodes
-    ))
+    logging.debug('Legal node coords={}'.format(nodes))
     return nodes
 
 def legal_tile_ids():

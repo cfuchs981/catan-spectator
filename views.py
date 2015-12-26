@@ -125,7 +125,6 @@ class BoardFrame(tkinter.Frame):
         points = self._hex_points(radius, offset, rotate)
         a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
 
-
     def _draw_numbers(self, board, terrain_centers):
         logging.debug('Drawing numbers')
         for tile_id, (x, y) in terrain_centers.items():
@@ -164,6 +163,7 @@ class BoardFrame(tkinter.Frame):
         roads, settlements, cities = self._get_pieces(board)
         for coord, road in roads:
             self._draw_piece(coord, road, terrain_centers)
+        logging.debug('Roads drawn: {}'.format(len(roads)))
         for coord, settlement in settlements:
             self._draw_piece(coord, settlement, terrain_centers)
         for coord, city in cities:
@@ -186,12 +186,22 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
         logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
-        nodes = hexgrid.legal_node_coords()
         piece = Piece(piece_type, self.game.get_cur_player())
-        for node in nodes:
-            if node in board.pieces:
-                continue
-            self._draw_piece(node, piece, terrain_centers, ghost=True)
+        if piece_type == PieceType.road:
+            edges = hexgrid.legal_edge_coords()
+            count = 0
+            for edge in edges:
+                if edge in board.pieces:
+                    continue
+                count += 1
+                self._draw_piece(edge, piece, terrain_centers, ghost=True)
+            logging.debug('Road shadows drawn: {}'.format(count))
+        else:
+            nodes = hexgrid.legal_node_coords()
+            for node in nodes:
+                if node in board.pieces:
+                    continue
+                self._draw_piece(node, piece, terrain_centers, ghost=True)
 
     def _piece_tkinter_opts(self, coord, piece, **kwargs):
         opts = dict()

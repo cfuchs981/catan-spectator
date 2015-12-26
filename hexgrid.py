@@ -55,9 +55,9 @@ def nearest_tile_to_node(tile_ids, node_coord):
 def nodes_touching_tile(tile_id):
     """Takes a tile id, returns a list of node coordinates touching the tile"""
     coord = tile_id_to_coord(tile_id)
-    nodes = _tile_node_offsets.keys()
-    for node in nodes:
-        node += coord
+    nodes = []
+    for offset in _tile_node_offsets.keys():
+        nodes.append(coord + offset)
     logging.debug('tile_id={}, nodes touching={}'.format(
         tile_id, nodes
     ))

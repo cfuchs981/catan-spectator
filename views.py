@@ -191,7 +191,7 @@ class BoardFrame(tkinter.Frame):
             edges = hexgrid.legal_edge_coords()
             count = 0
             for edge in edges:
-                if edge in board.pieces:
+                if (hexgrid.EDGE, edge) in board.pieces:
                     continue
                 count += 1
                 self._draw_piece(edge, piece, terrain_centers, ghost=True)
@@ -199,7 +199,7 @@ class BoardFrame(tkinter.Frame):
         else:
             nodes = hexgrid.legal_node_coords()
             for node in nodes:
-                if node in board.pieces:
+                if (hexgrid.NODE, node) in board.pieces:
                     continue
                 self._draw_piece(node, piece, terrain_centers, ghost=True)
 
@@ -257,7 +257,8 @@ class BoardFrame(tkinter.Frame):
         roads = list()
         settlements = list()
         cities = list()
-        for coord, piece in board.pieces.items():
+        logging.debug('board.pieces.items()={}'.format(board.pieces.items()))
+        for (_, coord), piece in board.pieces.items():
             if piece.type == PieceType.road:
                 roads.append((coord, piece))
             elif piece.type == PieceType.settlement:

@@ -311,7 +311,11 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        self.pieces[coord] = piece
+        if piece.type == PieceType.road:
+            hextype = hexgrid.EDGE
+        else:
+            hextype = hexgrid.NODE
+        self.pieces[(hextype, coord)] = piece
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)

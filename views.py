@@ -36,6 +36,9 @@ class BoardFrame(tkinter.Frame):
         self.game.observers.add(self)
 
     def tile_click(self, event):
+        if not self._board.state.hex_change_allowed():
+            return
+
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
         if self.master.options.get('hex_resource_selection'):
             self._board.cycle_hex_type(self._tile_id_from_tag(tag))
@@ -63,8 +66,13 @@ class BoardFrame(tkinter.Frame):
         self._draw_numbers(board, terrain_centers)
         self._draw_ports(board, terrain_centers)
         self._draw_pieces(board, terrain_centers)
-        if self.game.state.can_place_settlement():
+        if self.game.state.can_place_road():
+            self._draw_piece_shadows(PieceType.road, board, terrain_centers)
+        elif self.game.state.can_place_settlement():
             self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
+        elif self.game.state.can_place_city():
+            self._draw_piece_shadows(PieceType.city, board, terrain_centers)
+
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -114,12 +122,12 @@ class BoardFrame(tkinter.Frame):
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
-            logging.debug('tile_id={}, port={}, x+dx={}+{}, y+dy={}+{}'.format(tile_id, port, tile_x, dx, tile_y, dy))
+            #logging.debug('tile_id={}, port={}, x+dx={}+{}, y+dy={}+{}'.format(tile_id, port, tile_x, dx, tile_y, dy))
             port_centers.append((tile_x + dx, tile_y + dy, theta))
 
         port_centers = self._fixup_port_centers(port_centers)
         for (x, y, angle), port in zip(port_centers, [port for _, _, port in board.ports]):
-            logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
+            # logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
             self._draw_port(x, y, angle, port)
 
     def _draw_pieces(self, board, terrain_centers):
@@ -208,7 +216,7 @@ class BoardFrame(tkinter.Frame):
     def _draw_number(self, x, y, number: HexNumber, tile):
         if number is HexNumber.none:
             return
-        logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
+        # logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
         color = 'red' if number.value in (6, 8) else 'black'
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 

@@ -67,7 +67,8 @@ def legal_node_coords():
     """Returns all legal node coordinates on the hexgrid"""
     nodes = set()
     for tile_id in legal_tile_ids():
-        nodes.add(*nodes_touching_tile(tile_id))
+        for node in nodes_touching_tile(tile_id):
+            nodes.add(node)
     logging.debug('Legal node coords={}'.format(
         nodes
     ))

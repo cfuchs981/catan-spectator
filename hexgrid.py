@@ -95,7 +95,7 @@ def legal_node_coords():
     for tile_id in legal_tile_ids():
         for node in nodes_touching_tile(tile_id):
             nodes.add(node)
-    logging.debug('Legal node coords={}'.format(nodes))
+    logging.debug('Legal node coords({})={}'.format(len(nodes), nodes))
     return nodes
 
 def legal_tile_ids():

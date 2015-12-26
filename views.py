@@ -192,6 +192,7 @@ class BoardFrame(tkinter.Frame):
             count = 0
             for edge in edges:
                 if (hexgrid.EDGE, edge) in board.pieces:
+                    logging.debug('Not drawing shadow road at coord={}'.format(edge))
                     continue
                 count += 1
                 self._draw_piece(edge, piece, terrain_centers, ghost=True)
@@ -229,7 +230,9 @@ class BoardFrame(tkinter.Frame):
         points += [x + length/2, y + height/2] # right bottom
         points += [x - length/2, y + height/2] # left bottom
         points = tkinterutils.rotate_2poly(angle, points, (x, y))
-        logging.debug('Drawing road={} with opts={}'.format(points, opts))
+        logging.debug('Drawing road={} at coord={}, angle={} with opts={}'.format(
+            piece, coord, angle, opts
+        ))
         self._board_canvas.create_polygon(*points,
                                             **opts)
 
@@ -357,7 +360,7 @@ class BoardFrame(tkinter.Frame):
     _tile_padding = 3
     _board_center = (300, 300)
     _tile_angle_order = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
-    _edge_angle_order = ('E', 'SE', 'SW', 'W', 'NE', 'NW') # 0 + 60*index
+    _edge_angle_order = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
     _node_angle_order = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {

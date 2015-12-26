@@ -46,6 +46,11 @@ class BoardFrame(tkinter.Frame):
             self._board.cycle_hex_number(self._tile_id_from_tag(tag))
         self.redraw()
 
+    def piece_click(self, event):
+        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+
+
+
     def notify(self, observable):
         self.redraw()
 
@@ -136,12 +141,15 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
         x, y = self._get_piece_center(coord, piece, terrain_centers)
-        if piece.type == PieceType.settlement:
-            self._draw_settlement(x, y, piece, ghost=ghost)
+        if piece.type == PieceType.road:
+            self._draw_road()
+        elif piece.type == PieceType.settlement:
+            self._draw_settlement(x, y, coord, piece, ghost=ghost)
         elif piece.type == PieceType.city:
-            self._draw_city(x, y, piece, ghost=ghost)
+            self._draw_city(x, y, coord, piece, ghost=ghost)
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
+        logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
         nodes = hexgrid.legal_node_coords()
         piece = Piece(piece_type, self.game.get_cur_player())
         for node in nodes:
@@ -149,8 +157,12 @@ class BoardFrame(tkinter.Frame):
                 continue
             self._draw_piece(node, piece, terrain_centers, ghost=True)
 
-    def _draw_settlement(self, x, y, piece, ghost=False):
+    def _draw_road(self):
+        logging.warning('Draw road not yet implemented')
+
+    def _draw_settlement(self, x, y, coord, piece, ghost=False):
         opts = {
+            'tags': self._settlement_tag(coord),
             'outline': piece.owner.color,
             'fill': piece.owner.color
         }
@@ -169,8 +181,9 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_polygon(*points,
                                           **opts)
 
-    def _draw_city(self, x, y, piece, ghost=False):
+    def _draw_city(self, x, y, coord, piece, ghost=False):
         opts = {
+            'tags': self._city_tag(coord),
             'outline': piece.owner.color,
             'fill': piece.owner.color
         }
@@ -243,8 +256,26 @@ class BoardFrame(tkinter.Frame):
     def _tile_tag(self, tile):
         return 'tile_' + str(tile.tile_id)
 
+    def _road_tag(self, coord):
+        return 'road_' + hex(coord)
+
+    def _settlement_tag(self, coord):
+        return 'settlement_' + hex(coord)
+
+    def _city_tag(self, coord):
+        return 'city_' + hex(coord)
+
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
+
+    def _coord_from_road_tag(self, tag):
+        return int(tag[len('road_0x'):], 16)
+
+    def _coord_from_settlement_tag(self, tag):
+        return int(tag[len('settlement_0x'):], 16)
+
+    def _coord_from_city_tag(self, tag):
+        return int(tag[len('city_0x'):], 16)
 
     _tile_radius  = 50
     _tile_padding = 3

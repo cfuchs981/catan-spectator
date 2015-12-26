@@ -1,4 +1,4 @@
-import recording
+import catanlog
 import models
 import random
 import re
@@ -27,7 +27,7 @@ def get_players():
 
 
 def get_record_with_random_board():
-    record = recording.GameRecord()
+    record = catanlog.CatanLog()
 
     players = get_players()
     terrain = ([Terrain.wood]*4 + [Terrain.wheat]*4 + [Terrain.sheep]*4 +
@@ -127,7 +127,7 @@ def test_record_intial_game_info():
 
 def test_turn():
     player = models.Player(1, 'ross', 'red')
-    record = recording.GameRecord()
+    record = catanlog.CatanLog()
 
     record.record_player_roll(player, 2)
     record.record_player_ends_turn(player)
@@ -140,7 +140,7 @@ def test_turn():
 
 def test_robber():
     players = get_players()
-    record = recording.GameRecord()
+    record = catanlog.CatanLog()
 
     roller = players[0]
     robbed = players[1]

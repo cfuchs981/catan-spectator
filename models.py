@@ -1,7 +1,7 @@
 import logging
 import hexgrid
 import states
-import recording
+import catanlog
 from enum import Enum
 
 
@@ -11,7 +11,7 @@ class Game(object):
         self.observers = set()
         self.players = players or list()
         self.board = board or Board()
-        self.record = record or recording.GameRecord()
+        self.record = record or catanlog.CatanLog()
 
         self.state = None
         self._cur_player = None # set in #set_players
@@ -35,7 +35,7 @@ class Game(object):
     def reset(self):
         self.players = list()
         self.board.reset()
-        self.record = recording.GameRecord()
+        self.record = catanlog.CatanLog()
         self.state = None
 
         self.last_roll = None

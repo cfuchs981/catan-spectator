@@ -128,9 +128,6 @@ class BoardFrame(tkinter.Frame):
                 self._draw_city(x, y, piece)
 
     def _draw_settlement(self, x, y, piece):
-        # x
-        #xxx
-        #xxx
         width = 18
         height = 14
         point_height = 8

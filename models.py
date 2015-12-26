@@ -111,6 +111,8 @@ class Game(object):
 
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
+        piece = Piece(PieceType.settlement, self.get_cur_player())
+        self.board.place_piece(piece, node)
         self.record.record_player_buys_settlement(self._cur_player, node)
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))

@@ -121,13 +121,32 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_pieces(self, board, terrain_centers):
         for coord, piece in board.pieces.items():
-            x, y = self._get_piece_center(coord, piece, terrain_centers)
-            if piece.type == PieceType.settlement:
-                self._draw_settlement(x, y, piece)
-            elif piece.type == PieceType.city:
-                self._draw_city(x, y, piece)
+            self._draw_piece(coord, piece, terrain_centers)
 
-    def _draw_settlement(self, x, y, piece):
+    def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
+        x, y = self._get_piece_center(coord, piece, terrain_centers)
+        if piece.type == PieceType.settlement:
+            self._draw_settlement(x, y, piece, ghost=ghost)
+        elif piece.type == PieceType.city:
+            self._draw_city(x, y, piece, ghost=ghost)
+
+    def _draw_piece_shadows(self, piece_type, board, terrain_centers):
+        nodes = hexgrid.legal_node_coords()
+        piece = Piece(piece_type, self.game.get_cur_player())
+        for node in nodes:
+            if node in board.pieces:
+                continue
+            self._draw_piece(node, piece, terrain_centers, ghost=True)
+
+    def _draw_settlement(self, x, y, piece, ghost=False):
+        opts = {
+            'outline': piece.owner.color,
+            'fill': piece.owner.color
+        }
+        if ghost:
+            opts['fill'] = '' # transparent
+            opts['activefill'] = piece.owner.color
+
         width = 18
         height = 14
         point_height = 8
@@ -137,13 +156,19 @@ class BoardFrame(tkinter.Frame):
         points += [x + width/2, y + height/2] # right bottom
         points += [x - width/2, y + height/2] # left bottom
         self._board_canvas.create_polygon(*points,
-                                          outline='black',
-                                          fill=piece.owner.color)
+                                          **opts)
 
-    def _draw_city(self, x, y, piece):
+    def _draw_city(self, x, y, piece, ghost=False):
+        opts = {
+            'outline': piece.owner.color,
+            'fill': piece.owner.color
+        }
+        if ghost:
+            opts['fill'] = '' # transparent
+            opts['activefill'] = piece.owner.color
+
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
-                                            outline=piece.owner.color,
-                                            fill=piece.owner.color)
+                                            **opts)
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         tile_ids = terrain_centers.keys()

@@ -14,7 +14,7 @@ class GameRecord(object):
 
     TODO record private information as well (which dev card picked up, which card stolen)
     """
-    version = '0.0.1'
+    version = '0.0.2'
 
     def __init__(self, auto_flush=True, use_stdout=True):
         self._record_str = str()
@@ -138,14 +138,13 @@ class GameRecord(object):
             player.color
         ))
 
-    def record_player_buys_road(self, player, node_id_1, node_id_2):
+    def record_player_buys_road(self, player, edge):
         """
-        $color buys road, builds from $location to $location
+        $color buys road, builds at $location
         """
-        self.recordln('{0} buys road, builds from {1} to {2}'.format(
+        self.recordln('{0} buys road, builds at {1}'.format(
             player.color,
-            node_id_1,
-            node_id_2
+            edge
         ))
 
     def record_player_trades_with_port(self, player, to_port, port, to_player):

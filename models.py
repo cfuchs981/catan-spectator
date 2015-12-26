@@ -103,9 +103,11 @@ class Game(object):
         victim = Player(1, "name", "color") # todo use real victim
         self.state.steal(victim)
 
-    def buy_road(self, node_from, node_to):
-        #self.assert_legal_road(node_from, node_to)
-        self.record.record_player_buys_road(self._cur_player, node_from, node_to)
+    def buy_road(self, edge):
+        #self.assert_legal_road(edge)
+        piece = Piece(PieceType.road, self.get_cur_player())
+        self.board.place_piece(piece, edge)
+        self.record.record_player_buys_road(self._cur_player, edge)
         if self.state.is_in_pregame():
             self.end_turn()
 

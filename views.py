@@ -51,6 +51,7 @@ class BoardFrame(tkinter.Frame):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
         logging.debug('Piece clicked with tag {}'.format(tag))
         if piece_type == PieceType.road:
+            self.game.buy_road(self._coord_from_road_tag(tag))
             logging.warning('Road click not yet implemented')
         elif piece_type == PieceType.settlement:
             self.game.buy_settlement(self._coord_from_settlement_tag(tag))

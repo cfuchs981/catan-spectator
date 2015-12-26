@@ -9,6 +9,7 @@ import hexgrid
 
 from models import Terrain, Port, Player, HexNumber, Piece, PieceType
 import states
+import tkinterutils
 
 can_do = {
     True: tkinter.NORMAL,
@@ -159,10 +160,14 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_polygon(*points, fill=self._colors[port])
         self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
-
     def _draw_pieces(self, board, terrain_centers):
-        for coord, piece in board.pieces.items():
-            self._draw_piece(coord, piece, terrain_centers)
+        roads, settlements, cities = self._get_pieces(board)
+        for coord, road in roads:
+            self._draw_piece(coord, road, terrain_centers)
+        for coord, settlement in settlements:
+            self._draw_piece(coord, settlement, terrain_centers)
+        for coord, city in cities:
+            self._draw_piece(coord, city, terrain_centers)
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
         x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
@@ -207,19 +212,16 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_road(self, x, y, coord, piece, angle, ghost=False):
         opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
-        length = self._tile_radius * 2/3
-        start = (x - math.cos(math.radians(angle)) * length/2,
-                 y - math.sin(math.radians(angle)) * length/2)
-        end = (x + math.cos(math.radians(angle)) * length/2,
-               y + math.sin(math.radians(angle)) * length/2)
-        points = []
-        points.extend(start)
-        points.extend(end)
-        del opts['outline'] # temporary hack until we use rectangles for roads
-        opts['width'] = 7.0 # temporary hack until we use rectangles for roads
+        length = self._tile_radius * 0.7
+        height = self._tile_padding * 2.5
+        points = [x - length/2, y - height/2] # left top
+        points += [x + length/2, y - height/2] # right top
+        points += [x + length/2, y + height/2] # right bottom
+        points += [x - length/2, y + height/2] # left bottom
+        points = tkinterutils.rotate_2poly(angle, points, (x, y))
         logging.debug('Drawing road={} with opts={}'.format(points, opts))
-        self._board_canvas.create_line(*points,
-                                       **opts)
+        self._board_canvas.create_polygon(*points,
+                                            **opts)
 
     def _draw_settlement(self, x, y, coord, piece, ghost=False):
         opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
@@ -238,6 +240,21 @@ class BoardFrame(tkinter.Frame):
         opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
                                             **opts)
+
+    def _get_pieces(self, board):
+        """Returns roads, settlements, and cities on the board
+        """
+        roads = list()
+        settlements = list()
+        cities = list()
+        for coord, piece in board.pieces.items():
+            if piece.type == PieceType.road:
+                roads.append((coord, piece))
+            elif piece.type == PieceType.settlement:
+                settlements.append((coord, piece))
+            elif piece.type == PieceType.city:
+                cities.append((coord, piece))
+        return roads, settlements, cities
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         """Takes a piece's hex coordinate, the piece itself, and the terrain_centers

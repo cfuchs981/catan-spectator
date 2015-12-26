@@ -72,7 +72,6 @@ class BoardFrame(tkinter.Frame):
         We then shift all the individual tile centers so that the board center
         is at 0, 0.
         """
-
         terrain_centers = self._draw_terrain(board)
         self._draw_numbers(board, terrain_centers)
         self._draw_ports(board, terrain_centers)
@@ -166,10 +165,10 @@ class BoardFrame(tkinter.Frame):
             self._draw_piece(coord, piece, terrain_centers)
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
-        x, y = self._get_piece_center(coord, piece, terrain_centers)
+        x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
         tag = None
         if piece.type == PieceType.road:
-            self._draw_road()
+            self._draw_road(x, y, coord, piece, angle=angle, ghost=ghost)
             tag = self._road_tag(coord)
         elif piece.type == PieceType.settlement:
             self._draw_settlement(x, y, coord, piece, ghost=ghost)
@@ -189,19 +188,41 @@ class BoardFrame(tkinter.Frame):
                 continue
             self._draw_piece(node, piece, terrain_centers, ghost=True)
 
-    def _draw_road(self):
-        logging.warning('Draw road not yet implemented')
-
-    def _draw_settlement(self, x, y, coord, piece, ghost=False):
-        opts = {
-            'tags': self._settlement_tag(coord),
-            'outline': piece.owner.color,
-            'fill': piece.owner.color
+    def _piece_tkinter_opts(self, coord, piece, **kwargs):
+        opts = dict()
+        tag_funcs = {
+            PieceType.road: self._road_tag,
+            PieceType.settlement: self._settlement_tag,
+            PieceType.city: self._city_tag,
         }
-        if ghost:
+        opts['tags'] = tag_funcs[piece.type](coord)
+        opts['outline'] = piece.owner.color
+        opts['fill'] = piece.owner.color
+        if 'ghost' in kwargs and kwargs['ghost'] == True:
             opts['fill'] = '' # transparent
             opts['activefill'] = piece.owner.color
+        del kwargs['ghost']
+        opts.update(kwargs)
+        return opts
 
+    def _draw_road(self, x, y, coord, piece, angle, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
+        length = self._tile_radius * 2/3
+        start = (x - math.cos(math.radians(angle)) * length/2,
+                 y - math.sin(math.radians(angle)) * length/2)
+        end = (x + math.cos(math.radians(angle)) * length/2,
+               y + math.sin(math.radians(angle)) * length/2)
+        points = []
+        points.extend(start)
+        points.extend(end)
+        del opts['outline'] # temporary hack until we use rectangles for roads
+        opts['width'] = 7.0 # temporary hack until we use rectangles for roads
+        logging.debug('Drawing road={} with opts={}'.format(points, opts))
+        self._board_canvas.create_line(*points,
+                                       **opts)
+
+    def _draw_settlement(self, x, y, coord, piece, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         width = 18
         height = 14
         point_height = 8
@@ -214,28 +235,38 @@ class BoardFrame(tkinter.Frame):
                                           **opts)
 
     def _draw_city(self, x, y, coord, piece, ghost=False):
-        opts = {
-            'tags': self._city_tag(coord),
-            'outline': piece.owner.color,
-            'fill': piece.owner.color
-        }
-        if ghost:
-            opts['fill'] = '' # transparent
-            opts['activefill'] = piece.owner.color
-
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
                                             **opts)
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
-        tile_ids = terrain_centers.keys()
-        tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
-        tile_coord = hexgrid.tile_id_to_coord(tile_id)
-        direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
-        angle = 30 + 60*self._node_angle_order.index(direction)
-        terrain_x, terrain_y = terrain_centers[tile_id]
-        dx = math.cos(math.radians(angle)) * self._tile_radius
-        dy = math.sin(math.radians(angle)) * self._tile_radius
-        return terrain_x + dx, terrain_y + dy
+        """Takes a piece's hex coordinate, the piece itself, and the terrain_centers
+        dictionary which maps tile_id->(x,y)
+
+        Returns the piece's center, as an (x,y) pair. Also returns the angle the
+        piece should be rotated at, if any
+        """
+        tile_ids = hexgrid.legal_tile_ids()
+        if piece.type == PieceType.road:
+            tile_id = hexgrid.nearest_tile_to_edge(tile_ids, piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
+            angle = 60*self._edge_angle_order.index(direction)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            dx = math.cos(math.radians(angle)) * self.distance_tile_to_edge()
+            dy = math.sin(math.radians(angle)) * self.distance_tile_to_edge()
+            return terrain_x + dx, terrain_y + dy, angle + 90
+        elif piece.type in [PieceType.settlement, PieceType.city]:
+            tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
+            angle = 30 + 60*self._node_angle_order.index(direction)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            dx = math.cos(math.radians(angle)) * self._tile_radius
+            dy = math.sin(math.radians(angle)) * self._tile_radius
+            return terrain_x + dx, terrain_y + dy, 0
+        else:
+            logging.warning('Unknown piece={}'.format(piece))
 
     def _fixup_offset(self):
         offx, offy = self._board_center
@@ -258,7 +289,6 @@ class BoardFrame(tkinter.Frame):
         color = 'red' if number.value in (6, 8) else 'black'
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 
-
     def _hex_points(self, radius, offset, rotate):
         offx, offy = offset
         points = []
@@ -267,6 +297,9 @@ class BoardFrame(tkinter.Frame):
             y = (math.sin(math.radians(theta + rotate)) * radius) + offy
             points += [x, y]
         return points
+
+    def distance_tile_to_edge(self):
+        return self._tile_radius * math.cos(math.radians(30)) + 1/2*self._tile_padding
 
     def _tile_tag(self, tile):
         return 'tile_' + str(tile.tile_id)
@@ -295,8 +328,9 @@ class BoardFrame(tkinter.Frame):
     _tile_radius  = 50
     _tile_padding = 3
     _board_center = (300, 300)
-    _tile_angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
-    _node_angle_order  = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
+    _tile_angle_order = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
+    _edge_angle_order = ('E', 'SE', 'SW', 'W', 'NE', 'NW') # 0 + 60*index
+    _node_angle_order = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {
         Terrain.ore: 'gray94',

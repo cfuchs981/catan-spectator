@@ -88,9 +88,12 @@ def _generate_pieces(pieces_opts):
         zach = Player(4, 'zach', 'orange')
         return {
             0x23: Piece(PieceType.settlement, josh),
+            0x22: Piece(PieceType.road, josh),
             0x67: Piece(PieceType.settlement, ross),
+            0x98: Piece(PieceType.road, ross),
             0x87: Piece(PieceType.settlement, yuri),
-            0xA9: Piece(PieceType.city, zach),
+            0x89: Piece(PieceType.road, yuri),
+            0xA9: Piece(PieceType.road, zach),
         }
 
 def _check_red_placement(tiles):

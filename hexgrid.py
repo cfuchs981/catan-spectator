@@ -45,6 +45,13 @@ def tile_id_from_coord(coord):
             return i
     raise Exception('Tile id lookup failed, coord={} not found in map'.format(hex(coord)))
 
+def nearest_tile_to_edge(tile_ids, edge_coord):
+    """Takes a list of tile ids and an edge coordinate.
+    Returns the id of a tile which is touching the edge"""
+    for tile_id in tile_ids:
+        if edge_coord - tile_id_to_coord(tile_id) in _tile_edge_offsets.keys():
+            return tile_id
+
 def nearest_tile_to_node(tile_ids, node_coord):
     """Takes a list of tile ids and a node coordinate.
     Returns the id of a tile which is touching the node"""
@@ -117,5 +124,3 @@ _tile_id_to_coord = {
     4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
     5: 0x73, 6: 0x95, 7: 0xB7
 }
-
-

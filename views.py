@@ -48,7 +48,14 @@ class BoardFrame(tkinter.Frame):
 
     def piece_click(self, piece_type, event):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
-        logging.info('Pieces clicked with tag {}'.format(tag))
+        logging.debug('Piece clicked with tag {}'.format(tag))
+        if piece_type == PieceType.road:
+            logging.warning('Road click not yet implemented')
+        elif piece_type == PieceType.settlement:
+            self.game.buy_settlement(self._coord_from_settlement_tag(tag))
+        elif piece_type == PieceType.city:
+            logging.warning('City click not yet implemented')
+
 
     def notify(self, observable):
         self.redraw()

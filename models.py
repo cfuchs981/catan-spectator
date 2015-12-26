@@ -239,6 +239,9 @@ class Piece(object):
         self.type = type
         self.owner = owner
 
+    def __repr__(self):
+        return '<Piece type={}, owner={}>'.format(self.type.value, self.owner)
+
 
 class Board(object):
     """Represents a single game board.
@@ -285,8 +288,15 @@ class Board(object):
         })
 
     def can_place_piece(self, piece, coord):
-        if piece.type == PieceType.city:
-            logging.warning('"Place city" not yet implemented')
+        if piece.type == PieceType.road:
+            logging.warning('"Can place road" not yet implemented')
+            return True
+        elif piece.type == PieceType.settlement:
+            logging.warning('"Can place settlement" not yet implemented')
+            return True
+        elif piece.type == PieceType.city:
+            logging.warning('"Can place city" not yet implemented')
+            return True
         else:
             logging.debug('Can\'t place piece={} on coord={}'.format(
                 piece.value, hex(coord)
@@ -299,7 +309,7 @@ class Board(object):
                 piece.value, hex(coord)
             ))
         logging.debug('Placed piece={} on coord={}'.format(
-            piece.value, hex(coord)
+            piece, hex(coord)
         ))
         self.pieces[coord] = piece
 

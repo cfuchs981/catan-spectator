@@ -8,6 +8,7 @@ import functools
 import hexgrid
 
 from models import Terrain, Port, Player, HexNumber, Piece, PieceType
+import states
 
 can_do = {
     True: tkinter.NORMAL,
@@ -62,6 +63,8 @@ class BoardFrame(tkinter.Frame):
         self._draw_numbers(board, terrain_centers)
         self._draw_ports(board, terrain_centers)
         self._draw_pieces(board, terrain_centers)
+        if self.game.state.can_place_settlement():
+            self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -435,18 +438,28 @@ class BuildFrame(tkinter.Frame):
         self.dev_card.configure(state=can_do[self.game.state.can_buy_dev_card()])
 
     def on_buy_road(self):
-        # todo UI for placing the road
-        self.game.buy_road(node_from=None, node_to=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.road))
+        else:
+            logging.warning('Buying roads out of pregame not yet implemented')
+        #self.game.buy_road(node_from=None, node_to=None)
 
     def on_buy_settlement(self):
-        # todo UI for placing the settlement
-        self.game.buy_settlement(node=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
+        else:
+            logging.warning('Buying settlements out of pregame not yet implemented')
+        # self.game.buy_settlement(node=None)
 
     def on_buy_city(self):
-        # todo UI for placing the city
-        self.game.buy_city(node=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
+        else:
+            logging.warning('Buying cities out of pregame not yet implemented')
+        # self.game.buy_city(node=None)
 
     def on_buy_dev_card(self):
+        logging.warning('Buying dev cards not yet implemented')
         self.game.buy_dev_card()
 
 

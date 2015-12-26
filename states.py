@@ -88,6 +88,15 @@ class GameStateInGame(GameState):
     def can_buy_city(self):
         return self.has_rolled()
 
+    def can_place_road(self):
+        return False
+
+    def can_place_settlement(self):
+        return False
+
+    def can_place_city(self):
+        return False
+
     def can_buy_dev_card(self):
         return self.has_rolled()
 
@@ -201,6 +210,58 @@ class GameStatePreGamePlaceRoad(GameStatePreGame):
     def can_end_turn(self):
         return False
 
+
+class GameStatePreGamePlacingPiece(GameStatePreGame):
+    """
+    - AFTER a player has selected to place a piece
+    - WHILE the player is choosing where to place it
+    - BEFORE the player has placed it
+    """
+    def __init__(self, game, piece_type):
+        super(GameStatePreGamePlacingPiece, self).__init__(game)
+        self.piece_type = piece_type
+
+    def can_buy_settlement(self):
+        return False
+
+    def can_buy_road(self):
+        return False
+
+    def can_end_turn(self):
+        return False
+
+    def can_place_road(self):
+        return self.piece_type == models.PieceType.road
+
+    def can_place_settlement(self):
+        return self.piece_type == models.PieceType.settlement
+
+    def can_place_city(self):
+        return self.piece_type == models.PieceType.city
+
+    def place_road(self, node_from, node_to):
+        if not self.can_place_road():
+            logging.warning('Attempted to place road in illegal state={} with piece_type={}'.format(
+                self.__class__.__name__,
+                self.piece_type
+            ))
+        self.game.buy_road(node_from, node_to)
+
+    def place_settlement(self, node):
+        if not self.can_place_settlement():
+            logging.warning('Attempted to place settlement in illegal state={} with piece_type={}'.format(
+                self.__class__.__name__,
+                self.piece_type
+            ))
+        self.game.buy_settlement(node)
+
+    def place_city(self, node):
+        if not self.can_place_city():
+            logging.warning('Attempted to place city in illegal state={} with piece_type={}'.format(
+                self.__class__.__name__,
+                self.piece_type
+            ))
+        self.game.buy_city(node)
 
 class GameStateBeginTurn(GameStateInGame):
     """

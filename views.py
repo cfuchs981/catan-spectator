@@ -46,10 +46,9 @@ class BoardFrame(tkinter.Frame):
             self._board.cycle_hex_number(self._tile_id_from_tag(tag))
         self.redraw()
 
-    def piece_click(self, event):
+    def piece_click(self, piece_type, event):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
-
-
+        logging.info('Pieces clicked with tag {}'.format(tag))
 
     def notify(self, observable):
         self.redraw()
@@ -112,6 +111,14 @@ class BoardFrame(tkinter.Frame):
 
         return dict(centers)
 
+    def _draw_tile(self, x, y, terrain: Terrain, tile):
+        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
+
+    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
+        points = self._hex_points(radius, offset, rotate)
+        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
+
+
     def _draw_numbers(self, board, terrain_centers):
         logging.debug('Drawing numbers')
         for tile_id, (x, y) in terrain_centers.items():
@@ -135,18 +142,36 @@ class BoardFrame(tkinter.Frame):
             # logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
             self._draw_port(x, y, angle, port)
 
+    def _draw_port(self, x, y, angle, port):
+        """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
+        given by the angle."""
+        points = [x, y]
+        for adjust in (-30, 30):
+            x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
+            y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
+            points.extend([x1, y1])
+        self._board_canvas.create_polygon(*points, fill=self._colors[port])
+        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
+
+
     def _draw_pieces(self, board, terrain_centers):
         for coord, piece in board.pieces.items():
             self._draw_piece(coord, piece, terrain_centers)
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
         x, y = self._get_piece_center(coord, piece, terrain_centers)
+        tag = None
         if piece.type == PieceType.road:
             self._draw_road()
+            tag = self._road_tag(coord)
         elif piece.type == PieceType.settlement:
             self._draw_settlement(x, y, coord, piece, ghost=ghost)
+            tag = self._settlement_tag(coord)
         elif piece.type == PieceType.city:
             self._draw_city(x, y, coord, piece, ghost=ghost)
+            tag = self._city_tag(coord)
+        self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
+                                    func=functools.partial(self.piece_click, piece.type))
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
         logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
@@ -219,13 +244,6 @@ class BoardFrame(tkinter.Frame):
     def _fixup_port_centers(self, port_centers):
         return [(x, y, angle + 180) for x, y, angle in port_centers]
 
-    def _draw_tile(self, x, y, terrain: Terrain, tile):
-        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
-
-    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
-        points = self._hex_points(radius, offset, rotate)
-        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
-
     def _draw_number(self, x, y, number: HexNumber, tile):
         if number is HexNumber.none:
             return
@@ -233,16 +251,6 @@ class BoardFrame(tkinter.Frame):
         color = 'red' if number.value in (6, 8) else 'black'
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 
-    def _draw_port(self, x, y, angle, port):
-        """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
-        given by the angle."""
-        points = [x, y]
-        for adjust in (-30, 30):
-            x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
-            y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
-            points.extend([x1, y1])
-        self._board_canvas.create_polygon(*points, fill=self._colors[port])
-        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
     def _hex_points(self, radius, offset, rotate):
         offx, offy = offset

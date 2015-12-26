@@ -128,14 +128,25 @@ class BoardFrame(tkinter.Frame):
                 self._draw_city(x, y, piece)
 
     def _draw_settlement(self, x, y, piece):
-        self._board_canvas.create_rectangle(x-10, y-10, x+10, y+10,
-                                            outline='white',
-                                            activefill=piece.owner.color)
+        # x
+        #xxx
+        #xxx
+        width = 18
+        height = 14
+        point_height = 8
+        points = [x - width/2, y - height/2] # left top
+        points += [x, y - height/2 - point_height] # middle point
+        points += [x + width/2, y - height/2] # right top
+        points += [x + width/2, y + height/2] # right bottom
+        points += [x - width/2, y + height/2] # left bottom
+        self._board_canvas.create_polygon(*points,
+                                          outline='black',
+                                          fill=piece.owner.color)
 
     def _draw_city(self, x, y, piece):
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
                                             outline=piece.owner.color,
-                                            activefill=piece.owner.color)
+                                            fill=piece.owner.color)
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         tile_ids = terrain_centers.keys()
@@ -167,7 +178,7 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
         points = self._hex_points(radius, offset, rotate)
-        a = self._board_canvas.create_polygon(*itertools.chain.from_iterable(points), fill=fill, tags=tags)
+        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
 
     def _draw_number(self, x, y, number: HexNumber, tile):
         if number is HexNumber.none:
@@ -193,7 +204,7 @@ class BoardFrame(tkinter.Frame):
         for theta in (60 * n for n in range(6)):
             x = (math.cos(math.radians(theta + rotate)) * radius) + offx
             y = (math.sin(math.radians(theta + rotate)) * radius) + offy
-            points.append((x, y))
+            points += [x, y]
         return points
 
     def _tile_tag(self, tile):

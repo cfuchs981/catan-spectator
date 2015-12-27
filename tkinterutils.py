@@ -14,7 +14,6 @@ def rotate_2poly(angle, coords, origin):
         raise Exception('Malformed 2poly={}'.format(coords))
     return rotate_poly(angle, zip(xs, ys), origin)
 
-
 def rotate_poly(angle, points, origin):
     return list(rotate_point(angle, point, origin) for point in points)
 

@@ -10,6 +10,7 @@ This will reset the board. #reset is an alias.
 """
 import logging
 from enum import Enum
+import pprint
 import random
 import hexgrid
 import states
@@ -21,6 +22,9 @@ class Opts(Enum):
     random = 'random'
     preset = 'preset'
     debug = 'debug'
+
+    def __repr__(self):
+        return 'opt:{}'.format(self.value)
 
 
 def get_opts(opts):
@@ -39,7 +43,10 @@ def get_opts(opts):
         _opts.update(opts)
     except Exception:
         raise ValueError('Invalid options={}'.format(opts))
-    logging.debug('used defaults={} on opts={}, returned total opts={}'.format(defaults, opts, _opts))
+    logging.debug('used defaults=\n{}\n on opts=\n{}\nreturned total opts=\n{}'.format(
+        pprint.pformat(defaults),
+        pprint.pformat(opts),
+        pprint.pformat(_opts)))
     return _opts
 
 def build(opts=None):

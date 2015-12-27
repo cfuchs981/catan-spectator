@@ -8,6 +8,7 @@ TODO: Docstrings and unittests.
 """
 
 import tkinter
+import pprint
 import logging
 import argparse
 
@@ -43,15 +44,15 @@ class CatanSpectator(tkinter.Frame):
         was_in_game = self._in_game
         self._in_game = self.game.state.is_in_game()
         if was_in_game and not self.game.state.is_in_game():
-            # we were in game, now we're not
-            self._toolbar_frame.pack_forget()
+            logging.debug('we were in game, NO WE\'RE NOT')
+            self._toolbar_frame.grid_forget()
             self._toolbar_frame = self._setup_game_toolbar_frame
-            self._toolbar_frame.grid(column=1)
+            self._toolbar_frame.grid(row=0, column=1, rowspan=2, sticky=tkinter.N)
         elif not was_in_game and self.game.state.is_in_game():
-            # we were not in game, now we are
-            self._toolbar_frame.pack_forget()
+            logging.debug('we were not in game, NOW WE ARE')
+            self._toolbar_frame.grid_forget()
             self._toolbar_frame = views.GameToolbarFrame(self, self.game)
-            self._toolbar_frame.grid(column=1)
+            self._toolbar_frame.grid(row=0, column=1, rowspan=2, sticky=tkinter.N)
 
     def setup_options(self):
         return self._setup_game_toolbar_frame.options.copy()
@@ -69,14 +70,15 @@ def main():
     parser.add_argument('--pregame', help='on|off, default on')
 
     args = parser.parse_args()
-    logging.info('args={}'.format(args))
-    app = CatanSpectator(options={
+    options = {
         'terrain': args.terrain,
         'numbers': args.numbers,
         'ports': args.ports,
         'pieces': args.pieces,
         'pregame': args.pregame,
-    })
+    }
+    logging.info('args=\n{}'.format(pprint.pformat(options)))
+    app = CatanSpectator(options=options)
     app.mainloop()
 
 

@@ -649,15 +649,23 @@ class PlayDevCardFrame(tkinter.Frame):
 
         self.label = tkinter.Label(self, text="Play Dev Card", anchor=tkinter.W)
         self.knight = tkinter.Button(self, text="Knight", command=self.on_knight)
-        self.monopoly = tkinter.Button(self, text="Monopoly", command=self.on_monopoly)
         self.road_builder = tkinter.Button(self, text="Road Builder", command=self.on_road_builder)
         self.victory_point = tkinter.Button(self, text="Victory Point", command=self.on_victory_point)
 
+        self.monopoly_frame = tkinter.Frame(self)
+        self.monopoly = tkinter.Button(self.monopoly_frame, text="Monopoly", command=self.on_monopoly)
+        self.monopoly_choice = tkinter.StringVar()
+        self.monopoly_picker = tkinter.Spinbox(self.monopoly_frame, values=[t.value for t in Terrain
+                                                                            if t != Terrain.desert])
+
         self.set_states()
+
+        self.monopoly_picker.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        self.monopoly.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
         self.label.pack(fill=tkinter.X)
         self.knight.pack(fill=tkinter.X, expand=True)
-        self.monopoly.pack(fill=tkinter.X, expand=True)
+        self.monopoly_frame.pack(fill=tkinter.X, expand=True)
         self.road_builder.pack(fill=tkinter.X, expand=True)
         self.victory_point.pack(fill=tkinter.X, expand=True)
 
@@ -667,6 +675,7 @@ class PlayDevCardFrame(tkinter.Frame):
     def set_states(self):
         self.knight.configure(state=can_do[self.game.state.can_play_knight()])
         self.monopoly.configure(state=can_do[self.game.state.can_play_monopoly()])
+        self.monopoly_picker.configure(state=can_do[self.game.state.can_play_monopoly()])
         self.road_builder.configure(state=can_do[self.game.state.can_play_road_builder()])
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
@@ -674,8 +683,7 @@ class PlayDevCardFrame(tkinter.Frame):
         self.game.play_knight()
 
     def on_monopoly(self):
-        resource = Terrain.brick # todo get resource from dropdown dialog
-        self.game.play_monopoly(resource)
+        self.game.play_monopoly(self.monopoly_choice.get())
 
     def on_road_builder(self):
         # todo UI for choosing where both roads go, pass them to Game

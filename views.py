@@ -55,8 +55,8 @@ class BoardFrame(tkinter.Frame):
         elif piece_type == PieceType.settlement:
             self.game.buy_settlement(self._coord_from_settlement_tag(tag))
         elif piece_type == PieceType.city:
-            logging.warning('City click not yet implemented')
-
+            self.game.buy_city(self._coord_from_city_tag(tag))
+        self.redraw()
 
     def notify(self, observable):
         self.redraw()
@@ -181,8 +181,10 @@ class BoardFrame(tkinter.Frame):
         elif piece.type == PieceType.city:
             self._draw_city(x, y, coord, piece, ghost=ghost)
             tag = self._city_tag(coord)
-        self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
-                                    func=functools.partial(self.piece_click, piece.type))
+
+        if ghost:
+            self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
+                                        func=functools.partial(self.piece_click, piece.type))
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
         logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
@@ -556,29 +558,29 @@ class BuildFrame(tkinter.Frame):
         self.dev_card.configure(state=can_do[self.game.state.can_buy_dev_card()])
 
     def on_buy_road(self):
+        # actual road purchase and catanlog happens in the piece onclick in BoardFrame
         if self.game.state.is_in_pregame():
             self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.road))
         else:
-            logging.warning('Buying roads out of pregame not yet implemented')
-        #self.game.buy_road(node_from=None, node_to=None)
+            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.road))
 
     def on_buy_settlement(self):
+        # see on_buy_road
         if self.game.state.is_in_pregame():
             self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
         else:
-            logging.warning('Buying settlements out of pregame not yet implemented')
-        # self.game.buy_settlement(node=None)
+            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.settlement))
 
     def on_buy_city(self):
+        # see on_buy_road
         if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.city))
         else:
-            logging.warning('Buying cities out of pregame not yet implemented')
-        # self.game.buy_city(node=None)
+            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.city))
 
     def on_buy_dev_card(self):
         logging.warning('Buying dev cards not yet implemented')
-        self.game.buy_dev_card()
+        #self.game.buy_dev_card()
 
 
 class TradeFrame(tkinter.Frame):

@@ -20,8 +20,11 @@ class CatanSpectator(tkinter.Frame):
     def __init__(self, options=None, *args, **kwargs):
         super(CatanSpectator, self).__init__()
         self.options = options or dict()
-        board = models.Board(**self.options)
-        self.game = models.Game(board=board)
+        board = models.Board(terrain=self.options.get('terrain'),
+                             numbers=self.options.get('numbers'),
+                             ports=self.options.get('ports'),
+                             pieces=self.options.get('pieces'))
+        self.game = models.Game(board=board, pregame=self.options.get('pregame'))
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
@@ -67,6 +70,7 @@ def main():
     parser.add_argument('--numbers', help='random|preset|empty|debug, default empty')
     parser.add_argument('--ports', help='random|preset|empty|debug, default preset')
     parser.add_argument('--pieces', help='random|preset|empty|debug, default empty')
+    parser.add_argument('--pregame', help='on|off, default on')
 
     args = parser.parse_args()
     logging.info('args={}'.format(args))
@@ -75,6 +79,7 @@ def main():
         'numbers': args.numbers,
         'ports': args.ports,
         'pieces': args.pieces,
+        'pregame': args.pregame,
     })
     app.mainloop()
 

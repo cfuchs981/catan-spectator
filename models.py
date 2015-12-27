@@ -7,8 +7,11 @@ from enum import Enum
 
 class Game(object):
 
-    def __init__(self, players=None, board=None, log=None):
+    def __init__(self, players=None, board=None, log=None, pregame='on'):
         self.observers = set()
+        self.options = {
+            'pregame': pregame,
+        }
         self.players = players or list()
         self.board = board or Board()
         self.catanlog = log or catanlog.CatanLog()
@@ -67,7 +70,12 @@ class Game(object):
 
     def start(self, players):
         self.set_players(players)
-        self.set_state(states.GameStatePreGamePlaceSettlement(self))
+        if self.options.get('pregame') is None or self.options.get('pregame') == 'on':
+            logging.debug('Entering pregame, game options={}'.format(self.options))
+            self.set_state(states.GameStatePreGamePlaceSettlement(self))
+        elif self.options.get('pregame') == 'off':
+            logging.debug('Skipping pregame, game options={}'.format(self.options))
+            self.set_state(states.GameStateBeginTurn(self))
 
         terrain = list()
         numbers = list()
@@ -117,6 +125,8 @@ class Game(object):
         self.catanlog.log_player_buys_road(self.get_cur_player(), edge)
         if self.state.is_in_pregame():
             self.end_turn()
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
@@ -125,9 +135,15 @@ class Game(object):
         self.catanlog.log_player_buys_settlement(self.get_cur_player(), node)
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def buy_city(self, node):
+        #self.assert_legal_city(node)
+        piece = Piece(PieceType.city, self.get_cur_player())
+        self.board.place_piece(piece, node)
         self.catanlog.log_player_buys_city(self.get_cur_player(), node)
+        self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def buy_dev_card(self):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())

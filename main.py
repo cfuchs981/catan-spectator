@@ -9,6 +9,8 @@ TODO: Docstrings and unittests.
 
 import tkinter
 import logging
+import argparse
+import boardbuilder
 
 import views
 import models
@@ -18,18 +20,15 @@ class CatanSpectator(tkinter.Frame):
 
     def __init__(self, options=None, *args, **kwargs):
         super(CatanSpectator, self).__init__()
-        self.options = options or {
-            'hex_resource_selection': True,
-            'hex_number_selection': False
-        }
-        dbg_board = models.Board(terrain='debug', numbers='debug', pieces='debug')
-        self.game = models.Game(board=dbg_board)
+        self.options = boardbuilder.get_opts(options)
+        board = models.Board(**options)
+        self.game = models.Game(board=board)
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
-        self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self, self.game, options=self.options)
+        self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self, self.game)
         self._game_toolbar_frame = None
-        board_frame = views.BoardFrame(self, self.game, options=self.options)
+        board_frame = views.BoardFrame(self, self.game)
 
         board_frame.redraw()
 
@@ -60,7 +59,16 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.DEBUG)
-    app = CatanSpectator()
+
+    parser = argparse.ArgumentParser(description='log a game of catan')
+    parser.add_argument('--terrain', help='random|preset|empty|debug, default empty')
+    parser.add_argument('--numbers', help='random|preset|empty|debug, default empty')
+    parser.add_argument('--ports', help='random|preset|empty|debug, default preset')
+    parser.add_argument('--pieces', help='random|preset|empty|debug, default empty')
+
+    args = parser.parse_args()
+    logging.info('args={}'.format(args))
+    app = CatanSpectator(options=args)
     app.mainloop()
 
 

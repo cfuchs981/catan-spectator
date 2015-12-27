@@ -15,6 +15,8 @@ This is a work in progress.
 $ python3 main.py
 ```
 
+Detailed usage below.
+
 ### Demo
 ![Demo](/doc/gifs/demo2.gif)
 

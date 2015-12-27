@@ -9,20 +9,35 @@ Use #modify to modify an existing board instead of building a new one.
 This will reset the board. #reset is an alias.
 """
 import logging
+from enum import Enum
 import random
 import hexgrid
 import states
 from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece, PieceType, Player
 
 
+class Opts(Enum):
+    empty = 'empty'
+    random = 'random'
+    preset = 'preset'
+    debug = 'debug'
+
+
 def get_opts(opts):
     _opts = { # defaults
-              'terrain': 'empty', # random|empty|default
-              'numbers': 'empty', # random|empty|default
-              'ports': 'default', # random|empty|default
-              'pieces': None
+              'terrain': Opts('empty'),
+              'numbers': Opts('empty'),
+              'ports': Opts('preset'),
+              'pieces': Opts('empty'),
               }
-    _opts.update(opts)
+    if opts is None:
+        opts = dict()
+    try:
+        for key, val in opts.items():
+            Opts(val)
+        _opts.update(opts)
+    except Exception:
+        raise ValueError('Invalid options={}'.format(opts))
     return _opts
 
 def build(opts=None):
@@ -54,6 +69,9 @@ def _generate_tiles(terrain_opts, numbers_opts):
                    [Terrain.sheep] * 4 +
                    [Terrain.wheat] * 4)
         random.shuffle(terrain)
+    elif terrain_opts == 'preset':
+        terrain = ([Terrain.desert] * NUM_TILES)
+        logging.warning('Preset terrain option not yet implemented')
 
     if numbers_opts == 'empty':
         numbers = ([HexNumber.none] * NUM_TILES)
@@ -66,6 +84,9 @@ def _generate_tiles(terrain_opts, numbers_opts):
                    [HexNumber.twelve])
         random.shuffle(numbers)
         numbers.insert(terrain.index(Terrain.desert), HexNumber.none)
+    elif numbers_opts == 'preset':
+        numbers = ([HexNumber.none] * NUM_TILES)
+        logging.warning('Preset numbers option not yet implemented')
 
     assert len(numbers) == NUM_TILES
     assert len(terrain) == NUM_TILES
@@ -76,12 +97,17 @@ def _generate_tiles(terrain_opts, numbers_opts):
     return tiles
 
 def _generate_ports(port_opts):
-    if port_opts in ['default', 'debug']:
+    if port_opts in ['preset', 'debug']:
         return [(tile, dir, port) for (tile, dir), port in zip(_default_port_locations, list(_default_ports))]
+    elif port_opts in ['empty, random']:
+        logging.warning('{} option not yet implemented'.format(port_opts))
+        return []
 
 def _generate_pieces(pieces_opts):
     if pieces_opts == 'empty':
         return dict()
+    elif pieces_opts in ['random', 'preset']:
+        logging.warning('{} option not yet implemented'.format(pieces_opts))
     elif pieces_opts == 'debug':
         josh = Player(1, 'josh', 'blue')
         ross = Player(2, 'ross', 'red')

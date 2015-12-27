@@ -283,10 +283,10 @@ class Board(object):
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
         import boardbuilder
         boardbuilder.reset(self, opts={
-            'terrain': terrain or 'empty', # random|empty|default
-            'numbers': numbers or 'empty', # random|empty|default
-            'ports': ports or 'default', # random|empty|default
-            'pieces': pieces or 'empty', # empty|debug
+            'terrain': terrain or 'empty',
+            'numbers': numbers or 'empty',
+            'ports': ports or 'default',
+            'pieces': pieces or 'empty',
         })
 
     def can_place_piece(self, piece, coord):

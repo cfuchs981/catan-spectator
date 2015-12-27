@@ -9,14 +9,17 @@ OPTS=$(OPTS_DEBUG_NO_PREGAME)
 
 all: relaunch
 
+logs:
+	cat log/buffer.log
+
 launch:
 	@mkdir -p log
 	python3 main.py $(OPTS) &>log/buffer.log & echo $$! > log/running.pid
 	@cat log/running.pid
 	@echo "Follow logs: tail -f log/buffer.log, or make logs"
 
-logs:
-	tail -f log/buffer.log
+tail:
+	tail -f -n 30 log/buffer.log | less
 
 relaunch:
 	@mkdir -p log

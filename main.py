@@ -10,7 +10,6 @@ TODO: Docstrings and unittests.
 import tkinter
 import logging
 import argparse
-import boardbuilder
 
 import views
 import models
@@ -20,8 +19,8 @@ class CatanSpectator(tkinter.Frame):
 
     def __init__(self, options=None, *args, **kwargs):
         super(CatanSpectator, self).__init__()
-        self.options = boardbuilder.get_opts(options)
-        board = models.Board(**options)
+        self.options = options or dict()
+        board = models.Board(**self.options)
         self.game = models.Game(board=board)
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
@@ -54,6 +53,9 @@ class CatanSpectator(tkinter.Frame):
             self._toolbar_frame = self._game_toolbar_frame or views.GameToolbarFrame(self, self.game)
             self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
+    def setup_options(self):
+        return self._setup_game_toolbar_frame.options.copy()
+
 
 def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
@@ -68,7 +70,12 @@ def main():
 
     args = parser.parse_args()
     logging.info('args={}'.format(args))
-    app = CatanSpectator(options=args)
+    app = CatanSpectator(options={
+        'terrain': args.terrain,
+        'numbers': args.numbers,
+        'ports': args.ports,
+        'pieces': args.pieces,
+    })
     app.mainloop()
 
 

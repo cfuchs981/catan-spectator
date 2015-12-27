@@ -24,20 +24,22 @@ class Opts(Enum):
 
 
 def get_opts(opts):
-    _opts = { # defaults
-              'terrain': Opts('empty'),
-              'numbers': Opts('empty'),
-              'ports': Opts('preset'),
-              'pieces': Opts('empty'),
-              }
+    defaults = {
+        'terrain': Opts.random,
+        'numbers': Opts.random,
+        'ports': Opts.preset,
+        'pieces': Opts.debug,
+    }
+    _opts = defaults.copy()
     if opts is None:
         opts = dict()
     try:
-        for key, val in opts.items():
-            Opts(val)
+        for key, val in opts.copy().items():
+            opts[key] = Opts(val)
         _opts.update(opts)
     except Exception:
         raise ValueError('Invalid options={}'.format(opts))
+    logging.debug('used defaults={} on opts={}, returned total opts={}'.format(defaults, opts, _opts))
     return _opts
 
 def build(opts=None):
@@ -59,9 +61,9 @@ def _generate_tiles(terrain_opts, numbers_opts):
     terrain = None
     numbers = None
 
-    if terrain_opts == 'empty':
+    if terrain_opts == Opts.empty:
         terrain = ([Terrain.desert] * NUM_TILES)
-    elif terrain_opts in ['random', 'debug']:
+    elif terrain_opts in (Opts.random, Opts.debug):
         terrain = ([Terrain.desert] +
                    [Terrain.brick] * 3 +
                    [Terrain.ore] * 3 +
@@ -69,13 +71,13 @@ def _generate_tiles(terrain_opts, numbers_opts):
                    [Terrain.sheep] * 4 +
                    [Terrain.wheat] * 4)
         random.shuffle(terrain)
-    elif terrain_opts == 'preset':
+    elif terrain_opts == Opts.preset:
         terrain = ([Terrain.desert] * NUM_TILES)
         logging.warning('Preset terrain option not yet implemented')
 
-    if numbers_opts == 'empty':
+    if numbers_opts == Opts.empty:
         numbers = ([HexNumber.none] * NUM_TILES)
-    elif numbers_opts in ['random', 'debug']:
+    elif numbers_opts in (Opts.random, Opts.debug):
         numbers = ([HexNumber.two] +
                    [HexNumber.three]*2 + [HexNumber.four]*2 +
                    [HexNumber.five]*2 + [HexNumber.six]*2 +
@@ -84,7 +86,7 @@ def _generate_tiles(terrain_opts, numbers_opts):
                    [HexNumber.twelve])
         random.shuffle(numbers)
         numbers.insert(terrain.index(Terrain.desert), HexNumber.none)
-    elif numbers_opts == 'preset':
+    elif numbers_opts == Opts.preset:
         numbers = ([HexNumber.none] * NUM_TILES)
         logging.warning('Preset numbers option not yet implemented')
 
@@ -97,18 +99,16 @@ def _generate_tiles(terrain_opts, numbers_opts):
     return tiles
 
 def _generate_ports(port_opts):
-    if port_opts in ['preset', 'debug']:
+    if port_opts in [Opts.preset, Opts.debug]:
         return [(tile, dir, port) for (tile, dir), port in zip(_default_port_locations, list(_default_ports))]
     elif port_opts in ['empty, random']:
         logging.warning('{} option not yet implemented'.format(port_opts))
         return []
 
 def _generate_pieces(pieces_opts):
-    if pieces_opts == 'empty':
+    if pieces_opts == Opts.empty:
         return dict()
-    elif pieces_opts in ['random', 'preset']:
-        logging.warning('{} option not yet implemented'.format(pieces_opts))
-    elif pieces_opts == 'debug':
+    elif pieces_opts == Opts.debug:
         josh = Player(1, 'josh', 'blue')
         ross = Player(2, 'ross', 'red')
         yuri = Player(3, 'yuri', 'green')
@@ -122,6 +122,8 @@ def _generate_pieces(pieces_opts):
             (hexgrid.EDGE, 0x89): Piece(PieceType.road, yuri),
             (hexgrid.EDGE, 0xA9): Piece(PieceType.road, zach),
         }
+    elif pieces_opts in (Opts.random, Opts.preset):
+        logging.warning('{} option not yet implemented'.format(pieces_opts))
 
 def _check_red_placement(tiles):
     logging.warning('"Check red placement" not yet implemented')

@@ -20,7 +20,7 @@ can_do = {
 
 class BoardFrame(tkinter.Frame):
 
-    def __init__(self, master, game, options=None, *args, **kwargs):
+    def __init__(self, master, game, *args, **kwargs):
         super(BoardFrame, self).__init__()
         self.master = master
         self.game = game
@@ -28,7 +28,7 @@ class BoardFrame(tkinter.Frame):
 
         self._board = game.board
 
-        board_canvas = tkinter.Canvas(self, height=600, width=600, background='Royal Blue')
+        board_canvas = tkinter.Canvas(self, height=700, width=620, background='Royal Blue')
         board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 
         self._board_canvas = board_canvas
@@ -41,9 +41,9 @@ class BoardFrame(tkinter.Frame):
             return
 
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
-        if self.master.options.get('hex_resource_selection'):
+        if self.master.setup_options()['hex_resource_selection']:
             self._board.cycle_hex_type(self._tile_id_from_tag(tag))
-        if self.master.options.get('hex_number_selection'):
+        if self.master.setup_options()['hex_number_selection']:
             self._board.cycle_hex_number(self._tile_id_from_tag(tag))
         self.redraw()
 
@@ -261,7 +261,6 @@ class BoardFrame(tkinter.Frame):
         roads = list()
         settlements = list()
         cities = list()
-        logging.debug('board.pieces.items()={}'.format(board.pieces.items()))
         for (_, coord), piece in board.pieces.items():
             if piece.type == PieceType.road:
                 roads.append((coord, piece))

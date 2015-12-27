@@ -46,15 +46,19 @@ class Game(object):
         self.set_state(states.GameStateNotInGame(self))
 
     def set_state(self, game_state: states.GameState):
-        logging.info('now {0}, was {1}'.format(
-            type(game_state).__name__,
-            type(self.state).__name__
-        ))
+        _old_state = self.state
+        _old_board_state = self.board.state
         self.state = game_state
         if game_state.is_in_game():
             self.board.state = states.BoardStateLocked(self.board)
         else:
             self.board.state = states.BoardStateModifiable(self.board)
+        logging.info('Game now={}, was={}. Board now={}, was={}'.format(
+            type(self.state).__name__,
+            type(_old_state).__name__,
+            type(self.board.state).__name__,
+            type(_old_board_state).__name__
+        ))
         self.notify_observers()
 
     def set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
@@ -282,12 +286,16 @@ class Board(object):
 
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
         import boardbuilder
-        boardbuilder.reset(self, opts={
-            'terrain': terrain or 'empty',
-            'numbers': numbers or 'empty',
-            'ports': ports or 'default',
-            'pieces': pieces or 'empty',
-        })
+        opts = dict()
+        if terrain is not None:
+            opts['terrain'] = terrain
+        if numbers is not None:
+            opts['numbers'] = numbers
+        if ports is not None:
+            opts['ports'] = ports
+        if pieces is not None:
+            opts['pieces'] = pieces
+        boardbuilder.reset(self, opts=opts)
 
     def can_place_piece(self, piece, coord):
         if piece.type == PieceType.road:

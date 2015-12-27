@@ -47,7 +47,7 @@ def get_log_with_random_board():
     terrain.insert(desert, Terrain.desert)
     numbers.insert(desert, HexNumber.none)
 
-    log.log_initial_game_info(players, terrain, numbers, ports)
+    log.log_game_start(players, terrain, numbers, ports)
     return log
 
 

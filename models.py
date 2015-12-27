@@ -35,19 +35,6 @@ class Game(object):
         for obs in self.observers.copy():
             obs.notify(self)
 
-    def reset(self):
-        self.players = list()
-        self.board.reset()
-        self.catanlog = catanlog.CatanLog()
-        self.state = None
-
-        self.last_roll = None
-        self.last_player_to_roll = None
-        self._cur_player = None
-        self._cur_turn = 0
-
-        self.set_state(states.GameStateNotInGame(self))
-
     def set_state(self, game_state):
         _old_state = self.state
         _old_board_state = self.board.state
@@ -69,6 +56,8 @@ class Game(object):
         self.notify_observers()
 
     def start(self, players):
+        self.reset()
+
         self.set_players(players)
         if self.options.get('pregame') is None or self.options.get('pregame') == 'on':
             logging.debug('Entering pregame, game options={}'.format(self.options))
@@ -85,12 +74,22 @@ class Game(object):
             numbers.append(tile.number)
         for _, _, port in self.board.ports:
             ports.append(port)
-        self.catanlog.log_initial_game_info(self.players, terrain, numbers, ports)
+
+        self.catanlog.log_game_start(self.players, terrain, numbers, ports)
         self.notify_observers()
 
     def end(self):
         self.catanlog.log_player_wins(self.get_cur_player())
         self.set_state(states.GameStateNotInGame(self))
+
+    def reset(self):
+        self.players = list()
+        self.state = states.GameStateNotInGame(self)
+
+        self.last_roll = None
+        self.last_player_to_roll = None
+        self._cur_player = None
+        self._cur_turn = 0
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)

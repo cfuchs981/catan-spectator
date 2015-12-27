@@ -50,6 +50,12 @@ class CatanLog(object):
         """
         self.log('{0}\n'.format(content))
 
+    def reset(self):
+        """Erases the log, resets the timestamp
+        """
+        self._log = ''
+        self.timestamp = datetime.datetime.now()
+
     def dump(self):
         """Dumps the entire log to a string, and returns it
         """
@@ -84,9 +90,11 @@ class CatanLog(object):
         if not self._use_stdout:
             file.close()
 
-    def log_initial_game_info(self, players, terrain, numbers, ports):
+    def log_game_start(self, players, terrain, numbers, ports):
         """
-        Begins a game by logging
+        Begins a game.
+
+        Clears the log, sets the timestamp, and logs the following:
         - file format version
         - timestamp
         - players
@@ -97,6 +105,7 @@ class CatanLog(object):
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
+        self.reset()
         self._set_players(players)
         self.logln('{} {}'.format(name(), version()))
         self.logln('timestamp: {0}'.format(self.timestamp))

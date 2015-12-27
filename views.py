@@ -84,7 +84,6 @@ class BoardFrame(tkinter.Frame):
         elif self.game.state.can_place_city():
             self._draw_piece_shadows(PieceType.city, board, terrain_centers)
 
-
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
         self.draw(self._board)
@@ -123,7 +122,7 @@ class BoardFrame(tkinter.Frame):
 
     def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
         points = self._hex_points(radius, offset, rotate)
-        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
+        self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
 
     def _draw_numbers(self, board, terrain_centers):
         logging.debug('Drawing numbers')
@@ -185,6 +184,8 @@ class BoardFrame(tkinter.Frame):
         if ghost:
             self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
                                         func=functools.partial(self.piece_click, piece.type))
+        else:
+            self._board_canvas.tag_unbind(tag, '<ButtonPress-1>')
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
         logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))

@@ -157,11 +157,9 @@ class Game(object):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
 
-    def play_road_builder(self, node_a1, node_a2, node_b1, node_b2):
+    def play_road_builder(self, edge1, edge2):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(),
-                                                         node_a1, node_a2,
-                                                         node_b1, node_b2)
+        self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(), edge1, edge2)
 
     def play_victory_point(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))

@@ -51,11 +51,11 @@ class BoardFrame(tkinter.Frame):
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
         logging.debug('Piece clicked with tag={}'.format(tag))
         if piece_type == PieceType.road:
-            self.game.buy_road(self._coord_from_road_tag(tag))
+            self.game.state.place_road(self._coord_from_road_tag(tag))
         elif piece_type == PieceType.settlement:
-            self.game.buy_settlement(self._coord_from_settlement_tag(tag))
+            self.game.state.place_settlement(self._coord_from_settlement_tag(tag))
         elif piece_type == PieceType.city:
-            self.game.buy_city(self._coord_from_city_tag(tag))
+            self.game.state.place_city(self._coord_from_city_tag(tag))
         self.redraw()
 
     def notify(self, observable):
@@ -233,9 +233,9 @@ class BoardFrame(tkinter.Frame):
         points += [x + length/2, y + height/2] # right bottom
         points += [x - length/2, y + height/2] # left bottom
         points = tkinterutils.rotate_2poly(angle, points, (x, y))
-        logging.debug('Drawing road={} at coord={}, angle={} with opts={}'.format(
-            piece, coord, angle, opts
-        ))
+        # logging.debug('Drawing road={} at coord={}, angle={} with opts={}'.format(
+        #     piece, coord, angle, opts
+        # ))
         self._board_canvas.create_polygon(*points,
                                             **opts)
 
@@ -686,8 +686,7 @@ class PlayDevCardFrame(tkinter.Frame):
         self.game.play_monopoly(self.monopoly_choice.get())
 
     def on_road_builder(self):
-        # todo UI for choosing where both roads go, pass them to Game
-        self.game.play_road_builder(None, None, None, None)
+        self.game.set_state(states.GameStatePlacingRoadBuilderPieces(self.game))
 
     def on_victory_point(self):
         self.game.play_victory_point()

@@ -425,13 +425,13 @@ class GameStatePlacingPiece(GameStateInGame):
     def can_place_city(self):
         return self.piece_type == models.PieceType.city
 
-    def place_road(self, node_from, node_to):
+    def place_road(self, edge):
         if not self.can_place_road():
             logging.warning('Attempted to place road in illegal state={} with piece_type={}'.format(
                 self.__class__.__name__,
                 self.piece_type
             ))
-        self.game.buy_road(node_from, node_to)
+        self.game.buy_road(edge)
 
     def place_settlement(self, node):
         if not self.can_place_settlement():
@@ -483,6 +483,30 @@ class GameStatePlacingPiece(GameStateInGame):
 
     def can_play_victory_point(self):
         return True
+
+
+class GameStatePlacingRoadBuilderPieces(GameStatePlacingPiece):
+    """
+    - AFTER a player has selected to build 2 road builder roads
+    - WHILE the player is choosing where to place them
+    - BEFORE the player has placed both of them
+    """
+    def __init__(self, game):
+        super(GameStatePlacingRoadBuilderPieces, self).__init__(game, models.PieceType.road)
+        self.edges = list()
+
+    def place_road(self, edge):
+        if not self.can_place_road():
+            logging.warning('Attempted to place road in illegal state={} with piece_type={}'.format(
+                self.__class__.__name__,
+                self.piece_type
+            ))
+        piece = models.Piece(models.PieceType.road, self.game.get_cur_player())
+        self.game.board.place_piece(piece, edge)
+        self.edges.append(edge)
+        if len(self.edges) == 2:
+            self.game.play_road_builder(self.edges[0], self.edges[1])
+            self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
 
 
 class DevCardPlayabilityState(object):

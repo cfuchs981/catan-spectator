@@ -17,7 +17,7 @@ class CatanLog(object):
 
     TODO log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=1, patch=0)
+    version = Version(major=0, minor=2, patch=0)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
@@ -241,16 +241,14 @@ class CatanLog(object):
         """
         self.logln('{0} plays dev card: victory point'.format(player.color))
 
-    def log_player_plays_dev_road_builder(self, player, node_id_a1, node_id_a2, node_id_b1, node_id_b2):
+    def log_player_plays_dev_road_builder(self, player, edge1, edge2):
         """
-        $color plays dev card: road builder, builds from $location to $location and $location to $location
+        $color plays dev card: road builder, builds at $location and $location
         """
-        self.logln('{0} plays dev card: road builder, builds from {1} to {2} and {3} to {4}'.format(
+        self.logln('{0} plays dev card: road builder, builds at {1} and {2}'.format(
             player.color,
-            node_id_a1,
-            node_id_a2,
-            node_id_b1,
-            node_id_b2
+            edge1,
+            edge2
         ))
 
     def log_player_ends_turn(self, player):

@@ -68,7 +68,7 @@ def edges_touching_tile(tile_id):
     edges = []
     for offset in _tile_edge_offsets.keys():
         edges.append(coord + offset)
-    logging.debug('tile_id={}, edges touching={}'.format(tile_id, edges))
+    # logging.debug('tile_id={}, edges touching={}'.format(tile_id, edges))
     return edges
 
 def nodes_touching_tile(tile_id):
@@ -77,7 +77,7 @@ def nodes_touching_tile(tile_id):
     nodes = []
     for offset in _tile_node_offsets.keys():
         nodes.append(coord + offset)
-    logging.debug('tile_id={}, nodes touching={}'.format(tile_id, nodes))
+    # logging.debug('tile_id={}, nodes touching={}'.format(tile_id, nodes))
     return nodes
 
 def legal_edge_coords():

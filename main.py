@@ -1,4 +1,4 @@
-"""Record a game of Settlers of Catan.
+"""log a game of Settlers of Catan.
 
 TODO: Allow ports to be selected during pregame
 TODO: Control size adjustment with resizing of window
@@ -14,10 +14,10 @@ import views
 import models
 
 
-class CatanGameRecorder(tkinter.Frame):
+class CatanSpectator(tkinter.Frame):
 
     def __init__(self, options=None, *args, **kwargs):
-        super(CatanGameRecorder, self).__init__()
+        super(CatanSpectator, self).__init__()
         self.options = options or {
             'hex_resource_selection': True,
             'hex_number_selection': False
@@ -60,7 +60,7 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.DEBUG)
-    app = CatanGameRecorder()
+    app = CatanSpectator()
     app.mainloop()
 
 

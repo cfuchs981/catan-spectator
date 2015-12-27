@@ -341,7 +341,7 @@ class GameStateSteal(GameStateInGame):
         return True
 
     def steal(self, victim):
-        self.game.record.record_player_moves_robber_and_steals(
+        self.game.log.log_player_moves_robber_and_steals(
             self.game.get_cur_player(),
             self.game.robber_tile,
             victim
@@ -383,7 +383,7 @@ class GameStateStealUsingKnight(GameStateSteal):
     - BEFORE the player has stolen a card using the knight
     """
     def steal(self, victim):
-        self.game.record.record_player_plays_dev_knight(
+        self.game.log.log_player_plays_dev_knight(
             self.game.get_cur_player(),
             self.game.robber_tile,
             victim

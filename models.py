@@ -7,11 +7,11 @@ from enum import Enum
 
 class Game(object):
 
-    def __init__(self, players=None, board=None, record=None):
+    def __init__(self, players=None, board=None, log=None):
         self.observers = set()
         self.players = players or list()
         self.board = board or Board()
-        self.record = record or catanlog.CatanLog()
+        self.catanlog = log or catanlog.CatanLog()
 
         self.state = None
         self._cur_player = None # set in #set_players
@@ -35,7 +35,7 @@ class Game(object):
     def reset(self):
         self.players = list()
         self.board.reset()
-        self.record = catanlog.CatanLog()
+        self.catanlog = catanlog.CatanLog()
         self.state = None
 
         self.last_roll = None
@@ -73,11 +73,11 @@ class Game(object):
             numbers.append(tile.number)
         for _, _, port in self.board.ports:
             ports.append(port)
-        self.record.record_initial_game_info(self.players, terrain, numbers, ports)
+        self.catanlog.log_initial_game_info(self.players, terrain, numbers, ports)
 
     def end(self):
         self.set_state(states.GameStateNotInGame(self))
-        self.record.record_player_wins(self._cur_player)
+        self.catanlog.log_player_wins(self._cur_player)
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
@@ -88,7 +88,7 @@ class Game(object):
         self.notify_observers()
 
     def roll(self, roll):
-        self.record.record_player_roll(self._cur_player, roll)
+        self.catanlog.log_player_roll(self._cur_player, roll)
         self.last_roll = roll
         self.last_player_to_roll = self._cur_player
         if int(roll) == 7:
@@ -107,7 +107,7 @@ class Game(object):
         #self.assert_legal_road(edge)
         piece = Piece(PieceType.road, self.get_cur_player())
         self.board.place_piece(piece, edge)
-        self.record.record_player_buys_road(self._cur_player, edge)
+        self.catanlog.log_player_buys_road(self._cur_player, edge)
         if self.state.is_in_pregame():
             self.end_turn()
 
@@ -115,15 +115,15 @@ class Game(object):
         #self.assert_legal_settlement(node)
         piece = Piece(PieceType.settlement, self.get_cur_player())
         self.board.place_piece(piece, node)
-        self.record.record_player_buys_settlement(self._cur_player, node)
+        self.catanlog.log_player_buys_settlement(self._cur_player, node)
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))
 
     def buy_city(self, node):
-        self.record.record_player_buys_city(self._cur_player, node)
+        self.catanlog.log_player_buys_city(self._cur_player, node)
 
     def buy_dev_card(self):
-        self.record.record_player_buys_dev_card(self._cur_player)
+        self.catanlog.log_player_buys_dev_card(self._cur_player)
 
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
@@ -131,20 +131,20 @@ class Game(object):
 
     def play_monopoly(self, resource):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.record.record_player_plays_dev_monopoly(self._cur_player, resource)
+        self.catanlog.log_player_plays_dev_monopoly(self._cur_player, resource)
 
     def play_road_builder(self, node_a1, node_a2, node_b1, node_b2):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.record.record_player_plays_dev_road_builder(self._cur_player,
+        self.catanlog.log_player_plays_dev_road_builder(self._cur_player,
                                                          node_a1, node_a2,
                                                          node_b1, node_b2)
 
     def play_victory_point(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.record.record_player_plays_dev_victory_point(self._cur_player)
+        self.catanlog.log_player_plays_dev_victory_point(self._cur_player)
 
     def end_turn(self):
-        self.record.record_player_ends_turn(self._cur_player)
+        self.catanlog.log_player_ends_turn(self._cur_player)
         self._cur_player = self.state.next_player()
         self._cur_turn += 1
 

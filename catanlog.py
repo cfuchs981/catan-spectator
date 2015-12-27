@@ -82,7 +82,7 @@ class CatanLog(object):
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
-        self.logln('CatanGameRecord v{0}'.format(CatanLog.version))
+        self.logln('CatanGamelog v{0}'.format(CatanLog.version))
         self.logln('timestamp: {0}'.format(self.timestamp))
         self._log_players(players)
         self._log_board_terrain(terrain)

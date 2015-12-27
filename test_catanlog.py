@@ -51,7 +51,7 @@ def get_log_with_random_board():
     return log
 
 
-def test_log_intial_game_info():
+def test_log_initial_game_info():
     """
     Contract describing the game log "pregame"/file-header format
     """

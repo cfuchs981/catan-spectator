@@ -28,7 +28,7 @@ class BoardFrame(tkinter.Frame):
 
         self._board = game.board
 
-        board_canvas = tkinter.Canvas(self, height=700, width=620, background='Royal Blue')
+        board_canvas = tkinter.Canvas(self, height=800, width=600, background='Royal Blue')
         board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 
         self._board_canvas = board_canvas

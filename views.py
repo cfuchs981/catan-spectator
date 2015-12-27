@@ -580,8 +580,7 @@ class BuildFrame(tkinter.Frame):
             self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.city))
 
     def on_buy_dev_card(self):
-        logging.warning('Buying dev cards not yet implemented')
-        #self.game.buy_dev_card()
+        self.game.buy_dev_card()
 
 
 class TradeFrame(tkinter.Frame):

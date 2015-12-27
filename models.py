@@ -81,20 +81,23 @@ class Game(object):
 
     def end(self):
         self.set_state(states.GameStateNotInGame(self))
-        self.catanlog.log_player_wins(self._cur_player)
+        self.catanlog.log_player_wins(self.get_cur_player())
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
 
+    def set_cur_player(self, player):
+        self._cur_player = Player(player.seat, player.name, player.color)
+
     def set_players(self, players):
         self.players = list(players)
-        self._cur_player = self.players[0]
+        self.set_cur_player(self.players[0])
         self.notify_observers()
 
     def roll(self, roll):
-        self.catanlog.log_player_roll(self._cur_player, roll)
+        self.catanlog.log_player_roll(self.get_cur_player(), roll)
         self.last_roll = roll
-        self.last_player_to_roll = self._cur_player
+        self.last_player_to_roll = self.get_cur_player()
         if int(roll) == 7:
             self.set_state(states.GameStateMoveRobber(self))
         else:
@@ -111,7 +114,7 @@ class Game(object):
         #self.assert_legal_road(edge)
         piece = Piece(PieceType.road, self.get_cur_player())
         self.board.place_piece(piece, edge)
-        self.catanlog.log_player_buys_road(self._cur_player, edge)
+        self.catanlog.log_player_buys_road(self.get_cur_player(), edge)
         if self.state.is_in_pregame():
             self.end_turn()
 
@@ -119,15 +122,15 @@ class Game(object):
         #self.assert_legal_settlement(node)
         piece = Piece(PieceType.settlement, self.get_cur_player())
         self.board.place_piece(piece, node)
-        self.catanlog.log_player_buys_settlement(self._cur_player, node)
+        self.catanlog.log_player_buys_settlement(self.get_cur_player(), node)
         if self.state.is_in_pregame():
             self.set_state(states.GameStatePreGamePlaceRoad(self))
 
     def buy_city(self, node):
-        self.catanlog.log_player_buys_city(self._cur_player, node)
+        self.catanlog.log_player_buys_city(self.get_cur_player(), node)
 
     def buy_dev_card(self):
-        self.catanlog.log_player_buys_dev_card(self._cur_player)
+        self.catanlog.log_player_buys_dev_card(self.get_cur_player())
 
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
@@ -135,21 +138,21 @@ class Game(object):
 
     def play_monopoly(self, resource):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.catanlog.log_player_plays_dev_monopoly(self._cur_player, resource)
+        self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
 
     def play_road_builder(self, node_a1, node_a2, node_b1, node_b2):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.catanlog.log_player_plays_dev_road_builder(self._cur_player,
+        self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(),
                                                          node_a1, node_a2,
                                                          node_b1, node_b2)
 
     def play_victory_point(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
-        self.catanlog.log_player_plays_dev_victory_point(self._cur_player)
+        self.catanlog.log_player_plays_dev_victory_point(self.get_cur_player())
 
     def end_turn(self):
-        self.catanlog.log_player_ends_turn(self._cur_player)
-        self._cur_player = self.state.next_player()
+        self.catanlog.log_player_ends_turn(self.get_cur_player())
+        self.set_cur_player(self.state.next_player())
         self._cur_turn += 1
 
         self.set_dev_card_state(states.DevCardNotPlayedState(self))

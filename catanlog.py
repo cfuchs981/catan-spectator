@@ -36,7 +36,7 @@ class CatanLog(object):
         """
         self._log += content
         if self._auto_flush:
-            self.flush(self._log_dir, self._use_stdout)
+            self.flush()
 
     def logln(self, content):
         """Writes a string to the log, appending a newline
@@ -53,28 +53,28 @@ class CatanLog(object):
         """
         return self._log[self._chars_flushed:]
 
-    def filename(self, log_dir):
+    def filename(self):
         """Returns a unique string based on the timestamp and players involved
         """
         name = '{}-{}.catan'.format(self.timestamp.isoformat(), '-'.join([p.name for p in self.players]))
-        path = os.path.join(log_dir, name)
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
+        path = os.path.join(self._log_dir, name)
+        if not os.path.exists(self._log_dir):
+            os.mkdir(self._log_dir)
         return path
 
-    def flush(self, log_dir, use_stdout):
+    def flush(self):
         """Appends the latest updates to file, or optionally to stdout instead
         """
         latest = self._latest()
         self._chars_flushed += len(latest)
-        if use_stdout:
+        if self._use_stdout:
             file = sys.stdout
         else:
-            file = open(self.filename(log_dir), 'a')
+            file = open(self.filename(), 'a')
 
         print(latest, file=file, flush=True, end='')
 
-        if not use_stdout:
+        if not self._use_stdout:
             file.close()
 
     def log_initial_game_info(self, players, terrain, numbers, ports):

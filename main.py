@@ -28,19 +28,21 @@ class CatanSpectator(tkinter.Frame):
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
-        self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self, self.game)
-        self._game_toolbar_frame = None
-        board_frame = views.BoardFrame(self, self.game)
+        self.left_frame = tkinter.Frame()
+        self.right_frame = tkinter.Frame()
 
-        board_frame.redraw()
+        self._board_frame = views.BoardFrame(self.left_frame, self.game)
+        self._log_frame = views.LogFrame(self.left_frame, self.game)
+        self._board_frame.pack(side=tkinter.TOP, fill=tkinter.Y)
+        self._log_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        self.left_frame.pack(side=tkinter.LEFT)
 
-        self._board_frame = board_frame
+        self._board_frame.redraw()
+
+        self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self.right_frame, self.game)
         self._toolbar_frame = self._setup_game_toolbar_frame
-
-        self._board_frame.pack(side=tkinter.LEFT, fill=tkinter.Y)
-        self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-
-        self.lift()
+        self._toolbar_frame.pack(side=tkinter.TOP, fill=tkinter.BOTH)
+        self.right_frame.pack(side=tkinter.RIGHT)
 
     def notify(self, observable):
         was_in_game = self._in_game
@@ -53,12 +55,11 @@ class CatanSpectator(tkinter.Frame):
         elif not was_in_game and self.game.state.is_in_game():
             # we were not in game, now we are
             self._toolbar_frame.pack_forget()
-            self._toolbar_frame = self._game_toolbar_frame or views.GameToolbarFrame(self, self.game)
+            self._toolbar_frame = views.GameToolbarFrame(self.right_frame, self.game)
             self._toolbar_frame.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
     def setup_options(self):
         return self._setup_game_toolbar_frame.options.copy()
-
 
 def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',

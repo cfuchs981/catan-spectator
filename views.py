@@ -2,7 +2,6 @@ import logging
 import tkinter
 from tkinter import messagebox
 import math
-import itertools
 import collections
 import functools
 import hexgrid
@@ -18,23 +17,48 @@ can_do = {
 }
 
 
+CANVAS_WIDTH = 600
+CANVAS_HEIGHT = 550
+
+
+class LogFrame(tkinter.Frame):
+
+    def __init__(self, master, game, *args, **kwargs):
+        super(LogFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+        self.log = tkinter.Text(self, height=12, state=tkinter.NORMAL)
+        self.log.pack(anchor=tkinter.W)
+
+    def notify(self, observable):
+        self.redraw()
+
+    def redraw(self):
+        self.log.delete(1.0, tkinter.END)
+        if len(self.game.catanlog.players) < 3:
+            return
+        with open(self.game.catanlog.filename(), 'r') as f:
+            for line in f:
+                self.log.insert(tkinter.END, line)
+        self.log.see(tkinter.END) # scroll to end
+
 class BoardFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(BoardFrame, self).__init__()
+        super(BoardFrame, self).__init__(master)
         self.master = master
         self.game = game
         self.game.observers.add(self)
 
         self._board = game.board
 
-        board_canvas = tkinter.Canvas(self, height=800, width=600, background='Royal Blue')
+        board_canvas = tkinter.Canvas(self, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, background='Royal Blue')
         board_canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 
         self._board_canvas = board_canvas
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
-
-        self.game.observers.add(self)
 
     def tile_click(self, event):
         if not self._board.state.hex_change_allowed():
@@ -383,7 +407,7 @@ class BoardFrame(tkinter.Frame):
 class SetupGameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, options=None, *args, **kwargs):
-        super(SetupGameToolbarFrame, self).__init__()
+        super(SetupGameToolbarFrame, self).__init__(master)
         self.master = master
         self.game = game
 
@@ -424,7 +448,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
 class GameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(GameToolbarFrame, self).__init__()
+        super(GameToolbarFrame, self).__init__(master)
         self.master = master
         self.game = game
 

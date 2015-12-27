@@ -1,6 +1,8 @@
 import datetime
 import sys
+import collections
 
+Version = collections.namedtuple('Version', ['major', 'minor', 'patch'])
 
 class CatanLog(object):
     """
@@ -14,7 +16,7 @@ class CatanLog(object):
 
     TODO log private information as well (which dev card picked up, which card stolen)
     """
-    version = '0.1.0'
+    version = Version(major=0, minor=1, patch=0)
 
     def __init__(self, auto_flush=True, use_stdout=True):
         self._log = str()
@@ -82,7 +84,9 @@ class CatanLog(object):
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
-        self.logln('CatanGamelog v{0}'.format(CatanLog.version))
+        self.logln('catanlog v{}.{}.{}'.format(CatanLog.version.major,
+                                               CatanLog.version.minor,
+                                               CatanLog.version.patch))
         self.logln('timestamp: {0}'.format(self.timestamp))
         self._log_players(players)
         self._log_board_terrain(terrain)

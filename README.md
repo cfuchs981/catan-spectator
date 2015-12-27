@@ -18,7 +18,7 @@ $ python3 main.py
 Detailed usage below.
 
 ### Demo
-![Demo](/doc/gifs/demo2.gif)
+![Demo](/doc/gifs/demo3.gif)
 
 ### File Format
 

@@ -28,9 +28,10 @@ optional arguments:
 ```
 
 Make targets:
-- `make`: launch (or relaunch) the GUI
-- `logs`: dump the python logs to stdout
-- `tail`: tail the python logs
+- `make relaunch`: launch (or relaunch) the GUI
+- `make logs`: dump the python logs to stdout
+- `make tail`: tail the python logs
+- `make`: alias for `make relaunch`
 
 ### Demo
 ![Demo](/doc/gifs/demo3.gif)

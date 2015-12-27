@@ -30,7 +30,7 @@ class LogFrame(tkinter.Frame):
         self.game.observers.add(self)
 
         self.log = tkinter.Text(self, height=12, state=tkinter.NORMAL)
-        self.log.pack(anchor=tkinter.W)
+        self.log.grid(row=0, column=0, sticky=tkinter.NSEW)
 
     def notify(self, observable):
         self.redraw()

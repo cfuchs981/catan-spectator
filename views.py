@@ -4,6 +4,7 @@ from tkinter import messagebox
 import math
 import collections
 import functools
+import catanlog
 import hexgrid
 
 from models import Terrain, Port, Player, HexNumber, Piece, PieceType
@@ -16,7 +17,9 @@ can_do = {
     None: tkinter.DISABLED
 }
 
-
+LOG_WIDTH = 85
+LOG_MAX_HEIGHT = 13
+LOG_MIN_HEIGHT = 1
 CANVAS_WIDTH = 600
 CANVAS_HEIGHT = 550
 
@@ -24,30 +27,34 @@ CANVAS_HEIGHT = 550
 class LogFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(LogFrame, self).__init__(master)
+        super(LogFrame, self).__init__()
         self.master = master
         self.game = game
         self.game.observers.add(self)
 
-        self.log = tkinter.Text(self, height=12, state=tkinter.NORMAL)
-        self.log.grid(row=0, column=0, sticky=tkinter.NSEW)
+        self.log = tkinter.Text(self, width=85, height=LOG_MIN_HEIGHT, state=tkinter.NORMAL)
+        self.log.insert(tkinter.END, '{} {}'.format(catanlog.name(), catanlog.version()))
+        self.log.see(tkinter.END)
+        self.log.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 
     def notify(self, observable):
         self.redraw()
 
     def redraw(self):
-        self.log.delete(1.0, tkinter.END)
         if len(self.game.catanlog.players) < 3:
             return
-        with open(self.game.catanlog.filename(), 'r') as f:
-            for line in f:
-                self.log.insert(tkinter.END, line)
+        self.log.delete(1.0, tkinter.END)
+        logs = self.game.catanlog.dump()
+        self.log.configure(height=max(LOG_MIN_HEIGHT,min(LOG_MAX_HEIGHT,len(logs))))
+        self.log.insert(tkinter.END, logs)
+
+        logging.debug('Redrew latest={} lines of game log'.format(len(logs)))
         self.log.see(tkinter.END) # scroll to end
 
 class BoardFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(BoardFrame, self).__init__(master)
+        super(BoardFrame, self).__init__()
         self.master = master
         self.game = game
         self.game.observers.add(self)
@@ -407,7 +414,7 @@ class BoardFrame(tkinter.Frame):
 class SetupGameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, options=None, *args, **kwargs):
-        super(SetupGameToolbarFrame, self).__init__(master)
+        super(SetupGameToolbarFrame, self).__init__()
         self.master = master
         self.game = game
 
@@ -448,7 +455,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
 class GameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(GameToolbarFrame, self).__init__(master)
+        super(GameToolbarFrame, self).__init__()
         self.master = master
         self.game = game
 

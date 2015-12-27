@@ -30,15 +30,17 @@ class CatanSpectator(tkinter.Frame):
         self._in_game = self.game.state.is_in_game()
 
         self._board_frame = views.BoardFrame(self, self.game)
-        # self._log_frame = views.LogFrame(self, self.game)
-        self._board_frame.pack(side=tkinter.LEFT)#grid(row=0, column=0)
-        # self._log_frame.pack(side=tkinter.BOTTOM)#grid(row=1, column=0, sticky=tkinter.W)
+        self._log_frame = views.LogFrame(self, self.game)
+        self._board_frame.grid(row=0, column=0, sticky=tkinter.NSEW)
+        self._log_frame.grid(row=1, column=0, sticky=tkinter.W)
 
         self._board_frame.redraw()
 
         self._setup_game_toolbar_frame = views.SetupGameToolbarFrame(self, self.game)
         self._toolbar_frame = self._setup_game_toolbar_frame
-        self._toolbar_frame.pack(side=tkinter.RIGHT)#grid(row=0, column=1, rowspan=2, sticky=tkinter.N)
+        self._toolbar_frame.grid(row=0, column=1, rowspan=2, sticky=tkinter.N)
+
+        self.lift()
 
     def notify(self, observable):
         was_in_game = self._in_game

@@ -5,6 +5,13 @@ import collections
 
 Version = collections.namedtuple('Version', ['major', 'minor', 'patch'])
 
+def name():
+    return 'catanlog'
+
+def version():
+    return 'v{}.{}.{}'.format(CatanLog.version.major, CatanLog.version.minor, CatanLog.version.patch)
+
+
 class CatanLog(object):
     """
     class CatanLog introduces a machine-parsable, human-readable log of all actions made in a game of Catan.
@@ -91,9 +98,7 @@ class CatanLog(object):
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
         self._set_players(players)
-        self.logln('catanlog v{}.{}.{}'.format(CatanLog.version.major,
-                                               CatanLog.version.minor,
-                                               CatanLog.version.patch))
+        self.logln('{} {}'.format(name(), version()))
         self.logln('timestamp: {0}'.format(self.timestamp))
         self._log_players(players)
         self._log_board_terrain(terrain)

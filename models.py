@@ -86,6 +86,7 @@ class Game(object):
         for _, _, port in self.board.ports:
             ports.append(port)
         self.catanlog.log_initial_game_info(self.players, terrain, numbers, ports)
+        self.notify_observers()
 
     def end(self):
         self.board.reset()

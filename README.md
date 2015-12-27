@@ -12,10 +12,25 @@ This is a work in progress.
 ### Usage
 
 ```
-$ python3 main.py
+$ python3 main.py --help
+usage: main.py [-h] [--terrain TERRAIN] [--numbers NUMBERS] [--ports PORTS]
+               [--pieces PIECES] [--pregame PREGAME]
+
+log a game of catan
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --terrain TERRAIN  random|preset|empty|debug, default empty
+  --numbers NUMBERS  random|preset|empty|debug, default empty
+  --ports PORTS      random|preset|empty|debug, default preset
+  --pieces PIECES    random|preset|empty|debug, default empty
+  --pregame PREGAME  on|off, default on
 ```
 
-Detailed usage below.
+Make targets:
+- `make`: launch (or relaunch) the GUI
+- `logs`: dump the python logs to stdout
+- `tail`: tail the python logs
 
 ### Demo
 ![Demo](/doc/gifs/demo3.gif)
@@ -27,32 +42,39 @@ Therefore, each `.catan` file contains sufficient information to 'replay' a game
 
 The header begins with a version, and ends with `...CATAN!`. The game begins after that.
 
+The format is not yet v1.0.
+
 Example
 ```
-CatanGamelog v0.0.1
-timestamp: 2015-12-14 23:50:14.603868
+catanlog v0.2.0
+timestamp: 2015-12-27 15:19:57.723284
 players: 4
 name: yurick, color: green, seat: 1
-name: ross, color: red, seat: 2
-name: josh, color: blue, seat: 3
-name: zach, color: orange, seat: 4
-terrain: wood sheep sheep ore sheep wheat brick wood brick wheat wheat sheep brick ore wood ore desert wood wheat
-numbers: 5 6 4 11 3 6 8 8 4 5 9 3 10 10 12 11 None 2 9
-ports: 3:1 3:1 sheep2:1 3:1 3:1 ore2:1 brick2:1 wheat2:1 wood2:1
+name: josh, color: blue, seat: 2
+name: zach, color: orange, seat: 3
+name: ross, color: yellow, seat: 4
+terrain: wood wood brick sheep ore sheep wheat brick wood ore sheep wood sheep ore wheat wheat desert wheat brick
+numbers: 3 6 8 10 2 11 12 9 8 10 5 6 9 4 3 11 None 5 4
+ports: 3:1 ore2:1 3:1 sheep2:1 3:1 wood2:1 brick2:1 3:1 wheat2:1
 ...CATAN!
-green rolls 7
-red is robbed
-green moves robber to 1, steals from blue
+green rolls 4
+green buys road, builds at 154
+green buys settlement, builds at 171
+green buys settlement, builds at 188
 green ends turn
-blue rolls 2
+blue rolls 4
+blue buys city, builds at 154
+blue buys dev card
+blue buys dev card
+blue plays dev card: knight on None, steals from color
+blue plays dev card: victory point
 blue ends turn
-orange rolls 2
+orange rolls 4
 orange ends turn
-red wins
+yellow wins
 ```
 
 See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with their format.
-
 
 ### Attribution
 

@@ -19,7 +19,7 @@ launch:
 	@echo "Follow logs: tail -f log/buffer.log, or make logs"
 
 tail:
-	tail -f -n 30 log/buffer.log | less
+	tail -f -n 30 log/buffer.log
 
 relaunch:
 	@mkdir -p log

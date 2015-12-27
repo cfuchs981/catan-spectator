@@ -1,4 +1,5 @@
 import datetime
+import os
 import sys
 import collections
 
@@ -18,15 +19,16 @@ class CatanLog(object):
     """
     version = Version(major=0, minor=1, patch=0)
 
-    def __init__(self, auto_flush=True, use_stdout=True):
+    def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
 
         self._chars_flushed = 0
         self._auto_flush = auto_flush
+        self._log_dir = log_dir
         self._use_stdout = use_stdout
 
         self.timestamp = datetime.datetime.now()
-        self.player_names = list()
+        self.players = list()
 
     def log(self, content):
         """
@@ -34,7 +36,7 @@ class CatanLog(object):
         """
         self._log += content
         if self._auto_flush:
-            self.flush(use_stdout=self._use_stdout)
+            self.flush(self._log_dir, self._use_stdout)
 
     def logln(self, content):
         """Writes a string to the log, appending a newline
@@ -51,12 +53,16 @@ class CatanLog(object):
         """
         return self._log[self._chars_flushed:]
 
-    def filename(self):
+    def filename(self, log_dir):
         """Returns a unique string based on the timestamp and players involved
         """
-        return '{}-{}.catan'.format(self.timestamp.isoformat(), '-'.join(self.player_names))
+        name = '{}-{}.catan'.format(self.timestamp.isoformat(), '-'.join([p.name for p in self.players]))
+        path = os.path.join(log_dir, name)
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        return path
 
-    def flush(self, use_stdout=False):
+    def flush(self, log_dir, use_stdout):
         """Appends the latest updates to file, or optionally to stdout instead
         """
         latest = self._latest()
@@ -64,7 +70,7 @@ class CatanLog(object):
         if use_stdout:
             file = sys.stdout
         else:
-            file = open(self.filename(), 'a')
+            file = open(self.filename(log_dir), 'a')
 
         print(latest, file=file, flush=True, end='')
 
@@ -84,6 +90,7 @@ class CatanLog(object):
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
         :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
         """
+        self._set_players(players)
         self.logln('catanlog v{}.{}.{}'.format(CatanLog.version.major,
                                                CatanLog.version.minor,
                                                CatanLog.version.patch))
@@ -266,9 +273,12 @@ class CatanLog(object):
 
     def _log_players(self, players):
         self.logln('players: {0}'.format(len(players)))
-        players = list(players)
-        players.sort(key=lambda p: p.seat)
-        for p in players:
-            self.player_names.append(p.name)
+        for p in self.players:
             self.logln('name: {0}, color: {1}, seat: {2}'.format(p.name, p.color, p.seat))
 
+    def _set_players(self, _players):
+        self.players = list()
+        _players = list(_players)
+        _players.sort(key=lambda p: p.seat)
+        for p in _players:
+            self.players.append(p)

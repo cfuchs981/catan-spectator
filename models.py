@@ -88,6 +88,7 @@ class Game(object):
         self.catanlog.log_initial_game_info(self.players, terrain, numbers, ports)
 
     def end(self):
+        self.board.reset()
         self.set_state(states.GameStateNotInGame(self))
         self.catanlog.log_player_wins(self.get_cur_player())
 
@@ -294,7 +295,18 @@ class Board(object):
         self.ports = None
         self.state = None
         self.pieces = None
-        self.reset(terrain=terrain, numbers=numbers, ports=ports, pieces=pieces)
+
+        self.opts = dict()
+        if terrain is not None:
+            self.opts['terrain'] = terrain
+        if numbers is not None:
+            self.opts['numbers'] = numbers
+        if ports is not None:
+            self.opts['ports'] = ports
+        if pieces is not None:
+            self.opts['pieces'] = pieces
+
+        self.reset()
         self.observers = set()
 
         self.center_tile = self.tiles[center or 10]
@@ -305,7 +317,7 @@ class Board(object):
 
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
         import boardbuilder
-        opts = dict()
+        opts = self.opts.copy()
         if terrain is not None:
             opts['terrain'] = terrain
         if numbers is not None:

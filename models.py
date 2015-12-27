@@ -48,7 +48,7 @@ class Game(object):
 
         self.set_state(states.GameStateNotInGame(self))
 
-    def set_state(self, game_state: states.GameState):
+    def set_state(self, game_state):
         _old_state = self.state
         _old_board_state = self.board.state
         self.state = game_state
@@ -64,7 +64,7 @@ class Game(object):
         ))
         self.notify_observers()
 
-    def set_dev_card_state(self, dev_state: states.DevCardPlayabilityState):
+    def set_dev_card_state(self, dev_state):
         self.dev_card_state = dev_state
         self.notify_observers()
 
@@ -89,9 +89,8 @@ class Game(object):
         self.notify_observers()
 
     def end(self):
-        self.board.reset()
-        self.set_state(states.GameStateNotInGame(self))
         self.catanlog.log_player_wins(self.get_cur_player())
+        self.set_state(states.GameStateNotInGame(self))
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
@@ -260,7 +259,7 @@ class Piece(object):
 
     Allowed types are described in enum PieceType
     """
-    def __init__(self, type: PieceType, owner: Player):
+    def __init__(self, type, owner):
         self.type = type
         self.owner = owner
 

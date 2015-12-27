@@ -4,6 +4,7 @@ from tkinter import messagebox
 import math
 import collections
 import functools
+import boardbuilder
 import catanlog
 import hexgrid
 
@@ -48,7 +49,7 @@ class LogFrame(tkinter.Frame):
         self.log.configure(height=max(LOG_MIN_HEIGHT,min(LOG_MAX_HEIGHT,len(logs))))
         self.log.insert(tkinter.END, logs)
 
-        logging.debug('Redrew latest={} lines of game log'.format(len(logs)))
+        logging.debug('Redrew latest={} lines of game log'.format(len(logs.split('\n'))))
         self.log.see(tkinter.END) # scroll to end
 
 class BoardFrame(tkinter.Frame):
@@ -424,13 +425,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
             'hex_number_selection': False
         })
 
-        tkinter.Label(self, text="Board Setup", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
-        for option in TkinterOptionWrapper(self.options):
-            option.callback()
-            tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
-                .pack(side=tkinter.TOP, fill=tkinter.X)
-
-        tkinter.Label(self, text="Players (name color)", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Label(self, text="Players", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
         self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
         for (entry, var), default in zip(self.player_entries_vars, defaults):
@@ -438,8 +433,20 @@ class SetupGameToolbarFrame(tkinter.Frame):
             entry.config(textvariable=var)
             entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
 
+        tkinter.Label(self, text="Board", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        for option in TkinterOptionWrapper(self.options):
+            option.callback()
+            tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
+                .pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Button(self, text="Reset", command=self.on_reset, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+
+        tkinter.Label(self, text="---").pack(side=tkinter.TOP)
         btn_start_game = tkinter.Button(self, text='Start Game', command=self.on_start_game)
         btn_start_game.pack(side=tkinter.TOP, fill=tkinter.X)
+
+    def on_reset(self):
+        self.game.board.reset()
+        self.game.notify_observers()
 
     def on_start_game(self):
         def get_name(var):
@@ -795,8 +802,8 @@ class TkinterOptionWrapper:
 
     Option = collections.namedtuple('_Option', ['text', 'var', 'callback'])
     _descriptions = {
-        'hex_resource_selection': 'Cycle hex resource',
-        'hex_number_selection': 'Cycle hex number'
+        'hex_resource_selection': 'Cycle resource',
+        'hex_number_selection': 'Cycle number'
     }
 
     def __init__(self, option_dict):

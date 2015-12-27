@@ -1,4 +1,4 @@
-import recording
+import catanlog
 import models
 import random
 import re
@@ -26,8 +26,8 @@ def get_players():
     return players
 
 
-def get_record_with_random_board():
-    record = recording.GameRecord()
+def get_log_with_random_board():
+    log = catanlog.CatanLog()
 
     players = get_players()
     terrain = ([Terrain.wood]*4 + [Terrain.wheat]*4 + [Terrain.sheep]*4 +
@@ -47,17 +47,17 @@ def get_record_with_random_board():
     terrain.insert(desert, Terrain.desert)
     numbers.insert(desert, HexNumber.none)
 
-    record.record_initial_game_info(players, terrain, numbers, ports)
-    return record
+    log.log_initial_game_info(players, terrain, numbers, ports)
+    return log
 
 
-def test_record_intial_game_info():
+def test_log_intial_game_info():
     """
-    Contract describing the game record "pregame"/file-header format
+    Contract describing the game log "pregame"/file-header format
     """
-    record = get_record_with_random_board()
-    print(record.dump())
-    lines = record.dump().split('\n')
+    log = get_log_with_random_board()
+    print(log.dump())
+    lines = log.dump().split('\n')
     i = 0
 
     if not re.match('\w+ v[\d\.]+', lines[i]):
@@ -127,31 +127,31 @@ def test_record_intial_game_info():
 
 def test_turn():
     player = models.Player(1, 'ross', 'red')
-    record = recording.GameRecord()
+    log = catanlog.CatanLog()
 
-    record.record_player_roll(player, 2)
-    record.record_player_ends_turn(player)
-    print(record.dump())
+    log.log_player_roll(player, 2)
+    log.log_player_ends_turn(player)
+    print(log.dump())
 
-    lines = record.dump().split('\n')
+    lines = log.dump().split('\n')
     assert re.match('red rolls 2', lines[0])
     assert re.match('red ends turn', lines[1])
 
 
 def test_robber():
     players = get_players()
-    record = recording.GameRecord()
+    log = catanlog.CatanLog()
 
     roller = players[0]
     robbed = players[1]
     victim = players[2]
-    record.record_player_roll(roller, 7)
-    record.record_player_is_robbed(robbed)
-    record.record_player_moves_robber_and_steals(roller, 1, victim)
-    record.record_player_ends_turn(roller)
-    print(record.dump())
+    log.log_player_roll(roller, 7)
+    log.log_player_is_robbed(robbed)
+    log.log_player_moves_robber_and_steals(roller, 1, victim)
+    log.log_player_ends_turn(roller)
+    print(log.dump())
 
-    lines = record.dump().split('\n')
+    lines = log.dump().split('\n')
     assert re.match('{0} rolls 7'.format(roller.color), lines[0])
     assert re.match('{0} is robbed'.format(robbed.color), lines[1])
     assert re.match('{0} moves robber to 1, steals from {1}'.format(roller.color, victim.color), lines[2])

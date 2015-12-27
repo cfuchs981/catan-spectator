@@ -8,6 +8,8 @@ import functools
 import hexgrid
 
 from models import Terrain, Port, Player, HexNumber, Piece, PieceType
+import states
+import tkinterutils
 
 can_do = {
     True: tkinter.NORMAL,
@@ -35,12 +37,27 @@ class BoardFrame(tkinter.Frame):
         self.game.observers.add(self)
 
     def tile_click(self, event):
+        if not self._board.state.hex_change_allowed():
+            return
+
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
         if self.master.options.get('hex_resource_selection'):
             self._board.cycle_hex_type(self._tile_id_from_tag(tag))
         if self.master.options.get('hex_number_selection'):
             self._board.cycle_hex_number(self._tile_id_from_tag(tag))
         self.redraw()
+
+    def piece_click(self, piece_type, event):
+        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+        logging.debug('Piece clicked with tag {}'.format(tag))
+        if piece_type == PieceType.road:
+            self.game.buy_road(self._coord_from_road_tag(tag))
+            logging.warning('Road click not yet implemented')
+        elif piece_type == PieceType.settlement:
+            self.game.buy_settlement(self._coord_from_settlement_tag(tag))
+        elif piece_type == PieceType.city:
+            logging.warning('City click not yet implemented')
+
 
     def notify(self, observable):
         self.redraw()
@@ -57,11 +74,17 @@ class BoardFrame(tkinter.Frame):
         We then shift all the individual tile centers so that the board center
         is at 0, 0.
         """
-
         terrain_centers = self._draw_terrain(board)
         self._draw_numbers(board, terrain_centers)
         self._draw_ports(board, terrain_centers)
         self._draw_pieces(board, terrain_centers)
+        if self.game.state.can_place_road():
+            self._draw_piece_shadows(PieceType.road, board, terrain_centers)
+        elif self.game.state.can_place_settlement():
+            self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
+        elif self.game.state.can_place_city():
+            self._draw_piece_shadows(PieceType.city, board, terrain_centers)
+
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -96,6 +119,13 @@ class BoardFrame(tkinter.Frame):
 
         return dict(centers)
 
+    def _draw_tile(self, x, y, terrain: Terrain, tile):
+        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
+
+    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
+        points = self._hex_points(radius, offset, rotate)
+        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
+
     def _draw_numbers(self, board, terrain_centers):
         logging.debug('Drawing numbers')
         for tile_id, (x, y) in terrain_centers.items():
@@ -111,26 +141,104 @@ class BoardFrame(tkinter.Frame):
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
-            logging.debug('tile_id={}, port={}, x+dx={}+{}, y+dy={}+{}'.format(tile_id, port, tile_x, dx, tile_y, dy))
+            #logging.debug('tile_id={}, port={}, x+dx={}+{}, y+dy={}+{}'.format(tile_id, port, tile_x, dx, tile_y, dy))
             port_centers.append((tile_x + dx, tile_y + dy, theta))
 
         port_centers = self._fixup_port_centers(port_centers)
         for (x, y, angle), port in zip(port_centers, [port for _, _, port in board.ports]):
-            logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
+            # logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
             self._draw_port(x, y, angle, port)
 
-    def _draw_pieces(self, board, terrain_centers):
-        for coord, piece in board.pieces.items():
-            x, y = self._get_piece_center(coord, piece, terrain_centers)
-            if piece.type == PieceType.settlement:
-                self._draw_settlement(x, y, piece)
-            elif piece.type == PieceType.city:
-                self._draw_city(x, y, piece)
+    def _draw_port(self, x, y, angle, port):
+        """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
+        given by the angle."""
+        points = [x, y]
+        for adjust in (-30, 30):
+            x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
+            y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
+            points.extend([x1, y1])
+        self._board_canvas.create_polygon(*points, fill=self._colors[port])
+        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
-    def _draw_settlement(self, x, y, piece):
-        # x
-        #xxx
-        #xxx
+    def _draw_pieces(self, board, terrain_centers):
+        roads, settlements, cities = self._get_pieces(board)
+        for coord, road in roads:
+            self._draw_piece(coord, road, terrain_centers)
+        logging.debug('Roads drawn: {}'.format(len(roads)))
+        for coord, settlement in settlements:
+            self._draw_piece(coord, settlement, terrain_centers)
+        for coord, city in cities:
+            self._draw_piece(coord, city, terrain_centers)
+
+    def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
+        x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
+        tag = None
+        if piece.type == PieceType.road:
+            self._draw_road(x, y, coord, piece, angle=angle, ghost=ghost)
+            tag = self._road_tag(coord)
+        elif piece.type == PieceType.settlement:
+            self._draw_settlement(x, y, coord, piece, ghost=ghost)
+            tag = self._settlement_tag(coord)
+        elif piece.type == PieceType.city:
+            self._draw_city(x, y, coord, piece, ghost=ghost)
+            tag = self._city_tag(coord)
+        self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
+                                    func=functools.partial(self.piece_click, piece.type))
+
+    def _draw_piece_shadows(self, piece_type, board, terrain_centers):
+        logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
+        piece = Piece(piece_type, self.game.get_cur_player())
+        if piece_type == PieceType.road:
+            edges = hexgrid.legal_edge_coords()
+            count = 0
+            for edge in edges:
+                if (hexgrid.EDGE, edge) in board.pieces:
+                    logging.debug('Not drawing shadow road at coord={}'.format(edge))
+                    continue
+                count += 1
+                self._draw_piece(edge, piece, terrain_centers, ghost=True)
+            logging.debug('Road shadows drawn: {}'.format(count))
+        else:
+            nodes = hexgrid.legal_node_coords()
+            for node in nodes:
+                if (hexgrid.NODE, node) in board.pieces:
+                    continue
+                self._draw_piece(node, piece, terrain_centers, ghost=True)
+
+    def _piece_tkinter_opts(self, coord, piece, **kwargs):
+        opts = dict()
+        tag_funcs = {
+            PieceType.road: self._road_tag,
+            PieceType.settlement: self._settlement_tag,
+            PieceType.city: self._city_tag,
+        }
+        opts['tags'] = tag_funcs[piece.type](coord)
+        opts['outline'] = piece.owner.color
+        opts['fill'] = piece.owner.color
+        if 'ghost' in kwargs and kwargs['ghost'] == True:
+            opts['fill'] = '' # transparent
+            opts['activefill'] = piece.owner.color
+        del kwargs['ghost']
+        opts.update(kwargs)
+        return opts
+
+    def _draw_road(self, x, y, coord, piece, angle, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
+        length = self._tile_radius * 0.7
+        height = self._tile_padding * 2.5
+        points = [x - length/2, y - height/2] # left top
+        points += [x + length/2, y - height/2] # right top
+        points += [x + length/2, y + height/2] # right bottom
+        points += [x - length/2, y + height/2] # left bottom
+        points = tkinterutils.rotate_2poly(angle, points, (x, y))
+        logging.debug('Drawing road={} at coord={}, angle={} with opts={}'.format(
+            piece, coord, angle, opts
+        ))
+        self._board_canvas.create_polygon(*points,
+                                            **opts)
+
+    def _draw_settlement(self, x, y, coord, piece, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         width = 18
         height = 14
         point_height = 8
@@ -140,24 +248,57 @@ class BoardFrame(tkinter.Frame):
         points += [x + width/2, y + height/2] # right bottom
         points += [x - width/2, y + height/2] # left bottom
         self._board_canvas.create_polygon(*points,
-                                          outline='black',
-                                          fill=piece.owner.color)
+                                          **opts)
 
-    def _draw_city(self, x, y, piece):
+    def _draw_city(self, x, y, coord, piece, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
-                                            outline=piece.owner.color,
-                                            fill=piece.owner.color)
+                                            **opts)
+
+    def _get_pieces(self, board):
+        """Returns roads, settlements, and cities on the board
+        """
+        roads = list()
+        settlements = list()
+        cities = list()
+        logging.debug('board.pieces.items()={}'.format(board.pieces.items()))
+        for (_, coord), piece in board.pieces.items():
+            if piece.type == PieceType.road:
+                roads.append((coord, piece))
+            elif piece.type == PieceType.settlement:
+                settlements.append((coord, piece))
+            elif piece.type == PieceType.city:
+                cities.append((coord, piece))
+        return roads, settlements, cities
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
-        tile_ids = terrain_centers.keys()
-        tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
-        tile_coord = hexgrid.tile_id_to_coord(tile_id)
-        direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
-        angle = 30 + 60*self._node_angle_order.index(direction)
-        terrain_x, terrain_y = terrain_centers[tile_id]
-        dx = math.cos(math.radians(angle)) * self._tile_radius
-        dy = math.sin(math.radians(angle)) * self._tile_radius
-        return terrain_x + dx, terrain_y + dy
+        """Takes a piece's hex coordinate, the piece itself, and the terrain_centers
+        dictionary which maps tile_id->(x,y)
+
+        Returns the piece's center, as an (x,y) pair. Also returns the angle the
+        piece should be rotated at, if any
+        """
+        tile_ids = hexgrid.legal_tile_ids()
+        if piece.type == PieceType.road:
+            tile_id = hexgrid.nearest_tile_to_edge(tile_ids, piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
+            angle = 60*self._edge_angle_order.index(direction)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            dx = math.cos(math.radians(angle)) * self.distance_tile_to_edge()
+            dy = math.sin(math.radians(angle)) * self.distance_tile_to_edge()
+            return terrain_x + dx, terrain_y + dy, angle + 90
+        elif piece.type in [PieceType.settlement, PieceType.city]:
+            tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
+            angle = 30 + 60*self._node_angle_order.index(direction)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            dx = math.cos(math.radians(angle)) * self._tile_radius
+            dy = math.sin(math.radians(angle)) * self._tile_radius
+            return terrain_x + dx, terrain_y + dy, 0
+        else:
+            logging.warning('Unknown piece={}'.format(piece))
 
     def _fixup_offset(self):
         offx, offy = self._board_center
@@ -173,30 +314,12 @@ class BoardFrame(tkinter.Frame):
     def _fixup_port_centers(self, port_centers):
         return [(x, y, angle + 180) for x, y, angle in port_centers]
 
-    def _draw_tile(self, x, y, terrain: Terrain, tile):
-        self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
-
-    def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
-        points = self._hex_points(radius, offset, rotate)
-        a = self._board_canvas.create_polygon(*points, fill=fill, tags=tags)
-
     def _draw_number(self, x, y, number: HexNumber, tile):
         if number is HexNumber.none:
             return
-        logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
+        # logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
         color = 'red' if number.value in (6, 8) else 'black'
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
-
-    def _draw_port(self, x, y, angle, port):
-        """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
-        given by the angle."""
-        points = [x, y]
-        for adjust in (-30, 30):
-            x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
-            y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
-            points.extend([x1, y1])
-        self._board_canvas.create_polygon(*points, fill=self._colors[port])
-        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
     def _hex_points(self, radius, offset, rotate):
         offx, offy = offset
@@ -207,17 +330,39 @@ class BoardFrame(tkinter.Frame):
             points += [x, y]
         return points
 
+    def distance_tile_to_edge(self):
+        return self._tile_radius * math.cos(math.radians(30)) + 1/2*self._tile_padding
+
     def _tile_tag(self, tile):
         return 'tile_' + str(tile.tile_id)
+
+    def _road_tag(self, coord):
+        return 'road_' + hex(coord)
+
+    def _settlement_tag(self, coord):
+        return 'settlement_' + hex(coord)
+
+    def _city_tag(self, coord):
+        return 'city_' + hex(coord)
 
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
 
+    def _coord_from_road_tag(self, tag):
+        return int(tag[len('road_0x'):], 16)
+
+    def _coord_from_settlement_tag(self, tag):
+        return int(tag[len('settlement_0x'):], 16)
+
+    def _coord_from_city_tag(self, tag):
+        return int(tag[len('city_0x'):], 16)
+
     _tile_radius  = 50
     _tile_padding = 3
     _board_center = (300, 300)
-    _tile_angle_order  = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
-    _node_angle_order  = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
+    _tile_angle_order = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
+    _edge_angle_order = ('E', 'SE', 'SW', 'W', 'NW', 'NE') # 0 + 60*index
+    _node_angle_order = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {
         Terrain.ore: 'gray94',
@@ -413,18 +558,28 @@ class BuildFrame(tkinter.Frame):
         self.dev_card.configure(state=can_do[self.game.state.can_buy_dev_card()])
 
     def on_buy_road(self):
-        # todo UI for placing the road
-        self.game.buy_road(node_from=None, node_to=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.road))
+        else:
+            logging.warning('Buying roads out of pregame not yet implemented')
+        #self.game.buy_road(node_from=None, node_to=None)
 
     def on_buy_settlement(self):
-        # todo UI for placing the settlement
-        self.game.buy_settlement(node=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
+        else:
+            logging.warning('Buying settlements out of pregame not yet implemented')
+        # self.game.buy_settlement(node=None)
 
     def on_buy_city(self):
-        # todo UI for placing the city
-        self.game.buy_city(node=None)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
+        else:
+            logging.warning('Buying cities out of pregame not yet implemented')
+        # self.game.buy_city(node=None)
 
     def on_buy_dev_card(self):
+        logging.warning('Buying dev cards not yet implemented')
         self.game.buy_dev_card()
 
 

@@ -36,7 +36,6 @@ nosetests.xml
 .pydevproject
 .idea
 venv
-catan-game-recorder.iml
 ignore
 catan-spectator.iml
 log/running.pid

@@ -10,6 +10,7 @@ This will reset the board. #reset is an alias.
 """
 import logging
 import random
+import hexgrid
 import states
 from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece, PieceType, Player
 
@@ -87,10 +88,13 @@ def _generate_pieces(pieces_opts):
         yuri = Player(3, 'yuri', 'green')
         zach = Player(4, 'zach', 'orange')
         return {
-            0x23: Piece(PieceType.settlement, josh),
-            0x67: Piece(PieceType.settlement, ross),
-            0x87: Piece(PieceType.settlement, yuri),
-            0xA9: Piece(PieceType.city, zach),
+            (hexgrid.NODE, 0x23): Piece(PieceType.settlement, josh),
+            (hexgrid.EDGE, 0x22): Piece(PieceType.road, josh),
+            (hexgrid.NODE, 0x67): Piece(PieceType.settlement, ross),
+            (hexgrid.EDGE, 0x98): Piece(PieceType.road, ross),
+            (hexgrid.NODE, 0x87): Piece(PieceType.settlement, yuri),
+            (hexgrid.EDGE, 0x89): Piece(PieceType.road, yuri),
+            (hexgrid.EDGE, 0xA9): Piece(PieceType.road, zach),
         }
 
 def _check_red_placement(tiles):

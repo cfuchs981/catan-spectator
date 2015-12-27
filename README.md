@@ -27,7 +27,7 @@ The header begins with a version, and ends with `...CATAN!`. The game begins aft
 
 Example
 ```
-CatanGameRecord v0.0.1
+CatanGamelog v0.0.1
 timestamp: 2015-12-14 23:50:14.603868
 players: 4
 name: yurick, color: green, seat: 1
@@ -49,12 +49,12 @@ orange ends turn
 red wins
 ```
 
-See `recording.GameRecord` (in `recording.py`) for all available actions, along with their format.
+See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with their format.
 
 
 ### Attribution
 
-This codebase was originally [fruitnuke/catan](https://github.com/fruitnuke/catan), a catan board generator
+Codebase originally forked from [fruitnuke/catan](https://github.com/fruitnuke/catan), a catan board generator
 
 Hexagonal grid system based off of [jdmonin/JSettlers2](https://github.com/jdmonin/JSettlers2), a catan implementation used for research
 

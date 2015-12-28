@@ -80,16 +80,23 @@ class BoardFrame(tkinter.Frame):
         self.redraw()
 
     def piece_click(self, piece_type, event):
-        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+        tags = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))
+        # avoid processing tile clicks
+        tag = None
+        for t in tags:
+            if 'tile' not in t:
+                tag = t
+                break
+
         logging.debug('Piece clicked with tag={}'.format(tag))
         if piece_type == PieceType.road:
-            self.game.state.place_road(self._coord_from_road_tag(tag))
+            self.game.place_road(self._coord_from_road_tag(tag))
         elif piece_type == PieceType.settlement:
-            self.game.state.place_settlement(self._coord_from_settlement_tag(tag))
+            self.game.place_settlement(self._coord_from_settlement_tag(tag))
         elif piece_type == PieceType.city:
-            self.game.state.place_city(self._coord_from_city_tag(tag))
+            self.game.place_city(self._coord_from_city_tag(tag))
         elif piece_type == PieceType.robber:
-            self.game.state.move_robber(hexgrid.tile_id_from_coord(self._coord_from_city_tag(tag)))
+            self.game.move_robber(hexgrid.tile_id_from_coord(self._coord_from_robber_tag(tag)))
         self.redraw()
 
     def notify(self, observable):
@@ -259,6 +266,10 @@ class BoardFrame(tkinter.Frame):
             for (_, node), p in board.pieces.items():
                 if p.type == PieceType.settlement and p.owner.color == piece.owner.color:
                     self._draw_piece(node, piece, terrain_centers, ghost=True)
+        elif piece_type == PieceType.robber:
+            for coord in hexgrid.legal_tile_coords():
+                if hexgrid.tile_id_from_coord(coord) != self.game.robber_tile:
+                    self._draw_piece(coord, piece, terrain_centers, ghost=True)
         else:
             logging.warning('Attempted to draw piece shadows for nonexistent type={}'.format(piece_type))
 
@@ -268,13 +279,20 @@ class BoardFrame(tkinter.Frame):
             PieceType.road: self._road_tag,
             PieceType.settlement: self._settlement_tag,
             PieceType.city: self._city_tag,
+            PieceType.robber: self._robber_tag,
         }
+        if piece.type == PieceType.robber:
+            # robber has no owner
+            color = 'black'
+        else:
+            color = piece.owner.color
+
         opts['tags'] = tag_funcs[piece.type](coord)
-        opts['outline'] = piece.owner.color
-        opts['fill'] = piece.owner.color
+        opts['outline'] = color
+        opts['fill'] = color
         if 'ghost' in kwargs and kwargs['ghost'] == True:
             opts['fill'] = '' # transparent
-            opts['activefill'] = piece.owner.color
+            opts['activefill'] = color
         del kwargs['ghost']
         opts.update(kwargs)
         return opts
@@ -313,6 +331,10 @@ class BoardFrame(tkinter.Frame):
                                             **opts)
 
     def _draw_robber(self, x, y, coord, piece, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
+        radius = 10
+        self._board_canvas.create_oval(x-radius, y-radius, x+radius, y+radius,
+                                       **opts)
 
     def _get_pieces(self, board):
         """Returns roads, settlements, and cities on the board as lists of (coord, piece) tuples.
@@ -343,22 +365,31 @@ class BoardFrame(tkinter.Frame):
         Returns the piece's center, as an (x,y) pair. Also returns the angle the
         piece should be rotated at, if any
         """
-        tile_id = hexgrid.nearest_tile_to_edge(hexgrid.legal_tile_ids(), piece_coord)
-        tile_coord = hexgrid.tile_id_to_coord(tile_id)
-        direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
-        terrain_x, terrain_y = terrain_centers[tile_id]
         if piece.type == PieceType.road:
+            # these pieces are on edges
+            tile_id = hexgrid.nearest_tile_to_edge(piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
+            terrain_x, terrain_y = terrain_centers[tile_id]
             angle = 60*self._edge_angle_order.index(direction)
             dx = math.cos(math.radians(angle)) * self.distance_tile_to_edge()
             dy = math.sin(math.radians(angle)) * self.distance_tile_to_edge()
             return terrain_x + dx, terrain_y + dy, angle + 90
         elif piece.type in [PieceType.settlement, PieceType.city]:
+            # these pieces are on nodes
+            tile_id = hexgrid.nearest_tile_to_node(piece_coord)
+            tile_coord = hexgrid.tile_id_to_coord(tile_id)
+            direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
+            terrain_x, terrain_y = terrain_centers[tile_id]
             angle = 30 + 60*self._node_angle_order.index(direction)
             dx = math.cos(math.radians(angle)) * self._tile_radius
             dy = math.sin(math.radians(angle)) * self._tile_radius
             return terrain_x + dx, terrain_y + dy, 0
         elif piece.type == PieceType.robber:
-            return terrain_x, terrain_y
+            # these pieces are on tiles
+            tile_id = hexgrid.tile_id_from_coord(piece_coord)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            return terrain_x, terrain_y, 0
         else:
             logging.warning('Unknown piece={}'.format(piece))
 
@@ -578,23 +609,17 @@ class RobberFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
-        self.move_robber = tkinter.Button(self, text="Move Robber", state=tkinter.DISABLED, command=self.on_move_robber)
         self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
 
         self.set_states()
 
-        self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
         self.steal.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
     def notify(self, observable):
         self.set_states()
 
     def set_states(self):
-        self.move_robber.configure(state=can_do[self.game.state.can_move_robber()])
         self.steal.configure(state=can_do[self.game.state.can_steal()])
-
-    def on_move_robber(self):
-        self.game.move_robber(None)
 
     def on_steal(self):
         self.game.steal(None)

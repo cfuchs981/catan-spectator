@@ -5,6 +5,7 @@ NODE = 1
 TILE = 2
 
 def direction_to_tile(from_tile, to_tile):
+    """Convenience method for tile_tile_offset_to_direction, takes two tile ids"""
     coord_from = tile_id_to_coord(from_tile.tile_id)
     coord_to = tile_id_to_coord(to_tile.tile_id)
     direction = tile_tile_offset_to_direction(coord_to - coord_from)
@@ -16,6 +17,10 @@ def direction_to_tile(from_tile, to_tile):
     return direction
 
 def tile_tile_offset_to_direction(offset):
+    """
+    :param offset: (tile_coord - tile_coord)
+    :return: direction string, one of the values of _tile_tile_offsets
+    """
     try:
         return _tile_tile_offsets[offset]
     except KeyError:
@@ -23,6 +28,10 @@ def tile_tile_offset_to_direction(offset):
         return 'ZZ'
 
 def tile_node_offset_to_direction(offset):
+    """
+    :param offset: (node_coord - tile_coord)
+    :return: direction string, one of the values of _tile_node_offsets
+    """
     try:
         return _tile_node_offsets[offset]
     except KeyError:
@@ -30,6 +39,10 @@ def tile_node_offset_to_direction(offset):
         return 'ZZ'
 
 def tile_edge_offset_to_direction(offset):
+    """
+    :param offset: (edge_coord - tile_coord)
+    :return: direction string, one of the values of _tile_edge_offsets
+    """
     try:
         return _tile_edge_offsets[offset]
     except KeyError:
@@ -49,19 +62,29 @@ def tile_id_from_coord(coord):
             return i
     raise Exception('Tile id lookup failed, coord={} not found in map'.format(hex(coord)))
 
-def nearest_tile_to_edge(tile_ids, edge_coord):
+def nearest_tile_to_edge(edge_coord):
+    """Convenience method for nearest_tile_to_edge_using_tiles which uses the set of legal tile ids"""
+    return nearest_tile_to_edge_using_tiles(legal_tile_ids(), edge_coord)
+
+def nearest_tile_to_edge_using_tiles(tile_ids, edge_coord):
     """Takes a list of tile ids and an edge coordinate.
     Returns the id of a tile which is touching the edge"""
     for tile_id in tile_ids:
         if edge_coord - tile_id_to_coord(tile_id) in _tile_edge_offsets.keys():
             return tile_id
+    logging.critical('Did not find a tile touching edge={}'.format(edge_coord))
 
-def nearest_tile_to_node(tile_ids, node_coord):
+def nearest_tile_to_node(node_coord):
+    """Convenience method for nearest_tile_to_node_using_tiles which uses the set of legal tile ids"""
+    return nearest_tile_to_node_using_tiles(legal_tile_ids(), node_coord)
+
+def nearest_tile_to_node_using_tiles(tile_ids, node_coord):
     """Takes a list of tile ids and a node coordinate.
     Returns the id of a tile which is touching the node"""
     for tile_id in tile_ids:
         if node_coord - tile_id_to_coord(tile_id) in _tile_node_offsets.keys():
             return tile_id
+    logging.critical('Did not find a tile touching node={}'.format(node_coord))
 
 def edges_touching_tile(tile_id):
     """Takes a tile id, returns a list of edge coordinates touching the tile"""
@@ -137,7 +160,7 @@ _tile_edge_offsets = {
 _tile_id_to_coord = {
     # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
     1: 0x37, 12: 0x59, 11: 0x7B,
-    2: 0x35, 13: 0x57, 18: 0x79 , 10: 0x9B,
+    2: 0x35, 13: 0x57, 18: 0x79, 10: 0x9B,
     3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
     4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
     5: 0x73, 6: 0x95, 7: 0xB7

@@ -1,3 +1,4 @@
+import hexgrid
 import models
 import logging
 
@@ -285,8 +286,12 @@ class GameStateMoveRobber(GameStateInGame):
     def can_move_robber(self):
         return True
 
-    def move_robber(self, tile):
-        self.game.robber_tile = tile
+    def move_robber(self, tile_id):
+        old_loc = (hexgrid.TILE, hexgrid.tile_id_to_coord(self.game.robber_tile))
+        robber = self.game.board.pieces[old_loc]
+        del self.game.board.pieces[old_loc]
+        self.game.board.place_piece(robber, hexgrid.tile_id_to_coord(tile_id))
+        self.game.robber_tile = tile_id
         self.game.set_state(GameStateSteal(self.game))
 
     def can_roll(self):
@@ -323,8 +328,12 @@ class GameStateMoveRobberUsingKnight(GameStateMoveRobber):
     - AFTER the playing of a knight
     - BEFORE the player has moved the robber
     """
-    def move_robber(self, tile):
-        self.game.robber_tile = tile
+    def move_robber(self, tile_id):
+        old_loc = (hexgrid.TILE, hexgrid.tile_id_to_coord(self.game.robber_tile))
+        robber = self.game.board.pieces[old_loc]
+        del self.game.board.pieces[old_loc]
+        self.game.board.place_piece(robber, hexgrid.tile_id_to_coord(tile_id))
+        self.game.robber_tile = tile_id
         self.game.set_state(GameStateStealUsingKnight(self.game))
 
 

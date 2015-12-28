@@ -76,6 +76,11 @@ class Game(object):
         for _, _, port in self.board.ports:
             ports.append(port)
 
+        for (_, coord), piece in self.board.pieces.items():
+            if piece.type == PieceType.robber:
+                self.robber_tile = hexgrid.tile_id_from_coord(coord)
+                logging.debug('Found robber at coord={}, set robber_tile={}'.format(coord, self.robber_tile))
+
         self.catanlog.log_game_start(self.players, terrain, numbers, ports)
         self.notify_observers()
 
@@ -113,7 +118,6 @@ class Game(object):
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def move_robber(self, tile):
-        self.robber_tile = tile
         self.state.move_robber(tile)
 
     def steal(self, victim):
@@ -150,6 +154,15 @@ class Game(object):
     def buy_dev_card(self):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())
         self.notify_observers()
+
+    def place_road(self, edge_coord):
+        self.state.place_road(edge_coord)
+
+    def place_settlement(self, node_coord):
+        self.state.place_settlement(node_coord)
+
+    def place_city(self, node_coord):
+        self.state.place_city(node_coord)
 
     def trade_with_port(self, to_port, port, to_player):
         logging.debug('trading to_port={} to port={} to get={}'.format(to_port, port, to_player))
@@ -347,6 +360,9 @@ class Board(object):
         elif piece.type == PieceType.city:
             logging.warning('"Can place city" not yet implemented')
             return True
+        elif piece.type == PieceType.robber:
+            logging.warning('"Can place robber" not yet implemented')
+            return True
         else:
             logging.debug('Can\'t place piece={} on coord={}'.format(
                 piece.value, hex(coord)
@@ -361,10 +377,12 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        if piece.type == PieceType.road:
+        if piece.type in (PieceType.road, ):
             hextype = hexgrid.EDGE
-        else:
+        elif piece.type in (PieceType.settlement, PieceType.city):
             hextype = hexgrid.NODE
+        elif piece.type in (PieceType.robber, ):
+            hextype = hexgrid.TILE
         self.pieces[(hextype, coord)] = piece
 
     def cycle_hex_type(self, tile_id):

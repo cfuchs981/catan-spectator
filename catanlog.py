@@ -247,7 +247,7 @@ class CatanLog(object):
         """
         self.logln('{0} plays dev card: monopoly on {1}'.format(
             player.color,
-            resource.value
+            resource
         ))
 
     def log_player_plays_dev_victory_point(self, player):

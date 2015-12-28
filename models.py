@@ -14,6 +14,7 @@ class Game(object):
         }
         self.players = players or list()
         self.board = board or Board()
+        self.robber = Piece(PieceType.robber, None)
         self.catanlog = log or catanlog.CatanLog()
 
         self.state = None
@@ -112,6 +113,7 @@ class Game(object):
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
     def move_robber(self, tile):
+        self.robber_tile = tile
         self.state.move_robber(tile)
 
     def steal(self, victim):

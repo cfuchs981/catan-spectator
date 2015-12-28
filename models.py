@@ -126,13 +126,14 @@ class Game(object):
     def stealable_players(self):
         if self.robber_tile is None:
             return list()
-        stealable = list()
+        stealable = set()
         logging.debug('Getting stealable players at robber tile={}'.format(self.robber_tile))
         for node in hexgrid.nodes_touching_tile(self.robber_tile):
             pieces = self.board.get_pieces(types=(PieceType.settlement, PieceType.city), coord=node)
-            if pieces and pieces[0].owner != self.get_cur_player():
+            if pieces:
                 logging.debug('found stealable player={}, cur={}'.format(pieces[0].owner, self.get_cur_player()))
-                stealable.append(pieces[0].owner)
+                stealable.add(pieces[0].owner)
+        stealable.remove(self.get_cur_player())
         logging.debug('stealable players={}, cur_player={}'.format([str(p) for p in stealable], self.get_cur_player()))
         return stealable
 
@@ -236,6 +237,9 @@ class Player(object):
 
     def __repr__(self):
         return '{} ({})'.format(self.color, self.name)
+
+    def __hash__(self):
+        return sum(bytes(str(self), encoding='utf8'))
 
 
 class Tile(object):

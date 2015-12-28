@@ -700,9 +700,10 @@ class PlayDevCardFrame(tkinter.Frame):
 
         self.monopoly_frame = tkinter.Frame(self)
         self.monopoly = tkinter.Button(self.monopoly_frame, text="Monopoly", command=self.on_monopoly)
+        option_list = list(t.value for t in Terrain if t != Terrain.desert)
         self.monopoly_choice = tkinter.StringVar()
-        self.monopoly_picker = tkinter.Spinbox(self.monopoly_frame, values=[t.value for t in Terrain
-                                                                            if t != Terrain.desert])
+        self.monopoly_choice.set(option_list[0])
+        self.monopoly_picker = tkinter.OptionMenu(self.monopoly_frame, self.monopoly_choice, *option_list)
 
         self.set_states()
 
@@ -726,15 +727,19 @@ class PlayDevCardFrame(tkinter.Frame):
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
     def on_knight(self):
+        logging.debug('play dev card: knight clicked')
         self.game.play_knight()
 
     def on_monopoly(self):
+        logging.debug('play dev card: monopoly clicked, resource={}'.format(self.monopoly_choice.get()))
         self.game.play_monopoly(self.monopoly_choice.get())
 
     def on_road_builder(self):
+        logging.debug('play dev card: road builder clicked')
         self.game.set_state(states.GameStatePlacingRoadBuilderPieces(self.game))
 
     def on_victory_point(self):
+        logging.debug('play dev card: victory point clicked')
         self.game.play_victory_point()
 
 

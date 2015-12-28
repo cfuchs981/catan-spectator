@@ -155,8 +155,8 @@ class Game(object):
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
 
     def play_monopoly(self, resource):
-        self.set_dev_card_state(states.DevCardPlayedState(self))
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
+        self.set_dev_card_state(states.DevCardPlayedState(self))
 
     def play_road_builder(self, edge1, edge2):
         self.set_dev_card_state(states.DevCardPlayedState(self))

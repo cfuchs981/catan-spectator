@@ -131,8 +131,8 @@ def _generate_pieces(tiles, ports, pieces_opts):
             (hexgrid.TILE, 0x77): Piece(PieceType.robber, None),
         }
     elif pieces_opts in (Opts.preset, ):
-        desert = filter(lambda tile: tile.terrain == Terrain.desert, tiles)[0]
-        coord = hexgrid.tile_id_to_coord(desert.tile_id)
+        deserts = filter(lambda tile: tile.terrain == Terrain.desert, tiles)
+        coord = hexgrid.tile_id_to_coord(list(deserts)[0].tile_id)
         return {
             (hexgrid.TILE, coord): Piece(PieceType.robber, None)
         }

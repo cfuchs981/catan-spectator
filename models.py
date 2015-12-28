@@ -121,7 +121,6 @@ class Game(object):
         self.state.move_robber(tile)
 
     def steal(self, victim):
-        victim = Player(1, "name", "color") # todo use real victim
         self.state.steal(victim)
 
     def buy_road(self, edge):

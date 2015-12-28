@@ -32,7 +32,7 @@ def get_opts(opts):
         'terrain': Opts.empty,
         'numbers': Opts.empty,
         'ports': Opts.preset,
-        'pieces': Opts.empty,
+        'pieces': Opts.preset,
     }
     _opts = defaults.copy()
     if opts is None:
@@ -62,7 +62,7 @@ def modify(board, opts=None):
     board.tiles = _generate_tiles(opts['terrain'], opts['numbers'])
     board.ports = _generate_ports(opts['ports'])
     board.state = states.BoardStateModifiable(board)
-    board.pieces = _generate_pieces(opts['pieces'])
+    board.pieces = _generate_pieces(board.tiles, board.ports, opts['pieces'])
 
 def _generate_tiles(terrain_opts, numbers_opts):
     terrain = None
@@ -112,7 +112,7 @@ def _generate_ports(port_opts):
         logging.warning('{} option not yet implemented'.format(port_opts))
         return []
 
-def _generate_pieces(pieces_opts):
+def _generate_pieces(tiles, ports, pieces_opts):
     if pieces_opts == Opts.empty:
         return dict()
     elif pieces_opts == Opts.debug:
@@ -130,7 +130,13 @@ def _generate_pieces(pieces_opts):
             (hexgrid.EDGE, 0xA9): Piece(PieceType.road, zach),
             (hexgrid.TILE, 0x77): Piece(PieceType.robber, None),
         }
-    elif pieces_opts in (Opts.random, Opts.preset):
+    elif pieces_opts in (Opts.preset, ):
+        desert = filter(lambda tile: tile.terrain == Terrain.desert, tiles)[0]
+        coord = hexgrid.tile_id_to_coord(desert.tile_id)
+        return {
+            (hexgrid.TILE, coord): Piece(PieceType.robber, None)
+        }
+    elif pieces_opts in (Opts.random, ):
         logging.warning('{} option not yet implemented'.format(pieces_opts))
 
 def _check_red_placement(tiles):

@@ -638,38 +638,42 @@ class TradeFrame(tkinter.Frame):
         self._cur_player = self.game.get_cur_player()
         self.game.observers.add(self)
 
-        self.label_player = tkinter.Label(self, text="Trade with Player")
+        ##
+        # Players
+        #
+        self.player_frame = tkinter.Frame(self)
+        self.label_player = tkinter.Label(self.player_frame, text="Trade: Players")
         self.player_buttons = list()
         for p in self.game.players:
-            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
+            button = tkinter.Button(self.player_frame, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
             self.player_buttons.append(button)
 
-        self.set_states(self._cur_player)
+        ##
+        # Ports
+        #
+        self.port_frame = tkinter.Frame(self)
+        resources = list(t.value for t in Terrain if t != Terrain.desert)
+        tkinter.Label(self.port_frame, text="Trade: Ports").grid(row=0, column=0, sticky=tkinter.W)
+        self.port_give = tkinter.StringVar(value=resources[0])
+        self.port_get = tkinter.StringVar(value=resources[1])
+        tkinter.OptionMenu(self.port_frame, self.port_give, *resources).grid(row=1, column=0, sticky=tkinter.NSEW)
+        tkinter.OptionMenu(self.port_frame, self.port_get, *resources).grid(row=1, column=1, sticky=tkinter.NSEW)
+        self.btn_31 = tkinter.Button(self.port_frame, text='3:1', command=self.on_three_for_one)
+        self.btn_31.grid(row=1, column=2, sticky=tkinter.NSEW)
+        self.btn_21 = tkinter.Button(self.port_frame, text='2:1', command=self.on_two_for_one)
+        self.btn_21.grid(row=1, column=3, sticky=tkinter.NSEW)
 
-        self.label_port = tkinter.Label(self, text="Trade with Port")
-        self.port_buttons = list()
-        for p in list(Port):
-            button = tkinter.Button(self, text='{0}'.format(p.value), state=tkinter.DISABLED)
-            self.port_buttons.append(button)
+        self.set_states(self._cur_player)
 
         ##
         # Place elements in frame
         #
-
-        row = 0
-        self.label_player.grid(row=row, sticky=tkinter.W)
-        row += 1
-
+        self.label_player.grid(row=0, sticky=tkinter.W)
         for i, button in enumerate(self.player_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
+            button.grid(row=1 + i // 2, column=i % 2, sticky=tkinter.EW)
 
-        self.label_port.grid(row=row, sticky=tkinter.W)
-        row += 1
-
-        for i, button in enumerate(self.port_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
+        self.player_frame.pack(anchor=tkinter.W)
+        self.port_frame.pack(anchor=tkinter.W)
 
     def notify(self, observable):
         # You can't trade with yourself
@@ -679,10 +683,20 @@ class TradeFrame(tkinter.Frame):
     def set_states(self, current_player):
         """You can't trade with yourself, and you have to roll before trading"""
         for player, button in zip(self.game.players, self.player_buttons):
-            if self.game.state.can_trade() and player != current_player:
-                button.configure(state=tkinter.NORMAL)
-            else:
-                button.configure(state=tkinter.DISABLED)
+            button.configure(state=can_do[self.game.state.can_trade() and player != current_player])
+        self.btn_31.configure(state=can_do[self.game.state.can_trade()])
+        self.btn_21.configure(state=can_do[self.game.state.can_trade()])
+
+    def on_three_for_one(self):
+        to_port = [(3, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        self.game.trade_with_port(to_port, Port.any.value, to_player)
+
+    def on_two_for_one(self):
+        to_port = [(2, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        port = Port('{}2:1'.format(self.port_give.get()))
+        self.game.trade_with_port(to_port, port.value, to_player)
 
 
 class PlayDevCardFrame(tkinter.Frame):
@@ -700,9 +714,10 @@ class PlayDevCardFrame(tkinter.Frame):
 
         self.monopoly_frame = tkinter.Frame(self)
         self.monopoly = tkinter.Button(self.monopoly_frame, text="Monopoly", command=self.on_monopoly)
+        option_list = list(t.value for t in Terrain if t != Terrain.desert)
         self.monopoly_choice = tkinter.StringVar()
-        self.monopoly_picker = tkinter.Spinbox(self.monopoly_frame, values=[t.value for t in Terrain
-                                                                            if t != Terrain.desert])
+        self.monopoly_choice.set(option_list[0])
+        self.monopoly_picker = tkinter.OptionMenu(self.monopoly_frame, self.monopoly_choice, *option_list)
 
         self.set_states()
 
@@ -726,15 +741,19 @@ class PlayDevCardFrame(tkinter.Frame):
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
     def on_knight(self):
+        logging.debug('play dev card: knight clicked')
         self.game.play_knight()
 
     def on_monopoly(self):
+        logging.debug('play dev card: monopoly clicked, resource={}'.format(self.monopoly_choice.get()))
         self.game.play_monopoly(self.monopoly_choice.get())
 
     def on_road_builder(self):
+        logging.debug('play dev card: road builder clicked')
         self.game.set_state(states.GameStatePlacingRoadBuilderPieces(self.game))
 
     def on_victory_point(self):
+        logging.debug('play dev card: victory point clicked')
         self.game.play_victory_point()
 
 

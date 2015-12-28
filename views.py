@@ -626,7 +626,8 @@ class RobberFrame(tkinter.Frame):
         logging.debug('steal state: set, player_str={}->{}, cur_player_str={}'.format(self.player_str.get(),
                                                                                       self._other_player_strs()[0],
                                                                                       str(self.game.get_cur_player())))
-        self.player_str.set(self._other_player_strs()[0])
+        if self.player_str.get() in (None, '', str(self.game.get_cur_player())):
+            self.player_str.set(self._other_player_strs()[0])
         self.player_picker = tkinter.OptionMenu(self, self.player_str, *self._other_player_strs())
         self.steal.configure(state=can_do[self.game.state.can_steal()])
 

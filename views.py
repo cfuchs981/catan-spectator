@@ -88,6 +88,8 @@ class BoardFrame(tkinter.Frame):
             self.game.state.place_settlement(self._coord_from_settlement_tag(tag))
         elif piece_type == PieceType.city:
             self.game.state.place_city(self._coord_from_city_tag(tag))
+        elif piece_type == PieceType.robber:
+            self.game.state.move_robber(hexgrid.tile_id_from_coord(self._coord_from_city_tag(tag)))
         self.redraw()
 
     def notify(self, observable):
@@ -115,6 +117,10 @@ class BoardFrame(tkinter.Frame):
             self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
         elif self.game.state.can_place_city():
             self._draw_piece_shadows(PieceType.city, board, terrain_centers)
+        elif self.game.state.can_move_robber():
+            self._draw_piece_shadows(PieceType.robber, board, terrain_centers)
+        elif self.game.state.can_steal():
+            logging.warning('Stealing not yet implemented in view logic')
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -191,14 +197,20 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
     def _draw_pieces(self, board, terrain_centers):
-        roads, settlements, cities = self._get_pieces(board)
+        roads, settlements, cities, robber = self._get_pieces(board)
+
         for coord, road in roads:
             self._draw_piece(coord, road, terrain_centers)
         logging.debug('Roads drawn: {}'.format(len(roads)))
+
         for coord, settlement in settlements:
             self._draw_piece(coord, settlement, terrain_centers)
+
         for coord, city in cities:
             self._draw_piece(coord, city, terrain_centers)
+
+        coord, robber = robber
+        self._draw_piece(coord, robber, terrain_centers)
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
         x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
@@ -212,6 +224,9 @@ class BoardFrame(tkinter.Frame):
         elif piece.type == PieceType.city:
             self._draw_city(x, y, coord, piece, ghost=ghost)
             tag = self._city_tag(coord)
+        elif piece.type == PieceType.robber:
+            self._draw_robber(x, y, coord, piece, ghost=ghost)
+            tag = self._robber_tag(coord)
         else:
             logging.warning('Attempted to draw piece of unknown type={}'.format(piece.type))
 
@@ -297,12 +312,17 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
                                             **opts)
 
+    def _draw_robber(self, x, y, coord, piece, ghost=False):
+
     def _get_pieces(self, board):
-        """Returns roads, settlements, and cities on the board
+        """Returns roads, settlements, and cities on the board as lists of (coord, piece) tuples.
+
+        Also returns the robber as a single (coord, piece) tuple.
         """
         roads = list()
         settlements = list()
         cities = list()
+        robber = None
         for (_, coord), piece in board.pieces.items():
             if piece.type == PieceType.road:
                 roads.append((coord, piece))
@@ -310,7 +330,11 @@ class BoardFrame(tkinter.Frame):
                 settlements.append((coord, piece))
             elif piece.type == PieceType.city:
                 cities.append((coord, piece))
-        return roads, settlements, cities
+            elif piece.type == PieceType.robber:
+                if robber is not None:
+                    logging.critical('More than one robber found on board, there can only be one robber')
+                robber = (coord, piece)
+        return roads, settlements, cities, robber
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         """Takes a piece's hex coordinate, the piece itself, and the terrain_centers
@@ -319,25 +343,22 @@ class BoardFrame(tkinter.Frame):
         Returns the piece's center, as an (x,y) pair. Also returns the angle the
         piece should be rotated at, if any
         """
-        tile_ids = hexgrid.legal_tile_ids()
+        tile_id = hexgrid.nearest_tile_to_edge(hexgrid.legal_tile_ids(), piece_coord)
+        tile_coord = hexgrid.tile_id_to_coord(tile_id)
+        direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
+        terrain_x, terrain_y = terrain_centers[tile_id]
         if piece.type == PieceType.road:
-            tile_id = hexgrid.nearest_tile_to_edge(tile_ids, piece_coord)
-            tile_coord = hexgrid.tile_id_to_coord(tile_id)
-            direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
             angle = 60*self._edge_angle_order.index(direction)
-            terrain_x, terrain_y = terrain_centers[tile_id]
             dx = math.cos(math.radians(angle)) * self.distance_tile_to_edge()
             dy = math.sin(math.radians(angle)) * self.distance_tile_to_edge()
             return terrain_x + dx, terrain_y + dy, angle + 90
         elif piece.type in [PieceType.settlement, PieceType.city]:
-            tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
-            tile_coord = hexgrid.tile_id_to_coord(tile_id)
-            direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
             angle = 30 + 60*self._node_angle_order.index(direction)
-            terrain_x, terrain_y = terrain_centers[tile_id]
             dx = math.cos(math.radians(angle)) * self._tile_radius
             dy = math.sin(math.radians(angle)) * self._tile_radius
             return terrain_x + dx, terrain_y + dy, 0
+        elif piece.type == PieceType.robber:
+            return terrain_x, terrain_y
         else:
             logging.warning('Unknown piece={}'.format(piece))
 
@@ -386,6 +407,9 @@ class BoardFrame(tkinter.Frame):
     def _city_tag(self, coord):
         return 'city_' + hex(coord)
 
+    def _robber_tag(self, coord):
+        return 'robber_' + hex(coord)
+
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
 
@@ -397,6 +421,9 @@ class BoardFrame(tkinter.Frame):
 
     def _coord_from_city_tag(self, tag):
         return int(tag[len('city_0x'):], 16)
+
+    def _coord_from_robber_tag(self, tag):
+        return int(tag[len('robber_0x'):], 16)
 
     _tile_radius  = 50
     _tile_padding = 3

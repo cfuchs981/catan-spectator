@@ -128,6 +128,7 @@ def _generate_pieces(pieces_opts):
             (hexgrid.NODE, 0x87): Piece(PieceType.settlement, yuri),
             (hexgrid.EDGE, 0x89): Piece(PieceType.road, yuri),
             (hexgrid.EDGE, 0xA9): Piece(PieceType.road, zach),
+            (hexgrid.TILE, 0x77): Piece(PieceType.robber, None),
         }
     elif pieces_opts in (Opts.random, Opts.preset):
         logging.warning('{} option not yet implemented'.format(pieces_opts))

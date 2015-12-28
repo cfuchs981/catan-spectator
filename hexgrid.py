@@ -2,6 +2,7 @@ import logging
 
 EDGE = 0
 NODE = 1
+TILE = 2
 
 def direction_to_tile(from_tile, to_tile):
     coord_from = tile_id_to_coord(from_tile.tile_id)

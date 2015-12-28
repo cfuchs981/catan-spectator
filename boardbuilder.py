@@ -118,7 +118,7 @@ def _generate_pieces(tiles, ports, pieces_opts):
     elif pieces_opts == Opts.debug:
         josh = Player(1, 'josh', 'blue')
         ross = Player(2, 'ross', 'red')
-        yuri = Player(3, 'yuri', 'green')
+        yuri = Player(3, 'yurick', 'green')
         zach = Player(4, 'zach', 'orange')
         return {
             (hexgrid.NODE, 0x23): Piece(PieceType.settlement, josh),

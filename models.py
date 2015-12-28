@@ -123,6 +123,19 @@ class Game(object):
     def steal(self, victim):
         self.state.steal(victim)
 
+    def stealable_players(self):
+        if self.robber_tile is None:
+            return list()
+        stealable = list()
+        logging.debug('Getting stealable players at robber tile={}'.format(self.robber_tile))
+        for node in hexgrid.nodes_touching_tile(self.robber_tile):
+            pieces = self.board.get_pieces(types=(PieceType.settlement, PieceType.city), coord=node)
+            if pieces and pieces[0].owner != self.get_cur_player():
+                logging.debug('found stealable player={}, cur={}'.format(pieces[0].owner, self.get_cur_player()))
+                stealable.append(pieces[0].owner)
+        logging.debug('stealable players={}, cur_player={}'.format([str(p) for p in stealable], self.get_cur_player()))
+        return stealable
+
     def buy_road(self, edge):
         #self.assert_legal_road(edge)
         piece = Piece(PieceType.road, self.get_cur_player())
@@ -349,6 +362,8 @@ class Board(object):
             opts['pieces'] = pieces
         boardbuilder.reset(self, opts=opts)
 
+
+
     def can_place_piece(self, piece, coord):
         if piece.type == PieceType.road:
             logging.warning('"Can place road" not yet implemented')
@@ -376,13 +391,30 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        if piece.type in (PieceType.road, ):
-            hextype = hexgrid.EDGE
-        elif piece.type in (PieceType.settlement, PieceType.city):
-            hextype = hexgrid.NODE
-        elif piece.type in (PieceType.robber, ):
-            hextype = hexgrid.TILE
-        self.pieces[(hextype, coord)] = piece
+        hex_type = self._piece_hex_type(piece)
+        self.pieces[(hex_type, coord)] = piece
+
+    def get_pieces(self, types=tuple(), coord=None):
+        if coord is None:
+            logging.critical('Attempted to get_piece with coord={}'.format(coord))
+            return Piece(None, None)
+        indexes = set((self._piece_type_to_hex_type(t), coord) for t in types)
+        pieces = [self.pieces[idx] for idx in indexes if idx in self.pieces]
+        if len(pieces) == 0:
+            logging.warning('Found zero pieces at {}'.format(indexes))
+        elif len(pieces) == 1:
+            logging.debug('Found one piece at {}: {}'.format(indexes, pieces[0]))
+        elif len(pieces) > 1:
+            logging.debug('Found {} pieces at {}: {}'.format(len(pieces), indexes, coord, pieces))
+        return pieces
+
+    def _piece_type_to_hex_type(self, piece_type):
+        if piece_type in (PieceType.road, ):
+            return hexgrid.EDGE
+        elif piece_type in (PieceType.settlement, PieceType.city):
+            return hexgrid.NODE
+        elif piece_type in (PieceType.robber, ):
+            return hexgrid.TILE
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)
@@ -391,23 +423,3 @@ class Board(object):
     def cycle_hex_number(self, tile_id):
         self.state.cycle_hex_number(tile_id)
         self.notify_observers()
-
-    def adjacent_tiles(self, tile_id):
-        coord = hexgrid.tile_id_to_coord(tile_id)
-        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
-        adjacent_coords = [coord-0x20, coord-0x22, coord-0x02,
-                           coord+0x20, coord+0x22, coord+0x02]
-        legal_coords = hexgrid.legal_tile_coords()
-        adjacent_coords = [coord for coord in adjacent_coords
-                           if coord in legal_coords]
-        adjacent_tiles = map(hexgrid.tile_id_from_coord, adjacent_coords)
-        logging.debug('tile={}, adjacent_tiles={}'.format(tile_id, adjacent_tiles))
-        return adjacent_tiles
-
-    def adjacent_nodes(self, tile_id):
-        coord = hexgrid.tile_id_to_coord(tile_id)
-        # clockwise from top. See Appendix A of JSettlers2 dissertation
-        adjacent_coords = [coord+0x01, coord-0x10, coord-0x01,
-                           coord+0x10, coord+0x21, coord+0x12]
-        return adjacent_coords
-

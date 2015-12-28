@@ -611,7 +611,7 @@ class RobberFrame(tkinter.Frame):
 
         self.player_strs = [str(player) for player in self.game.players]
         self.player_str = tkinter.StringVar()
-        self.player_picker = tkinter.OptionMenu(self, self.player_str, *self.player_strs) # reassigned in set_states
+        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(), *self.player_strs) # reassigned in set_states
         self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
 
         self.set_states()
@@ -623,21 +623,24 @@ class RobberFrame(tkinter.Frame):
         self.set_states()
 
     def set_states(self):
-        logging.debug('steal state: set, player_str={}->{}, cur_player_str={}'.format(self.player_str.get(),
-                                                                                      self._other_player_strs()[0],
-                                                                                      str(self.game.get_cur_player())))
-        if self.player_str.get() in (None, '', str(self.game.get_cur_player())):
-            self.player_str.set(self._other_player_strs()[0])
-        self.player_picker = tkinter.OptionMenu(self, self.player_str, *self._other_player_strs())
+        stealable_strs = [str(player) for player in self.game.stealable_players()]
+        if stealable_strs and (self.player_str.get() not in stealable_strs):
+            self.player_str.set(stealable_strs[0])
+        if stealable_strs:
+            logging.debug('stealable set state stealable_strs({})={}, picked_str({})={}'.format(
+                type(stealable_strs[0]), stealable_strs,
+                type(self.player_str.get()), self.player_str.get()
+            ))
+        self.player_picker.destroy()
+        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(),
+                                                *(s for s in stealable_strs if s != self.player_str.get()))
+        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         self.steal.configure(state=can_do[self.game.state.can_steal()])
 
     def on_steal(self):
         picked_str = self.player_str.get()
-        for player in self.game.players:
-            if str(player) == picked_str:
-                self.game.steal(player)
-                return
-        logging.critical('picked_str={}, players={}, failed to steal in view'.format(picked_str, self.game.players))
+        self.game.steal(picked_str)
+        logging.critical('picked_str={}, players={} in view'.format(picked_str, self.game.players))
 
     def _other_player_strs(self):
         cur_str = str(self.game.get_cur_player())

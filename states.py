@@ -239,13 +239,13 @@ class GameStatePreGamePlacingPiece(GameStatePreGame):
     def can_place_city(self):
         return self.piece_type == models.PieceType.city
 
-    def place_road(self, node_from, node_to):
+    def place_road(self, edge):
         if not self.can_place_road():
             logging.warning('Attempted to place road in illegal state={} with piece_type={}'.format(
                 self.__class__.__name__,
                 self.piece_type
             ))
-        self.game.buy_road(node_from, node_to)
+        self.game.buy_road(edge)
 
     def place_settlement(self, node):
         if not self.can_place_settlement():

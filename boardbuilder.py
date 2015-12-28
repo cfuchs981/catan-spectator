@@ -29,10 +29,10 @@ class Opts(Enum):
 
 def get_opts(opts):
     defaults = {
-        'terrain': Opts.random,
-        'numbers': Opts.random,
+        'terrain': Opts.empty,
+        'numbers': Opts.empty,
         'ports': Opts.preset,
-        'pieces': Opts.debug,
+        'pieces': Opts.empty,
     }
     _opts = defaults.copy()
     if opts is None:

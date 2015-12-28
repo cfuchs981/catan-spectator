@@ -638,38 +638,36 @@ class TradeFrame(tkinter.Frame):
         self._cur_player = self.game.get_cur_player()
         self.game.observers.add(self)
 
-        self.label_player = tkinter.Label(self, text="Trade with Player")
-        self.player_buttons = list()
-        for p in self.game.players:
-            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
-            self.player_buttons.append(button)
+        ##
+        # Players
+        #
+        self.player_frame = tkinter.Frame(self)
+        tkinter.Label(self.player_frame, text="Trade: Players").grid(row=0, column=0, sticky=tkinter.W)
+        players = list(p.__repr__() for p in self.game.players)
+        self.trading_player = tkinter.StringVar(value=players[0])
+        tkinter.OptionMenu(self.player_frame, self.trading_player, *players).grid(row=1, column=0, sticky=tkinter.NSEW)
+        self.btn_player_trade = tkinter.Button(self.player_frame, text='Trade', state=tkinter.DISABLED)
 
-        self.set_states(self._cur_player)
+        self.set_states()
 
-        self.label_port = tkinter.Label(self, text="Trade with Port")
-        self.port_buttons = list()
-        for p in list(Port):
-            button = tkinter.Button(self, text='{0}'.format(p.value), state=tkinter.DISABLED)
-            self.port_buttons.append(button)
+        ##
+        # Ports
+        #
+        self.port_frame = tkinter.Frame(self)
+        tkinter.Label(self.port_frame, text="Trade: Ports").grid(row=0, column=0, sticky=tkinter.W)
+        resources = list(t.value for t in Terrain if t != Terrain.desert)
+        self.port_give = tkinter.StringVar(value=resources[0])
+        self.port_get = tkinter.StringVar(value=resources[1])
+        tkinter.OptionMenu(self.port_frame, self.port_give, *resources).grid(row=1, column=0, sticky=tkinter.NSEW)
+        tkinter.OptionMenu(self.port_frame, self.port_get, *resources).grid(row=1, column=1, sticky=tkinter.NSEW)
+        tkinter.Button(self.port_frame, text='3:1', command=self.on_three_for_one).grid(row=1, column=2, sticky=tkinter.NSEW)
+        tkinter.Button(self.port_frame, text='2:1', command=self.on_two_for_one).grid(row=1, column=3, sticky=tkinter.NSEW)
 
         ##
         # Place elements in frame
         #
-
-        row = 0
-        self.label_player.grid(row=row, sticky=tkinter.W)
-        row += 1
-
-        for i, button in enumerate(self.player_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
-
-        self.label_port.grid(row=row, sticky=tkinter.W)
-        row += 1
-
-        for i, button in enumerate(self.port_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
+        self.player_frame.pack()
+        self.port_frame.pack()
 
     def notify(self, observable):
         # You can't trade with yourself
@@ -683,6 +681,12 @@ class TradeFrame(tkinter.Frame):
                 button.configure(state=tkinter.NORMAL)
             else:
                 button.configure(state=tkinter.DISABLED)
+
+    def on_three_for_one(self):
+        logging.warning('3:1 port trade controller not yet implemented')
+
+    def on_two_for_one(self):
+        logging.warning('2:1 port trade controller not yet implemented')
 
 
 class PlayDevCardFrame(tkinter.Frame):

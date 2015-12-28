@@ -658,8 +658,10 @@ class TradeFrame(tkinter.Frame):
         self.port_get = tkinter.StringVar(value=resources[1])
         tkinter.OptionMenu(self.port_frame, self.port_give, *resources).grid(row=1, column=0, sticky=tkinter.NSEW)
         tkinter.OptionMenu(self.port_frame, self.port_get, *resources).grid(row=1, column=1, sticky=tkinter.NSEW)
-        tkinter.Button(self.port_frame, text='3:1', command=self.on_three_for_one).grid(row=1, column=2, sticky=tkinter.NSEW)
-        tkinter.Button(self.port_frame, text='2:1', command=self.on_two_for_one).grid(row=1, column=3, sticky=tkinter.NSEW)
+        self.btn_31 = tkinter.Button(self.port_frame, text='3:1', command=self.on_three_for_one)
+        self.btn_31.grid(row=1, column=2, sticky=tkinter.NSEW)
+        self.btn_21 = tkinter.Button(self.port_frame, text='2:1', command=self.on_two_for_one)
+        self.btn_21.grid(row=1, column=3, sticky=tkinter.NSEW)
 
         self.set_states(self._cur_player)
 
@@ -681,16 +683,20 @@ class TradeFrame(tkinter.Frame):
     def set_states(self, current_player):
         """You can't trade with yourself, and you have to roll before trading"""
         for player, button in zip(self.game.players, self.player_buttons):
-            if self.game.state.can_trade() and player != current_player:
-                button.configure(state=tkinter.NORMAL)
-            else:
-                button.configure(state=tkinter.DISABLED)
+            button.configure(state=can_do[self.game.state.can_trade() and player != current_player])
+        self.btn_31.configure(state=can_do[self.game.state.can_trade()])
+        self.btn_21.configure(state=can_do[self.game.state.can_trade()])
 
     def on_three_for_one(self):
-        logging.warning('3:1 port trade controller not yet implemented')
+        to_port = [(3, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        self.game.trade_with_port(to_port, Port.any.value, to_player)
 
     def on_two_for_one(self):
-        logging.warning('2:1 port trade controller not yet implemented')
+        to_port = [(2, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        port = Port('{}2:1'.format(self.port_give.get()))
+        self.game.trade_with_port(to_port, port.value, to_player)
 
 
 class PlayDevCardFrame(tkinter.Frame):

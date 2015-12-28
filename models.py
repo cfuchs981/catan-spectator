@@ -149,6 +149,16 @@ class Game(object):
 
     def buy_dev_card(self):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())
+        self.notify_observers()
+
+    def trade_with_port(self, to_port, port, to_player):
+        logging.debug('trading to_port={} to port={} to get={}'.format(to_port, port, to_player))
+        self.catanlog.log_player_trades_with_port(self.get_cur_player(), to_port, port, to_player)
+        self.notify_observers()
+
+    def trade_with_other(self, to_other, other, to_player):
+        # todo trade with other
+        logging.warning('trading with other players not yet implemented')
 
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))

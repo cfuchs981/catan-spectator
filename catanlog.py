@@ -24,7 +24,7 @@ class CatanLog(object):
 
     TODO log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=2, patch=0)
+    version = Version(major=0, minor=3, patch=0)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
@@ -175,56 +175,58 @@ class CatanLog(object):
 
     def log_player_trades_with_port(self, player, to_port, port, to_player):
         """
-        $color trades $number $resources[, $number resources]* to port:$port for $number $resources[, $number resources]*
+        $color trades $number $resources[, $number resources]* to port $port for $number $resources[, $number resources]*
 
-        the to_resources params are dicts of form {'wood':2,'brick':1}
+        :param to_port: list of tuples: [(2, 'wood'), (2, 'brick')]
+        :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
         self.log('{0} trades '.format(player.color))
 
         # to_other items
         self.log('[')
-        for i, (res, num) in enumerate(to_port.items()):
+        for i, (num, res) in enumerate(to_port):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
-        self.log(' to port:{0} for '.format(port))
+        self.log(' to port {0} for '.format(port))
 
         # to_player items
         self.log('[')
-        for i, (res, num) in enumerate(to_player.items()):
+        for i, (num, res) in enumerate(to_player):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
         self.log('\n')
 
     def log_player_trades_with_other(self, player, to_other, other, to_player):
         """
-        $color trades [$number $resources, $number resources] to player:$color for [$number $resources, $number resources]
+        $color trades [$number $resources, $number resources] to player $color for [$number $resources, $number resources]
 
-        the to_resources params are dicts of form {'wood':2,'brick':1}
+        :param to_other: list of tuples: [(2, 'wood'), (2, 'brick')]
+        :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
         self.log('{0} trades '.format(player.color))
 
         # to_other items
         self.log('[')
-        for i, (res, num) in enumerate(to_other.items()):
+        for i, (num, res) in enumerate(to_other):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
-        self.log(' to player:{0} for '.format(other.color))
+        self.log(' to player {0} for '.format(other.color))
 
         # to_player items
         self.log('[')
-        for i, (res, num) in enumerate(to_player.items()):
+        for i, (num, res) in enumerate(to_player):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
         self.log('\n')

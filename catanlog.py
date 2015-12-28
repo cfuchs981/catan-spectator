@@ -54,6 +54,7 @@ class CatanLog(object):
         """Erases the log, resets the timestamp
         """
         self._log = ''
+        self._chars_flushed = 0
         self.timestamp = datetime.datetime.now()
 
     def dump(self):

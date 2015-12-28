@@ -212,6 +212,8 @@ class BoardFrame(tkinter.Frame):
         elif piece.type == PieceType.city:
             self._draw_city(x, y, coord, piece, ghost=ghost)
             tag = self._city_tag(coord)
+        else:
+            logging.warning('Attempted to draw piece of unknown type={}'.format(piece.type))
 
         if ghost:
             self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
@@ -232,12 +234,18 @@ class BoardFrame(tkinter.Frame):
                 count += 1
                 self._draw_piece(edge, piece, terrain_centers, ghost=True)
             logging.debug('Road shadows drawn: {}'.format(count))
-        else:
+        elif piece_type == PieceType.settlement:
             nodes = hexgrid.legal_node_coords()
             for node in nodes:
                 if (hexgrid.NODE, node) in board.pieces:
                     continue
                 self._draw_piece(node, piece, terrain_centers, ghost=True)
+        elif piece_type == PieceType.city:
+            for (_, node), p in board.pieces.items():
+                if p.type == PieceType.settlement and p.owner.color == piece.owner.color:
+                    self._draw_piece(node, piece, terrain_centers, ghost=True)
+        else:
+            logging.warning('Attempted to draw piece shadows for nonexistent type={}'.format(piece_type))
 
     def _piece_tkinter_opts(self, coord, piece, **kwargs):
         opts = dict()

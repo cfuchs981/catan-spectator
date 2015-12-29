@@ -3,6 +3,7 @@ import logging
 import tkinter as tk
 import math
 from models import Port
+import models
 from trading import CatanTrade
 
 can_do = {
@@ -24,13 +25,13 @@ class TradeFrame(tk.Frame):
 
         self.title = tk.Label(self, text="Trade")
         self.frame = WithWhoFrame(self)
-        self.make_trade = tk.Button(self, text='Make Trade', state=tk.DISABLED, command=self.on_make_trade)
         self.cancel = tk.Button(self, text='Cancel', state=tk.DISABLED, command=self.on_cancel)
+        self.make_trade = tk.Button(self, text='Make Trade', state=tk.DISABLED, command=self.on_make_trade)
 
         self.title.grid(sticky=tk.W)
         self.frame.grid()
-        self.make_trade.grid(row=2, column=0, sticky=tk.EW)
-        self.cancel.grid(row=2, column=1, sticky=tk.EW)
+        self.cancel.grid(row=2, column=0, sticky=tk.EW)
+        self.make_trade.grid(row=2, column=1, sticky=tk.EW)
 
         self.set_states()
 
@@ -137,9 +138,15 @@ class WithWhichPortFrame(tk.Frame):
         # grid of buttons
         # x x x
         # x x x
-        # 3:1 in topleft, other have text=terrain.value
-
-        tk.Label(self, text='which port').pack()
+        # any in topleft (functions as both 3:1 and 4:1), others have text=terrain.value
+        self.port_btns = list()
+        count = 0
+        for p in models.Port:
+            b = tk.Button(self, text='{}'.format(p.value), state=tk.DISABLED,
+                          command=functools.partial(self.on_port, p))
+            b.grid(row=count // 2, column=count % 2, sticky=tk.NSEW)
+            self.port_btns.append(b)
+            count += 1
 
         self.set_states()
 
@@ -147,18 +154,17 @@ class WithWhichPortFrame(tk.Frame):
         self.set_states()
 
     def set_states(self):
-        pass
+        can_trade = self.master.game.state.can_trade()
+        for btn, port in zip(self.port_btns, models.Port):
+            if port == Port.any:
+                btn.configure(state=can_do[can_trade])
+            else:
+                btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port(port)])
 
-    def on_three_for_one(self):
-        to_port = [(3, self.port_give.get())]
-        to_player = [(1, self.port_get.get())]
-        self.game.trade_with_port(to_port, Port.any.value, to_player)
-
-    def on_two_for_one(self):
-        to_port = [(2, self.port_give.get())]
-        to_player = [(1, self.port_get.get())]
-        port = Port('{}2:1'.format(self.port_give.get()))
-        self.game.trade_with_port(to_port, port.value, to_player)
+    def on_port(self, port):
+        logging.debug('trade: port={} selected'.format(port))
+        self.master.trade.set_getter(port)
+        self.master.set_frame(WhichResourcesFrame(self.master))
 
     def can_make_trade(self):
         return False

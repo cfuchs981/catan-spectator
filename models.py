@@ -109,6 +109,13 @@ class Game(object):
         self.set_cur_player(self.players[0])
         self.notify_observers()
 
+    def cur_player_has_port(self, port):
+        return self.player_has_port(self.get_cur_player(), port)
+
+    def player_has_port(self, player, port):
+        logging.warning('player_has_port not yet implemented in models, returning True')
+        return True
+
     def roll(self, roll):
         self.catanlog.log_player_roll(self.get_cur_player(), roll)
         self.last_roll = roll

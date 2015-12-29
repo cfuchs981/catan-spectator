@@ -354,6 +354,8 @@ class BoardFrame(tkinter.Frame):
                 if robber is not None:
                     logging.critical('More than one robber found on board, there can only be one robber')
                 robber = (coord, piece)
+        if robber is None:
+            logging.critical('No robber found on the board, this is probably wrong')
         return roads, settlements, cities, robber
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
@@ -645,7 +647,6 @@ class RobberFrame(tkinter.Frame):
                 victim = player
         logging.debug('in view, stealing from victim={} (victim_str={})'.format(victim, victim_str))
         self.game.steal(victim)
-        logging.critical('victim_str={}, players={} in view'.format(victim_str, self.game.players))
 
     def _other_player_strs(self):
         cur_str = str(self.game.get_cur_player())

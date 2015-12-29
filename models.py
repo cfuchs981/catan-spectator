@@ -130,7 +130,6 @@ class Game(object):
         if self.robber_tile is None:
             return list()
         stealable = set()
-        logging.debug('Getting stealable players at robber tile={}'.format(self.robber_tile))
         for node in hexgrid.nodes_touching_tile(self.robber_tile):
             pieces = self.board.get_pieces(types=(PieceType.settlement, PieceType.city), coord=node)
             if pieces:
@@ -138,7 +137,7 @@ class Game(object):
                 stealable.add(pieces[0].owner)
         if self.get_cur_player() in stealable:
             stealable.remove(self.get_cur_player())
-        logging.debug('stealable players={}, cur_player={}'.format(stealable, self.get_cur_player()))
+        logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
         return stealable
 
     def buy_road(self, edge):
@@ -408,7 +407,7 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        hex_type = self._piece_type_to_hex_type(piece)
+        hex_type = self._piece_type_to_hex_type(piece.type)
         self.pieces[(hex_type, coord)] = piece
 
     def move_piece(self, piece, from_coord, to_coord):
@@ -434,7 +433,8 @@ class Board(object):
         indexes = set((self._piece_type_to_hex_type(t), coord) for t in types)
         pieces = [self.pieces[idx] for idx in indexes if idx in self.pieces]
         if len(pieces) == 0:
-            logging.warning('Found zero pieces at {}'.format(indexes))
+            #logging.warning('Found zero pieces at {}'.format(indexes))
+            pass
         elif len(pieces) == 1:
             logging.debug('Found one piece at {}: {}'.format(indexes, pieces[0]))
         elif len(pieces) > 1:
@@ -448,6 +448,9 @@ class Board(object):
             return hexgrid.NODE
         elif piece_type in (PieceType.robber, ):
             return hexgrid.TILE
+        else:
+            logging.critical('piece type={} has no corresponding hex type. Returning None'.format(piece_type))
+            return None
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)

@@ -178,21 +178,80 @@ class WhichResourcesFrame(tk.Frame):
         super(WhichResourcesFrame, self).__init__(*args, **kwargs)
         self.master.game.observers.add(self)
 
-        tk.Label(self, text='which resources').pack()
+        self.input = WhichResourcesInputFrame(self)
+        self.output = WhichResourcesOutputFrame(self)
 
-        self.set_states()
+        self.input.pack()
+        self.output.pack()
 
-    def notify(self, observable):
-        self.set_states()
+        self.notify()
 
-    def set_states(self):
-        pass
+    def notify(self, observable=None):
+        self.input.notify()
+        self.output.notify()
 
     def can_make_trade(self):
         return True
 
     def can_cancel(self):
         return True
+
+
+class WhichResourcesInputFrame(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        super(WhichResourcesInputFrame, self).__init__(*args, **kwargs)
+
+        self.give_label = tk.Label(self, text='give')
+        self.get_label = tk.Label(self, text='get')
+
+        self.give_btns = list()
+        self.get_btns = list()
+        for t in models.Terrain:
+            self.give_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_click, t)))
+            self.get_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_click, t)))
+
+        self.give_label.grid(row=0, column=0, sticky=tk.W)
+        for column, btn in enumerate(self.give_btns, 1):
+            btn.grid(row=0, column=column, sticky=tk.NSEW)
+
+        self.get_label.grid(row=1, column=0, sticky=tk.W)
+        for column, btn in enumerate(self.get_btns, 1):
+            btn.grid(row=1, column=column, sticky=tk.NSEW)
+
+        self.set_states()
+
+    def notify(self, observable=None):
+        """WhichResourcesFrame calls notify()"""
+        self.set_states()
+
+    def set_states(self):
+        pass
+
+    def on_click(self, terrain):
+        pass
+
+    def trade(self):
+        return self.master.master.trade
+
+
+class WhichResourcesOutputFrame(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        super(WhichResourcesOutputFrame, self).__init__(*args, **kwargs)
+
+        tk.Label(self, text='output').pack()
+
+        self.set_states()
+
+    def notify(self, observable=None):
+        """WhichResourcesFrame calls notify()"""
+        self.set_states()
+
+    def set_states(self):
+        pass
+
+    def trade(self):
+        return self.master.master.trade
+
 
 # ##
 # # Players

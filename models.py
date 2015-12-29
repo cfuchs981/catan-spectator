@@ -1,4 +1,5 @@
 import logging
+from builtins import *
 import hexgrid
 import states
 import catanlog
@@ -59,7 +60,7 @@ class Game(object):
     def start(self, players):
         self.reset()
 
-        self.set_players(players)
+        self.set_players(Game.get_debug_players()) #todo use players
         if self.options.get('pregame') is None or self.options.get('pregame') == 'on':
             logging.debug('Entering pregame, game options={}'.format(self.options))
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
@@ -121,6 +122,8 @@ class Game(object):
         self.state.move_robber(tile)
 
     def steal(self, victim):
+        if victim is None:
+            victim = Player(1, 'nobody', 'nobody')
         self.state.steal(victim)
 
     def stealable_players(self):
@@ -133,8 +136,9 @@ class Game(object):
             if pieces:
                 logging.debug('found stealable player={}, cur={}'.format(pieces[0].owner, self.get_cur_player()))
                 stealable.add(pieces[0].owner)
-        stealable.remove(self.get_cur_player())
-        logging.debug('stealable players={}, cur_player={}'.format([str(p) for p in stealable], self.get_cur_player()))
+        if self.get_cur_player() in stealable:
+            stealable.remove(self.get_cur_player())
+        logging.debug('stealable players={}, cur_player={}'.format(stealable, self.get_cur_player()))
         return stealable
 
     def buy_road(self, edge):
@@ -212,6 +216,13 @@ class Game(object):
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
         else:
             self.set_state(states.GameStateBeginTurn(self))
+
+    @classmethod
+    def get_debug_players(cls):
+        return [Player(1, 'yurick', 'green'),
+                Player(2, 'josh', 'blue'),
+                Player(3, 'zach', 'orange'),
+                Player(4, 'ross', 'red')]
 
 
 class Player(object):
@@ -320,7 +331,7 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, center=1):
+    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, players=None, center=1):
         """
         method Board creates a new board.
         :param tiles:
@@ -343,6 +354,8 @@ class Board(object):
             self.opts['ports'] = ports
         if pieces is not None:
             self.opts['pieces'] = pieces
+        if players is not None:
+            self.opts['players'] = players
 
         self.reset()
         self.observers = set()
@@ -353,7 +366,7 @@ class Board(object):
         for obs in self.observers:
             obs.notify(self)
 
-    def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
+    def reset(self, terrain=None, numbers=None, ports=None, pieces=None, players=None):
         import boardbuilder
         opts = self.opts.copy()
         if terrain is not None:
@@ -364,9 +377,9 @@ class Board(object):
             opts['ports'] = ports
         if pieces is not None:
             opts['pieces'] = pieces
+        if players is not None:
+            opts['players'] = players
         boardbuilder.reset(self, opts=opts)
-
-
 
     def can_place_piece(self, piece, coord):
         if piece.type == PieceType.road:
@@ -395,8 +408,24 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        hex_type = self._piece_hex_type(piece)
+        hex_type = self._piece_type_to_hex_type(piece)
         self.pieces[(hex_type, coord)] = piece
+
+    def move_piece(self, piece, from_coord, to_coord):
+        from_index = (self._piece_type_to_hex_type(piece.type), from_coord)
+        if from_index not in self.pieces:
+            logging.warning('Attempted to move piece={} which was NOT on the board'.format(from_index))
+            return
+        self.place_piece(piece, to_coord)
+        self.remove_piece(piece, from_coord)
+
+    def remove_piece(self, piece, coord):
+        index = (self._piece_type_to_hex_type(piece.type), coord)
+        try:
+            self.pieces.pop(index)
+            logging.debug('Removed piece={}'.format(index))
+        except ValueError:
+            logging.critical('Attempted to remove piece={} which was NOT on the board'.format(index))
 
     def get_pieces(self, types=tuple(), coord=None):
         if coord is None:

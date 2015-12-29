@@ -126,8 +126,6 @@ class BoardFrame(tkinter.Frame):
             self._draw_piece_shadows(PieceType.city, board, terrain_centers)
         elif self.game.state.can_move_robber():
             self._draw_piece_shadows(PieceType.robber, board, terrain_centers)
-        elif self.game.state.can_steal():
-            logging.warning('Stealing not yet implemented in view logic')
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -624,8 +622,10 @@ class RobberFrame(tkinter.Frame):
 
     def set_states(self):
         stealable_strs = [str(player) for player in self.game.stealable_players()]
-        if stealable_strs and (self.player_str.get() not in stealable_strs):
+        if stealable_strs:
             self.player_str.set(stealable_strs[0])
+        else:
+            self.player_str.set('')
         if stealable_strs:
             logging.debug('stealable set state stealable_strs({})={}, picked_str({})={}'.format(
                 type(stealable_strs[0]), stealable_strs,
@@ -638,9 +638,14 @@ class RobberFrame(tkinter.Frame):
         self.steal.configure(state=can_do[self.game.state.can_steal()])
 
     def on_steal(self):
-        picked_str = self.player_str.get()
-        self.game.steal(picked_str)
-        logging.critical('picked_str={}, players={} in view'.format(picked_str, self.game.players))
+        victim_str = self.player_str.get()
+        victim = None
+        for player in self.game.players:
+            if victim_str == str(player):
+                victim = player
+        logging.debug('in view, stealing from victim={} (victim_str={})'.format(victim, victim_str))
+        self.game.steal(victim)
+        logging.critical('victim_str={}, players={} in view'.format(victim_str, self.game.players))
 
     def _other_player_strs(self):
         cur_str = str(self.game.get_cur_player())

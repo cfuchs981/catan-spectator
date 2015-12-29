@@ -286,11 +286,15 @@ class GameStateMoveRobber(GameStateInGame):
     def can_move_robber(self):
         return True
 
+
     def move_robber(self, tile_id):
-        old_loc = (hexgrid.TILE, hexgrid.tile_id_to_coord(self.game.robber_tile))
-        robber = self.game.board.pieces[old_loc]
-        del self.game.board.pieces[old_loc]
-        self.game.board.place_piece(robber, hexgrid.tile_id_to_coord(tile_id))
+        robbers = self.game.board.get_pieces((models.PieceType.robber, ),
+                                             hexgrid.tile_id_to_coord(self.game.robber_tile))
+        for robber in robbers:
+            self.game.board.move_piece(robber,
+                                       hexgrid.tile_id_to_coord(self.game.robber_tile), hexgrid.tile_id_to_coord(tile_id))
+        if len(robbers) != 1:
+            logging.warning('{} robbers found in board.pieces'.format(len(robbers)))
         self.game.robber_tile = tile_id
         self.game.set_state(GameStateSteal(self.game))
 
@@ -329,10 +333,13 @@ class GameStateMoveRobberUsingKnight(GameStateMoveRobber):
     - BEFORE the player has moved the robber
     """
     def move_robber(self, tile_id):
-        old_loc = (hexgrid.TILE, hexgrid.tile_id_to_coord(self.game.robber_tile))
-        robber = self.game.board.pieces[old_loc]
-        del self.game.board.pieces[old_loc]
-        self.game.board.place_piece(robber, hexgrid.tile_id_to_coord(tile_id))
+        robbers = self.game.board.get_pieces((models.PieceType.robber, ),
+                                             hexgrid.tile_id_to_coord(self.game.robber_tile))
+        for robber in robbers:
+            self.game.board.move_piece(robber,
+                                       hexgrid.tile_id_to_coord(self.game.robber_tile), hexgrid.tile_id_to_coord(tile_id))
+        if len(robbers) > 1:
+            logging.warning('More than one robber found in board.pieces')
         self.game.robber_tile = tile_id
         self.game.set_state(GameStateStealUsingKnight(self.game))
 
@@ -352,7 +359,7 @@ class GameStateSteal(GameStateInGame):
     def steal(self, victim):
         self.game.catanlog.log_player_moves_robber_and_steals(
             self.game.get_cur_player(),
-            self.game.robber_tile,
+            hexgrid.tile_id_to_coord(self.game.robber_tile),
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
@@ -394,7 +401,7 @@ class GameStateStealUsingKnight(GameStateSteal):
     def steal(self, victim):
         self.game.catanlog.log_player_plays_dev_knight(
             self.game.get_cur_player(),
-            self.game.robber_tile,
+            hexgrid.tile_id_to_coord(self.game.robber_tile),
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))

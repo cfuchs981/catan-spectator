@@ -90,6 +90,7 @@ Core
 Nice to have
 - [ ] cancelling of roads/settlements/cities while placing
 - [ ] save log file to custom location on End Game
+- [ ] images in UI buttons (eg dice for roll, )
 - [ ] city-shaped polygon for cities
 - [ ] tile images instead of colored hexagons
 - [ ] port images instead of colored triangles

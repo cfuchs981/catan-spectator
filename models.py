@@ -300,11 +300,12 @@ class HexNumber(Enum):
 
 class Port(Enum):
     any = '3:1'
-    wood = 'wood2:1'
-    brick = 'brick2:1'
-    wheat = 'wheat2:1'
-    sheep = 'sheep2:1'
-    ore = 'ore2:1'
+    any4 = '4:1'
+    wood = 'wood'
+    brick = 'brick'
+    wheat = 'wheat'
+    sheep = 'sheep'
+    ore = 'ore'
 
 
 class PieceType(Enum):

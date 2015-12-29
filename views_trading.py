@@ -165,7 +165,7 @@ class WithWhichPortFrame(tk.Frame):
         for p in models.Port:
             b = tk.Button(self, text='{}'.format(p.value), state=tk.DISABLED,
                           command=functools.partial(self.on_port, p))
-            b.grid(row=count // 2, column=count % 2, sticky=tk.NSEW)
+            b.grid(row=count // 4, column=count % 4, sticky=tk.NSEW)
             self.port_btns.append(b)
             count += 1
 

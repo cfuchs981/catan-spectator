@@ -280,6 +280,9 @@ class Terrain(Enum):
     ore = 'ore'
     desert = 'desert'
 
+    def __repr__(self):
+        return self.value
+
 
 class HexNumber(Enum):
     none = None

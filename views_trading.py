@@ -207,8 +207,8 @@ class WhichResourcesInputFrame(tk.Frame):
         self.give_btns = list()
         self.get_btns = list()
         for t in models.Terrain:
-            self.give_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_click, t)))
-            self.get_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_click, t)))
+            self.give_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_give, t)))
+            self.get_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_get, t)))
 
         self.give_label.grid(row=0, column=0, sticky=tk.W)
         for column, btn in enumerate(self.give_btns, 1):
@@ -227,8 +227,13 @@ class WhichResourcesInputFrame(tk.Frame):
     def set_states(self):
         pass
 
-    def on_click(self, terrain):
-        pass
+    def on_give(self, terrain):
+        self.trade().give(terrain)
+        self.master.notify()
+
+    def on_get(self, terrain):
+        self.trade().get(terrain)
+        self.master.notify()
 
     def trade(self):
         return self.master.master.trade
@@ -238,7 +243,11 @@ class WhichResourcesOutputFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super(WhichResourcesOutputFrame, self).__init__(*args, **kwargs)
 
-        tk.Label(self, text='output').pack()
+        self.giving_str = tk.StringVar()
+        self.getting_str = tk.StringVar()
+
+        tk.Label(self, textvariable=self.giving_str).pack()
+        tk.Label(self, textvariable=self.getting_str).pack()
 
         self.set_states()
 
@@ -247,7 +256,13 @@ class WhichResourcesOutputFrame(tk.Frame):
         self.set_states()
 
     def set_states(self):
-        pass
+        self.giving_str.set('giving: {}'.format(self.trade().giving()))
+        self.getting_str.set('getting: {}'.format(self.trade().getting()))
+        logging.debug('trade: giving_str="{}", getting_str="{}" (trade={})'.format(
+            self.giving_str.get(),
+            self.getting_str.get(),
+            self.trade()
+        ))
 
     def trade(self):
         return self.master.master.trade

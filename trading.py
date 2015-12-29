@@ -11,10 +11,12 @@ class CatanTrade(object):
 
     def give(self, terrain, num=1):
         for _ in range(num):
+            logging.debug('terrain={}'.format(terrain))
             self._give.append(terrain)
 
     def get(self, terrain, num=1):
         for _ in range(num):
+            logging.debug('terrain={}'.format(terrain))
             self._get.append(terrain)
 
     def giver(self):
@@ -25,13 +27,14 @@ class CatanTrade(object):
 
     def giving(self):
         """Returns tuples: [(2, Terrain.wood), (1, Terrain.brick)]"""
+        logging.debug('give={}'.format(self._give))
         c = Counter(self._give.copy())
-        return [(n, t) for t, n in c]
+        return [(n, t) for t, n in c.items()]
 
     def getting(self):
         """Returns tuples: [(2, Terrain.wood), (1, Terrain.brick)]"""
         c = Counter(self._get.copy())
-        return [(n, t) for t, n in c]
+        return [(n, t) for t, n in c.items()]
 
     def set_giver(self, giver):
         """

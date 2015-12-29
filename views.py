@@ -4,7 +4,6 @@ from tkinter import messagebox
 import math
 import collections
 import functools
-import boardbuilder
 import catanlog
 import hexgrid
 

@@ -81,7 +81,7 @@ See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with
 
 Core
 - [x] robber move, steal from player (account for steal from nobody case)
-- [ ] trading with people
+- [x] trading with people
 - [x] trading with port
 - [x] knight -> robber move, steal from player
 - [ ] ports changeable

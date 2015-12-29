@@ -1,5 +1,7 @@
+import functools
 import logging
 import tkinter as tk
+import math
 from models import Port
 from trading import CatanTrade
 
@@ -28,7 +30,7 @@ class TradeFrame(tk.Frame):
         self.title.grid(sticky=tk.W)
         self.frame.grid()
         self.make_trade.grid(row=2, column=0, sticky=tk.EW)
-        self.cancel.grid(row=2, column=3, sticky=tk.EW)
+        self.cancel.grid(row=2, column=1, sticky=tk.EW)
 
         self.set_states()
 
@@ -61,14 +63,27 @@ class TradeFrame(tk.Frame):
 class WithWhoFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super(WithWhoFrame, self).__init__(*args, **kwargs)
+        self.master.game.observers.add(self)
 
-        tk.Button(self, text='Player', command=self._on_player).pack(side=tk.LEFT)
-        tk.Button(self, text='Port', command=self._on_port).pack(side=tk.RIGHT)
+        self.player = tk.Button(self, text='Player', command=self.on_player)
+        self.port = tk.Button(self, text='Port', command=self.on_port)
 
-    def _on_player(self):
+        self.player.pack(side=tk.LEFT)
+        self.port.pack(side=tk.RIGHT)
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        self.player.configure(state=can_do[self.master.game.state.can_trade()])
+        self.port.configure(state=can_do[self.master.game.state.can_trade()])
+
+    def on_player(self):
         self.master.set_frame(WithWhichPlayerFrame(self.master))
 
-    def _on_port(self):
+    def on_port(self):
         self.master.set_frame(WithWhichPortFrame(self.master))
 
     def can_make_trade(self):
@@ -81,20 +96,43 @@ class WithWhoFrame(tk.Frame):
 class WithWhichPlayerFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super(WithWhichPlayerFrame, self).__init__(*args, **kwargs)
+        self.master.game.observers.add(self)
 
-        tk.Label(self, text='which player').pack()
+        self.player_btns = list()
+        count = 0
+        for p in self.master.game.players.copy():
+            b = tk.Button(self, text='{}'.format(p), state=tk.DISABLED, command=functools.partial(self.on_player, p))
+            b.grid(row=count // 2, column=count % 2, sticky=tk.NSEW)
+            self.player_btns.append(b)
+            count += 1
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        for player_btn, player in zip(self.player_btns, self.master.game.players.copy()):
+            state = (self.master.game.state.can_trade()
+                     and self.master.game.get_cur_player() != player)
+            player_btn.configure(state=can_do[state])
 
     def can_make_trade(self):
         return False
 
     def can_cancel(self):
-        logging.debug('can_cancel in withwhichplayerframe')
         return True
+
+    def on_player(self, player):
+        logging.debug('trade: player={} selected'.format(player))
+        self.master.trade.set_getter(player)
+        self.master.set_frame(WhichResourcesFrame(self.master))
 
 
 class WithWhichPortFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super(WithWhichPortFrame, self).__init__(*args, **kwargs)
+        self.master.game.observers.add(self)
 
         # grid of buttons
         # x x x
@@ -102,6 +140,14 @@ class WithWhichPortFrame(tk.Frame):
         # 3:1 in topleft, other have text=terrain.value
 
         tk.Label(self, text='which port').pack()
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        pass
 
     def on_three_for_one(self):
         to_port = [(3, self.port_give.get())]
@@ -124,8 +170,17 @@ class WithWhichPortFrame(tk.Frame):
 class WhichResourcesFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super(WhichResourcesFrame, self).__init__(*args, **kwargs)
+        self.master.game.observers.add(self)
 
         tk.Label(self, text='which resources').pack()
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        pass
 
     def can_make_trade(self):
         return True
@@ -138,10 +193,7 @@ class WhichResourcesFrame(tk.Frame):
 # #
 # self.player_frame = tk.Frame(self)
 #
-# self.player_buttons = list()
-# for p in self.game.players:
-#     button = tk.Button(self.player_frame, text='{0} ({1})'.format(p.color, p.name), state=tk.DISABLED)
-#     self.player_buttons.append(button)
+
 #
 # ##
 # # Ports

@@ -1,12 +1,3 @@
-"""log a game of Settlers of Catan.
-
-TODO: Allow ports to be selected during pregame
-TODO: Control size adjustment with resizing of window
-TODO: Simplify the algorithm for red placement now there is a connected path through
-      the graph that visits every node.
-TODO: Docstrings and unittests.
-"""
-
 import tkinter
 import pprint
 import logging

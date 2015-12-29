@@ -87,8 +87,11 @@ Core
 - [x] knight -> robber move, steal from player
 - [ ] ports configurable
 - [ ] fix victory point doesn't work first click each turn
+- [ ] robber movable during game setup
+- [ ] modules documented, including views
 
 Nice to have
+- [ ] random number setup obeys red number rule
 - [ ] cancelling of roads/settlements/cities while placing
 - [ ] save log file to custom location on End Game
 - [ ] images, colors in UI buttons (eg dice for roll, )

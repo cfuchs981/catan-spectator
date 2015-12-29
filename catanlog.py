@@ -17,14 +17,29 @@ class CatanLog(object):
     class CatanLog introduces a machine-parsable, human-readable log of all actions made in a game of Catan.
 
     Each log contains all publicly known information in the game.
-    Each log is sufficient to 'replay' a game.
+    Each log is sufficient to 'replay' a game from a spectator's point of view.
+
+    This logger is for raw game actions only. No derivable or inferrable information will be logged.
+    - e.g. players discarding cards on a 7 is not logged, because it is derivable from previous
+           rolls, purchases, etc.
+
+    The files are explicitly versioned by the class variable version, and versioning follows semver.
+
+    See individual methods' documentation for syntax and intent. Syntax variables are as follows:
+    - $color is the color of a player, eg 'red', 'blue', 'green', 'orange'
+    - $name is the name of a player, eg 'josh', 'yurick', 'zach', 'ross'
+    - #seat is the seat number of a player, eg 1, 2, 3, 4
+    - $number is an integer number, eg 7, 2, 3, 11, 12
+    - $location is a tile, node, or edge coordinate as defined in module hexgrid (see hexgrid.py)
+    - $port is the name of a port, eg 4:1, 3:1, wood, brick, wheat, sheep, ore
+    - $resource is the name of a terrain, resource, or card, eg 'wood', 'wheat', 'brick', 'ore', 'sheep'
 
     Use #dump to get the log as a string.
     Use #flush to write the log to a file.
 
-    TODO log private information as well (which dev card picked up, which card stolen)
+    TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=3, patch=1)
+    version = Version(major=0, minor=3, patch=2)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
@@ -39,36 +54,47 @@ class CatanLog(object):
 
     def log(self, content):
         """
-        Writes a string to the log
+        Write a string to the log
         """
         self._log += content
         if self._auto_flush:
             self.flush()
 
     def logln(self, content):
-        """Writes a string to the log, appending a newline
+        """
+        Write a string to the log, appending a newline
         """
         self.log('{0}\n'.format(content))
 
     def reset(self):
-        """Erases the log, resets the timestamp
+        """
+        Erase the log and reset the timestamp
         """
         self._log = ''
         self._chars_flushed = 0
         self.timestamp = datetime.datetime.now()
 
     def dump(self):
-        """Dumps the entire log to a string, and returns it
+        """
+        Dump the entire log to a string, and return it
         """
         return self._log
 
     def _latest(self):
-        """Gets all characters written to _log since the last flush()
+        """
+        Get all characters written to _log since the last flush()
         """
         return self._log[self._chars_flushed:]
 
-    def filename(self):
-        """Returns a unique string based on the timestamp and players involved
+    def logpath(self):
+        """
+        Return the logfile path and filename as a string.
+
+        The file with name self.logpath() is written to on flush().
+
+        The filename contains the log's timestamp and the names of players in the game.
+        The logpath changes when reset() or _set_players() are called, as they change the
+        timestamp and the players, respectively.
         """
         name = '{}-{}.catan'.format(self.timestamp.isoformat(), '-'.join([p.name for p in self.players]))
         path = os.path.join(self._log_dir, name)
@@ -77,14 +103,16 @@ class CatanLog(object):
         return path
 
     def flush(self):
-        """Appends the latest updates to file, or optionally to stdout instead
+        """
+        Append the latest updates to file, or optionally to stdout instead. See the constructor
+        for logging options.
         """
         latest = self._latest()
         self._chars_flushed += len(latest)
         if self._use_stdout:
             file = sys.stdout
         else:
-            file = open(self.filename(), 'a')
+            file = open(self.logpath(), 'a')
 
         print(latest, file=file, flush=True, end='')
 
@@ -93,13 +121,9 @@ class CatanLog(object):
 
     def log_game_start(self, players, terrain, numbers, ports):
         """
-        Begins a game.
+        Begin a game.
 
-        Clears the log, sets the timestamp, and logs the following:
-        - file format version
-        - timestamp
-        - players
-        - board layout
+        Erase the log, set the timestamp, set the players, and write the log header.
 
         :param players: set of 3 or (ideally) 4 #Players
         :param terrain: list of 19 terrain types as defined in #models (eg resource.WOOD)
@@ -118,13 +142,13 @@ class CatanLog(object):
 
     def log_player_roll(self, player, roll):
         """
-        $color rolls $number
+        syntax: $color rolls $number
         """
         self.logln('{0} rolls {1}'.format(player.color, roll))
 
     def log_player_moves_robber_and_steals(self, player, tile_id, victim):
         """
-        $color moves robber to $hex, steals from $color
+        syntax: $color moves robber to $location, steals from $color
         """
         self.logln('{0} moves robber to {1}, steals from {2}'.format(
             player.color,
@@ -134,7 +158,7 @@ class CatanLog(object):
 
     def log_player_buys_settlement(self, player, node_id):
         """
-        $color buys settlement, builds at $location
+        syntax: $color buys settlement, builds at $location
         """
         self.logln('{0} buys settlement, builds at {1}'.format(
             player.color,
@@ -143,7 +167,7 @@ class CatanLog(object):
 
     def log_player_buys_city(self, player, node_id):
         """
-        $color buys city, builds at $location
+        syntax: $color buys city, builds at $location
         """
         self.logln('{0} buys city, builds at {1}'.format(
             player.color,
@@ -152,7 +176,7 @@ class CatanLog(object):
 
     def log_player_buys_dev_card(self, player):
         """
-        $color buys dev card
+        syntax: $color buys dev card
         """
         self.logln('{0} buys dev card'.format(
             player.color
@@ -160,7 +184,7 @@ class CatanLog(object):
 
     def log_player_buys_road(self, player, edge):
         """
-        $color buys road, builds at $location
+        syntax: $color buys road, builds at $location
         """
         self.logln('{0} buys road, builds at {1}'.format(
             player.color,
@@ -169,7 +193,7 @@ class CatanLog(object):
 
     def log_player_trades_with_port(self, player, to_port, port, to_player):
         """
-        $color trades $number $resources[, $number resources]* to port $port for $number $resources[, $number resources]*
+        syntax: $color trades $number $resource[, $number resource]* to port $port for $number $resource[, $number resource]*
 
         :param to_port: list of tuples: [(2, 'wood'), (2, 'brick')]
         :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
@@ -198,7 +222,7 @@ class CatanLog(object):
 
     def log_player_trades_with_other(self, player, to_other, other, to_player):
         """
-        $color trades [$number $resources, $number resources] to player $color for [$number $resources, $number resources]
+        syntax: $color trades [$number $resources, $number resources] to player $color for [$number $resources, $number resources]
 
         :param to_other: list of tuples: [(2, 'wood'), (2, 'brick')]
         :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
@@ -227,7 +251,7 @@ class CatanLog(object):
 
     def log_player_plays_dev_knight(self, player, tile_id, victim):
         """
-        $color plays dev card: knight, moves robber to $hex, steals from $color
+        syntax: $color plays dev card: knight, moves robber to $location, steals from $color
         """
         self.logln('{0} plays dev card: knight, moves robber to {1}, steals from {2}'.format(
             player.color,
@@ -237,9 +261,7 @@ class CatanLog(object):
 
     def log_player_plays_dev_monopoly(self, player, resource):
         """
-        $color plays dev card: monopoly on $resource
-
-        resource is the lowercase fulltext, eg 'wood', 'wheat', 'brick', 'ore', 'sheep'
+        syntax: $color plays dev card: monopoly on $resource
         """
         self.logln('{0} plays dev card: monopoly on {1}'.format(
             player.color,
@@ -248,13 +270,13 @@ class CatanLog(object):
 
     def log_player_plays_dev_victory_point(self, player):
         """
-        $color plays dev card: victory point
+        syntax: $color plays dev card: victory point
         """
         self.logln('{0} plays dev card: victory point'.format(player.color))
 
     def log_player_plays_dev_road_builder(self, player, edge1, edge2):
         """
-        $color plays dev card: road builder, builds at $location and $location
+        syntax: $color plays dev card: road builder, builds at $location and $location
         """
         self.logln('{0} plays dev card: road builder, builds at {1} and {2}'.format(
             player.color,
@@ -264,28 +286,63 @@ class CatanLog(object):
 
     def log_player_ends_turn(self, player):
         """
-        $color ends turn
+        syntax: $color ends turn
         """
         self.logln('{0} ends turn'.format(player.color))
 
     def log_player_wins(self, player):
+        """
+        syntax: $color wins
+        """
         self.logln('{0} wins'.format(player.color))
 
     def _log_board_terrain(self, terrain):
+        """
+        syntax: terrain: ($resource ){19}
+
+        Tiles are logged counterclockwise beginning from the top-left.
+        See module hexgrid (hexgrid.py) for the tile layout.
+
+        There are 19 tiles in the base catan board.
+
+        :param terrain: list of 19 resources in models.Terrain, eg ['wood', 'brick', 'wood', 'desert', 'ore', ...]
+        """
         self.logln('terrain: {0}'.format(' '.join(t.value for t in terrain)))
 
     def _log_board_numbers(self, numbers):
+        """
+        syntax: numbers: ($number ){19}
+
+        Numbers are logged counterclockwise beginning from the top-left.
+        See module hexgrid (hexgrid.py) for the tile layout.
+
+        There are 19 tiles in the base catan board.
+
+        None designates a tile where there is no number. Usually, this is
+        the desert.
+
+        :param numbers: list of 19 numbers in models.HexNumber, eg [2, 4, 4, None, 3, 11, 2, ...]
+        """
         self.logln('numbers: {0}'.format(' '.join(str(n.value) for n in numbers)))
 
     def _log_board_ports(self, ports):
         self.logln('ports: {0}'.format(' '.join(p.value for p in ports)))
 
     def _log_players(self, players):
+        """
+        syntax:
+        players: $number
+        (name: $name, color: $color, seat: $number
+        )+
+        """
         self.logln('players: {0}'.format(len(players)))
         for p in self.players:
             self.logln('name: {0}, color: {1}, seat: {2}'.format(p.name, p.color, p.seat))
 
     def _set_players(self, _players):
+        """
+        Players will always be set in seat order (1,2,3,4)
+        """
         self.players = list()
         _players = list(_players)
         _players.sort(key=lambda p: p.seat)

@@ -80,14 +80,23 @@ class BoardFrame(tkinter.Frame):
         self.redraw()
 
     def piece_click(self, piece_type, event):
-        tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
+        tags = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))
+        # avoid processing tile clicks
+        tag = None
+        for t in tags:
+            if 'tile' not in t:
+                tag = t
+                break
+
         logging.debug('Piece clicked with tag={}'.format(tag))
         if piece_type == PieceType.road:
-            self.game.state.place_road(self._coord_from_road_tag(tag))
+            self.game.place_road(self._coord_from_road_tag(tag))
         elif piece_type == PieceType.settlement:
-            self.game.state.place_settlement(self._coord_from_settlement_tag(tag))
+            self.game.place_settlement(self._coord_from_settlement_tag(tag))
         elif piece_type == PieceType.city:
-            self.game.state.place_city(self._coord_from_city_tag(tag))
+            self.game.place_city(self._coord_from_city_tag(tag))
+        elif piece_type == PieceType.robber:
+            self.game.move_robber(hexgrid.tile_id_from_coord(self._coord_from_robber_tag(tag)))
         self.redraw()
 
     def notify(self, observable):
@@ -115,6 +124,8 @@ class BoardFrame(tkinter.Frame):
             self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
         elif self.game.state.can_place_city():
             self._draw_piece_shadows(PieceType.city, board, terrain_centers)
+        elif self.game.state.can_move_robber():
+            self._draw_piece_shadows(PieceType.robber, board, terrain_centers)
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -191,14 +202,20 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
 
     def _draw_pieces(self, board, terrain_centers):
-        roads, settlements, cities = self._get_pieces(board)
+        roads, settlements, cities, robber = self._get_pieces(board)
+
         for coord, road in roads:
             self._draw_piece(coord, road, terrain_centers)
         logging.debug('Roads drawn: {}'.format(len(roads)))
+
         for coord, settlement in settlements:
             self._draw_piece(coord, settlement, terrain_centers)
+
         for coord, city in cities:
             self._draw_piece(coord, city, terrain_centers)
+
+        coord, robber = robber
+        self._draw_piece(coord, robber, terrain_centers)
 
     def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
         x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
@@ -212,6 +229,9 @@ class BoardFrame(tkinter.Frame):
         elif piece.type == PieceType.city:
             self._draw_city(x, y, coord, piece, ghost=ghost)
             tag = self._city_tag(coord)
+        elif piece.type == PieceType.robber:
+            self._draw_robber(x, y, coord, piece, ghost=ghost)
+            tag = self._robber_tag(coord)
         else:
             logging.warning('Attempted to draw piece of unknown type={}'.format(piece.type))
 
@@ -244,6 +264,10 @@ class BoardFrame(tkinter.Frame):
             for (_, node), p in board.pieces.items():
                 if p.type == PieceType.settlement and p.owner.color == piece.owner.color:
                     self._draw_piece(node, piece, terrain_centers, ghost=True)
+        elif piece_type == PieceType.robber:
+            for coord in hexgrid.legal_tile_coords():
+                if hexgrid.tile_id_from_coord(coord) != self.game.robber_tile:
+                    self._draw_piece(coord, piece, terrain_centers, ghost=True)
         else:
             logging.warning('Attempted to draw piece shadows for nonexistent type={}'.format(piece_type))
 
@@ -253,13 +277,20 @@ class BoardFrame(tkinter.Frame):
             PieceType.road: self._road_tag,
             PieceType.settlement: self._settlement_tag,
             PieceType.city: self._city_tag,
+            PieceType.robber: self._robber_tag,
         }
+        if piece.type == PieceType.robber:
+            # robber has no owner
+            color = 'black'
+        else:
+            color = piece.owner.color
+
         opts['tags'] = tag_funcs[piece.type](coord)
-        opts['outline'] = piece.owner.color
-        opts['fill'] = piece.owner.color
+        opts['outline'] = color
+        opts['fill'] = color
         if 'ghost' in kwargs and kwargs['ghost'] == True:
             opts['fill'] = '' # transparent
-            opts['activefill'] = piece.owner.color
+            opts['activefill'] = color
         del kwargs['ghost']
         opts.update(kwargs)
         return opts
@@ -297,12 +328,21 @@ class BoardFrame(tkinter.Frame):
         self._board_canvas.create_rectangle(x-20, y-20, x+20, y+20,
                                             **opts)
 
+    def _draw_robber(self, x, y, coord, piece, ghost=False):
+        opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
+        radius = 10
+        self._board_canvas.create_oval(x-radius, y-radius, x+radius, y+radius,
+                                       **opts)
+
     def _get_pieces(self, board):
-        """Returns roads, settlements, and cities on the board
+        """Returns roads, settlements, and cities on the board as lists of (coord, piece) tuples.
+
+        Also returns the robber as a single (coord, piece) tuple.
         """
         roads = list()
         settlements = list()
         cities = list()
+        robber = None
         for (_, coord), piece in board.pieces.items():
             if piece.type == PieceType.road:
                 roads.append((coord, piece))
@@ -310,7 +350,13 @@ class BoardFrame(tkinter.Frame):
                 settlements.append((coord, piece))
             elif piece.type == PieceType.city:
                 cities.append((coord, piece))
-        return roads, settlements, cities
+            elif piece.type == PieceType.robber:
+                if robber is not None:
+                    logging.critical('More than one robber found on board, there can only be one robber')
+                robber = (coord, piece)
+        if robber is None:
+            logging.critical('No robber found on the board, this is probably wrong')
+        return roads, settlements, cities, robber
 
     def _get_piece_center(self, piece_coord, piece, terrain_centers):
         """Takes a piece's hex coordinate, the piece itself, and the terrain_centers
@@ -319,25 +365,31 @@ class BoardFrame(tkinter.Frame):
         Returns the piece's center, as an (x,y) pair. Also returns the angle the
         piece should be rotated at, if any
         """
-        tile_ids = hexgrid.legal_tile_ids()
         if piece.type == PieceType.road:
-            tile_id = hexgrid.nearest_tile_to_edge(tile_ids, piece_coord)
+            # these pieces are on edges
+            tile_id = hexgrid.nearest_tile_to_edge(piece_coord)
             tile_coord = hexgrid.tile_id_to_coord(tile_id)
             direction = hexgrid.tile_edge_offset_to_direction(piece_coord - tile_coord)
-            angle = 60*self._edge_angle_order.index(direction)
             terrain_x, terrain_y = terrain_centers[tile_id]
+            angle = 60*self._edge_angle_order.index(direction)
             dx = math.cos(math.radians(angle)) * self.distance_tile_to_edge()
             dy = math.sin(math.radians(angle)) * self.distance_tile_to_edge()
             return terrain_x + dx, terrain_y + dy, angle + 90
         elif piece.type in [PieceType.settlement, PieceType.city]:
-            tile_id = hexgrid.nearest_tile_to_node(tile_ids, piece_coord)
+            # these pieces are on nodes
+            tile_id = hexgrid.nearest_tile_to_node(piece_coord)
             tile_coord = hexgrid.tile_id_to_coord(tile_id)
             direction = hexgrid.tile_node_offset_to_direction(piece_coord - tile_coord)
-            angle = 30 + 60*self._node_angle_order.index(direction)
             terrain_x, terrain_y = terrain_centers[tile_id]
+            angle = 30 + 60*self._node_angle_order.index(direction)
             dx = math.cos(math.radians(angle)) * self._tile_radius
             dy = math.sin(math.radians(angle)) * self._tile_radius
             return terrain_x + dx, terrain_y + dy, 0
+        elif piece.type == PieceType.robber:
+            # these pieces are on tiles
+            tile_id = hexgrid.tile_id_from_coord(piece_coord)
+            terrain_x, terrain_y = terrain_centers[tile_id]
+            return terrain_x, terrain_y, 0
         else:
             logging.warning('Unknown piece={}'.format(piece))
 
@@ -386,6 +438,9 @@ class BoardFrame(tkinter.Frame):
     def _city_tag(self, coord):
         return 'city_' + hex(coord)
 
+    def _robber_tag(self, coord):
+        return 'robber_' + hex(coord)
+
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
 
@@ -397,6 +452,9 @@ class BoardFrame(tkinter.Frame):
 
     def _coord_from_city_tag(self, tag):
         return int(tag[len('city_0x'):], 16)
+
+    def _coord_from_robber_tag(self, tag):
+        return int(tag[len('robber_0x'):], 16)
 
     _tile_radius  = 50
     _tile_padding = 3
@@ -551,26 +609,48 @@ class RobberFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
-        self.move_robber = tkinter.Button(self, text="Move Robber", state=tkinter.DISABLED, command=self.on_move_robber)
+        self.player_strs = [str(player) for player in self.game.players]
+        self.player_str = tkinter.StringVar()
+        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(), *self.player_strs) # reassigned in set_states
         self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
 
         self.set_states()
 
-        self.move_robber.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
-        self.steal.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
+        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        self.steal.pack(side=tkinter.RIGHT, fill=tkinter.BOTH, expand=True)
 
     def notify(self, observable):
         self.set_states()
 
     def set_states(self):
-        self.move_robber.configure(state=can_do[self.game.state.can_move_robber()])
+        stealable_strs = [str(player) for player in self.game.stealable_players()]
+        if stealable_strs:
+            self.player_str.set(stealable_strs[0])
+        else:
+            self.player_str.set('')
+        if stealable_strs:
+            logging.debug('stealable set state stealable_strs({})={}, picked_str({})={}'.format(
+                type(stealable_strs[0]), stealable_strs,
+                type(self.player_str.get()), self.player_str.get()
+            ))
+        self.player_picker.destroy()
+        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(),
+                                                *(s for s in stealable_strs if s != self.player_str.get()))
+        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         self.steal.configure(state=can_do[self.game.state.can_steal()])
 
-    def on_move_robber(self):
-        self.game.move_robber(None)
-
     def on_steal(self):
-        self.game.steal(None)
+        victim_str = self.player_str.get()
+        victim = None
+        for player in self.game.players:
+            if victim_str == str(player):
+                victim = player
+        logging.debug('in view, stealing from victim={} (victim_str={})'.format(victim, victim_str))
+        self.game.steal(victim)
+
+    def _other_player_strs(self):
+        cur_str = str(self.game.get_cur_player())
+        return list(filter(lambda pstr: pstr != cur_str, self.player_strs))
 
 
 class BuildFrame(tkinter.Frame):
@@ -638,38 +718,42 @@ class TradeFrame(tkinter.Frame):
         self._cur_player = self.game.get_cur_player()
         self.game.observers.add(self)
 
-        self.label_player = tkinter.Label(self, text="Trade with Player")
+        ##
+        # Players
+        #
+        self.player_frame = tkinter.Frame(self)
+        self.label_player = tkinter.Label(self.player_frame, text="Trade: Players")
         self.player_buttons = list()
         for p in self.game.players:
-            button = tkinter.Button(self, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
+            button = tkinter.Button(self.player_frame, text='{0} ({1})'.format(p.color, p.name), state=tkinter.DISABLED)
             self.player_buttons.append(button)
 
-        self.set_states(self._cur_player)
+        ##
+        # Ports
+        #
+        self.port_frame = tkinter.Frame(self)
+        resources = list(t.value for t in Terrain if t != Terrain.desert)
+        tkinter.Label(self.port_frame, text="Trade: Ports").grid(row=0, column=0, sticky=tkinter.W)
+        self.port_give = tkinter.StringVar(value=resources[0])
+        self.port_get = tkinter.StringVar(value=resources[1])
+        tkinter.OptionMenu(self.port_frame, self.port_give, *resources).grid(row=1, column=0, sticky=tkinter.NSEW)
+        tkinter.OptionMenu(self.port_frame, self.port_get, *resources).grid(row=1, column=1, sticky=tkinter.NSEW)
+        self.btn_31 = tkinter.Button(self.port_frame, text='3:1', command=self.on_three_for_one)
+        self.btn_31.grid(row=1, column=2, sticky=tkinter.NSEW)
+        self.btn_21 = tkinter.Button(self.port_frame, text='2:1', command=self.on_two_for_one)
+        self.btn_21.grid(row=1, column=3, sticky=tkinter.NSEW)
 
-        self.label_port = tkinter.Label(self, text="Trade with Port")
-        self.port_buttons = list()
-        for p in list(Port):
-            button = tkinter.Button(self, text='{0}'.format(p.value), state=tkinter.DISABLED)
-            self.port_buttons.append(button)
+        self.set_states(self._cur_player)
 
         ##
         # Place elements in frame
         #
-
-        row = 0
-        self.label_player.grid(row=row, sticky=tkinter.W)
-        row += 1
-
+        self.label_player.grid(row=0, sticky=tkinter.W)
         for i, button in enumerate(self.player_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
+            button.grid(row=1 + i // 2, column=i % 2, sticky=tkinter.EW)
 
-        self.label_port.grid(row=row, sticky=tkinter.W)
-        row += 1
-
-        for i, button in enumerate(self.port_buttons):
-            button.grid(row=row + i // 2, column=i % 2, sticky=tkinter.EW)
-        row += 2
+        self.player_frame.pack(anchor=tkinter.W)
+        self.port_frame.pack(anchor=tkinter.W)
 
     def notify(self, observable):
         # You can't trade with yourself
@@ -679,10 +763,20 @@ class TradeFrame(tkinter.Frame):
     def set_states(self, current_player):
         """You can't trade with yourself, and you have to roll before trading"""
         for player, button in zip(self.game.players, self.player_buttons):
-            if self.game.state.can_trade() and player != current_player:
-                button.configure(state=tkinter.NORMAL)
-            else:
-                button.configure(state=tkinter.DISABLED)
+            button.configure(state=can_do[self.game.state.can_trade() and player != current_player])
+        self.btn_31.configure(state=can_do[self.game.state.can_trade()])
+        self.btn_21.configure(state=can_do[self.game.state.can_trade()])
+
+    def on_three_for_one(self):
+        to_port = [(3, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        self.game.trade_with_port(to_port, Port.any.value, to_player)
+
+    def on_two_for_one(self):
+        to_port = [(2, self.port_give.get())]
+        to_player = [(1, self.port_get.get())]
+        port = Port('{}2:1'.format(self.port_give.get()))
+        self.game.trade_with_port(to_port, port.value, to_player)
 
 
 class PlayDevCardFrame(tkinter.Frame):
@@ -700,9 +794,10 @@ class PlayDevCardFrame(tkinter.Frame):
 
         self.monopoly_frame = tkinter.Frame(self)
         self.monopoly = tkinter.Button(self.monopoly_frame, text="Monopoly", command=self.on_monopoly)
+        option_list = list(t.value for t in Terrain if t != Terrain.desert)
         self.monopoly_choice = tkinter.StringVar()
-        self.monopoly_picker = tkinter.Spinbox(self.monopoly_frame, values=[t.value for t in Terrain
-                                                                            if t != Terrain.desert])
+        self.monopoly_choice.set(option_list[0])
+        self.monopoly_picker = tkinter.OptionMenu(self.monopoly_frame, self.monopoly_choice, *option_list)
 
         self.set_states()
 
@@ -726,15 +821,19 @@ class PlayDevCardFrame(tkinter.Frame):
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
     def on_knight(self):
+        logging.debug('play dev card: knight clicked')
         self.game.play_knight()
 
     def on_monopoly(self):
+        logging.debug('play dev card: monopoly clicked, resource={}'.format(self.monopoly_choice.get()))
         self.game.play_monopoly(self.monopoly_choice.get())
 
     def on_road_builder(self):
+        logging.debug('play dev card: road builder clicked')
         self.game.set_state(states.GameStatePlacingRoadBuilderPieces(self.game))
 
     def on_victory_point(self):
+        logging.debug('play dev card: victory point clicked')
         self.game.play_victory_point()
 
 

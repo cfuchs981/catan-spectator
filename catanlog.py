@@ -24,7 +24,7 @@ class CatanLog(object):
 
     TODO log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=2, patch=0)
+    version = Version(major=0, minor=3, patch=1)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
@@ -54,6 +54,7 @@ class CatanLog(object):
         """Erases the log, resets the timestamp
         """
         self._log = ''
+        self._chars_flushed = 0
         self.timestamp = datetime.datetime.now()
 
     def dump(self):
@@ -121,12 +122,6 @@ class CatanLog(object):
         """
         self.logln('{0} rolls {1}'.format(player.color, roll))
 
-    def log_player_is_robbed(self, player):
-        """
-        $color is robbed
-        """
-        self.logln('{0} is robbed'.format(player.color))
-
     def log_player_moves_robber_and_steals(self, player, tile_id, victim):
         """
         $color moves robber to $hex, steals from $color
@@ -174,65 +169,67 @@ class CatanLog(object):
 
     def log_player_trades_with_port(self, player, to_port, port, to_player):
         """
-        $color trades $number $resources[, $number resources]* to port:$port for $number $resources[, $number resources]*
+        $color trades $number $resources[, $number resources]* to port $port for $number $resources[, $number resources]*
 
-        the to_resources params are dicts of form {'wood':2,'brick':1}
+        :param to_port: list of tuples: [(2, 'wood'), (2, 'brick')]
+        :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
         self.log('{0} trades '.format(player.color))
 
         # to_other items
         self.log('[')
-        for i, (res, num) in enumerate(to_port.items()):
+        for i, (num, res) in enumerate(to_port):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
-        self.log(' to port:{0} for '.format(port))
+        self.log(' to port {0} for '.format(port))
 
         # to_player items
         self.log('[')
-        for i, (res, num) in enumerate(to_player.items()):
+        for i, (num, res) in enumerate(to_player):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
         self.log('\n')
 
     def log_player_trades_with_other(self, player, to_other, other, to_player):
         """
-        $color trades [$number $resources, $number resources] to player:$color for [$number $resources, $number resources]
+        $color trades [$number $resources, $number resources] to player $color for [$number $resources, $number resources]
 
-        the to_resources params are dicts of form {'wood':2,'brick':1}
+        :param to_other: list of tuples: [(2, 'wood'), (2, 'brick')]
+        :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
         self.log('{0} trades '.format(player.color))
 
         # to_other items
         self.log('[')
-        for i, (res, num) in enumerate(to_other.items()):
+        for i, (num, res) in enumerate(to_other):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
-        self.log(' to player:{0} for '.format(other.color))
+        self.log(' to player {0} for '.format(other.color))
 
         # to_player items
         self.log('[')
-        for i, (res, num) in enumerate(to_player.items()):
+        for i, (num, res) in enumerate(to_player):
             if i > 0:
                 self.log(',')
-            self.log('{0} {1}'.format(num, res.value))
+            self.log('{0} {1}'.format(num, res))
         self.log(']')
 
         self.log('\n')
 
     def log_player_plays_dev_knight(self, player, tile_id, victim):
         """
-        $color plays dev card: knight on $hex, steals from $color
+        $color plays dev card: knight, moves robber to $hex, steals from $color
         """
-        self.logln('{0} plays dev card: knight on {1}, steals from {2}'.format(
+        self.logln('{0} plays dev card: knight, moves robber to {1}, steals from {2}'.format(
             player.color,
             tile_id,
             victim.color
@@ -246,7 +243,7 @@ class CatanLog(object):
         """
         self.logln('{0} plays dev card: monopoly on {1}'.format(
             player.color,
-            resource.value
+            resource
         ))
 
     def log_player_plays_dev_victory_point(self, player):

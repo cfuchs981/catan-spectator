@@ -14,7 +14,7 @@ import pprint
 import random
 import hexgrid
 import states
-from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece, PieceType, Player
+from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece, PieceType, Player, Game
 
 
 class Opts(Enum):
@@ -29,10 +29,11 @@ class Opts(Enum):
 
 def get_opts(opts):
     defaults = {
-        'terrain': Opts.random,
-        'numbers': Opts.random,
+        'terrain': Opts.empty,
+        'numbers': Opts.empty,
         'ports': Opts.preset,
-        'pieces': Opts.debug,
+        'pieces': Opts.preset,
+        'players': Opts.preset,
     }
     _opts = defaults.copy()
     if opts is None:
@@ -62,7 +63,7 @@ def modify(board, opts=None):
     board.tiles = _generate_tiles(opts['terrain'], opts['numbers'])
     board.ports = _generate_ports(opts['ports'])
     board.state = states.BoardStateModifiable(board)
-    board.pieces = _generate_pieces(opts['pieces'])
+    board.pieces = _generate_pieces(board.tiles, board.ports, opts['players'], opts['pieces'])
 
 def _generate_tiles(terrain_opts, numbers_opts):
     terrain = None
@@ -112,24 +113,28 @@ def _generate_ports(port_opts):
         logging.warning('{} option not yet implemented'.format(port_opts))
         return []
 
-def _generate_pieces(pieces_opts):
+def _generate_pieces(tiles, ports, players_opts, pieces_opts):
     if pieces_opts == Opts.empty:
         return dict()
-    elif pieces_opts == Opts.debug:
-        josh = Player(1, 'josh', 'blue')
-        ross = Player(2, 'ross', 'red')
-        yuri = Player(3, 'yuri', 'green')
-        zach = Player(4, 'zach', 'orange')
+    elif pieces_opts == Opts.debug and players_opts == Opts.debug:
+        players = Game.get_debug_players()
         return {
-            (hexgrid.NODE, 0x23): Piece(PieceType.settlement, josh),
-            (hexgrid.EDGE, 0x22): Piece(PieceType.road, josh),
-            (hexgrid.NODE, 0x67): Piece(PieceType.settlement, ross),
-            (hexgrid.EDGE, 0x98): Piece(PieceType.road, ross),
-            (hexgrid.NODE, 0x87): Piece(PieceType.settlement, yuri),
-            (hexgrid.EDGE, 0x89): Piece(PieceType.road, yuri),
-            (hexgrid.EDGE, 0xA9): Piece(PieceType.road, zach),
+            (hexgrid.NODE, 0x23): Piece(PieceType.settlement, players[0]),
+            (hexgrid.EDGE, 0x22): Piece(PieceType.road, players[0]),
+            (hexgrid.NODE, 0x67): Piece(PieceType.settlement, players[1]),
+            (hexgrid.EDGE, 0x98): Piece(PieceType.road, players[1]),
+            (hexgrid.NODE, 0x87): Piece(PieceType.settlement, players[2]),
+            (hexgrid.EDGE, 0x89): Piece(PieceType.road, players[2]),
+            (hexgrid.EDGE, 0xA9): Piece(PieceType.road, players[3]),
+            (hexgrid.TILE, 0x77): Piece(PieceType.robber, None),
         }
-    elif pieces_opts in (Opts.random, Opts.preset):
+    elif pieces_opts in (Opts.preset, ):
+        deserts = filter(lambda tile: tile.terrain == Terrain.desert, tiles)
+        coord = hexgrid.tile_id_to_coord(list(deserts)[0].tile_id)
+        return {
+            (hexgrid.TILE, coord): Piece(PieceType.robber, None)
+        }
+    elif pieces_opts in (Opts.random, ):
         logging.warning('{} option not yet implemented'.format(pieces_opts))
 
 def _check_red_placement(tiles):

@@ -82,7 +82,7 @@ See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with
 Core
 - [ ] robber move, steal from player (account for steal from nobody case)
 - [ ] trading with people
-- [ ] trading with port
+- [x] trading with port
 - [ ] knight -> robber move, steal from player
 - [ ] ports changeable
 
@@ -90,10 +90,10 @@ Nice to have
 - [ ] cancelling of roads/settlements/cities
 - [ ] save log file to custom location on End Game
 - [ ] city-shaped polygon for cities
-- [ ] tile images instead of colors
-- [ ] port images instead of colors
+- [ ] tile images instead of colored hexagons
+- [ ] port images instead of colored triangles
 - [ ] number images instead of text
-- [ ] piece images instead of colors (?)
+- [ ] piece images instead of colored polygons
 
 ### Attribution
 

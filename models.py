@@ -1,4 +1,5 @@
 import logging
+from builtins import *
 import hexgrid
 import states
 import catanlog
@@ -14,6 +15,7 @@ class Game(object):
         }
         self.players = players or list()
         self.board = board or Board()
+        self.robber = Piece(PieceType.robber, None)
         self.catanlog = log or catanlog.CatanLog()
 
         self.state = None
@@ -58,7 +60,7 @@ class Game(object):
     def start(self, players):
         self.reset()
 
-        self.set_players(players)
+        self.set_players(Game.get_debug_players()) #todo use players
         if self.options.get('pregame') is None or self.options.get('pregame') == 'on':
             logging.debug('Entering pregame, game options={}'.format(self.options))
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
@@ -74,6 +76,11 @@ class Game(object):
             numbers.append(tile.number)
         for _, _, port in self.board.ports:
             ports.append(port)
+
+        for (_, coord), piece in self.board.pieces.items():
+            if piece.type == PieceType.robber:
+                self.robber_tile = hexgrid.tile_id_from_coord(coord)
+                logging.debug('Found robber at coord={}, set robber_tile={}'.format(coord, self.robber_tile))
 
         self.catanlog.log_game_start(self.players, terrain, numbers, ports)
         self.notify_observers()
@@ -115,8 +122,23 @@ class Game(object):
         self.state.move_robber(tile)
 
     def steal(self, victim):
-        victim = Player(1, "name", "color") # todo use real victim
+        if victim is None:
+            victim = Player(1, 'nobody', 'nobody')
         self.state.steal(victim)
+
+    def stealable_players(self):
+        if self.robber_tile is None:
+            return list()
+        stealable = set()
+        for node in hexgrid.nodes_touching_tile(self.robber_tile):
+            pieces = self.board.get_pieces(types=(PieceType.settlement, PieceType.city), coord=node)
+            if pieces:
+                logging.debug('found stealable player={}, cur={}'.format(pieces[0].owner, self.get_cur_player()))
+                stealable.add(pieces[0].owner)
+        if self.get_cur_player() in stealable:
+            stealable.remove(self.get_cur_player())
+        logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
+        return stealable
 
     def buy_road(self, edge):
         #self.assert_legal_road(edge)
@@ -147,14 +169,33 @@ class Game(object):
 
     def buy_dev_card(self):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())
+        self.notify_observers()
+
+    def place_road(self, edge_coord):
+        self.state.place_road(edge_coord)
+
+    def place_settlement(self, node_coord):
+        self.state.place_settlement(node_coord)
+
+    def place_city(self, node_coord):
+        self.state.place_city(node_coord)
+
+    def trade_with_port(self, to_port, port, to_player):
+        logging.debug('trading to_port={} to port={} to get={}'.format(to_port, port, to_player))
+        self.catanlog.log_player_trades_with_port(self.get_cur_player(), to_port, port, to_player)
+        self.notify_observers()
+
+    def trade_with_other(self, to_other, other, to_player):
+        # todo trade with other
+        logging.warning('trading with other players not yet implemented')
 
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
 
     def play_monopoly(self, resource):
-        self.set_dev_card_state(states.DevCardPlayedState(self))
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
+        self.set_dev_card_state(states.DevCardPlayedState(self))
 
     def play_road_builder(self, edge1, edge2):
         self.set_dev_card_state(states.DevCardPlayedState(self))
@@ -174,6 +215,13 @@ class Game(object):
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
         else:
             self.set_state(states.GameStateBeginTurn(self))
+
+    @classmethod
+    def get_debug_players(cls):
+        return [Player(1, 'yurick', 'green'),
+                Player(2, 'josh', 'blue'),
+                Player(3, 'zach', 'orange'),
+                Player(4, 'ross', 'red')]
 
 
 class Player(object):
@@ -199,6 +247,9 @@ class Player(object):
 
     def __repr__(self):
         return '{} ({})'.format(self.color, self.name)
+
+    def __hash__(self):
+        return sum(bytes(str(self), encoding='utf8'))
 
 
 class Tile(object):
@@ -279,7 +330,7 @@ class Board(object):
     Board.direction(from, to) gives the compass direction you need to take to
     get from the origin tile to the destination tile.
     """
-    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, center=1):
+    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, players=None, center=1):
         """
         method Board creates a new board.
         :param tiles:
@@ -302,6 +353,8 @@ class Board(object):
             self.opts['ports'] = ports
         if pieces is not None:
             self.opts['pieces'] = pieces
+        if players is not None:
+            self.opts['players'] = players
 
         self.reset()
         self.observers = set()
@@ -312,7 +365,7 @@ class Board(object):
         for obs in self.observers:
             obs.notify(self)
 
-    def reset(self, terrain=None, numbers=None, ports=None, pieces=None):
+    def reset(self, terrain=None, numbers=None, ports=None, pieces=None, players=None):
         import boardbuilder
         opts = self.opts.copy()
         if terrain is not None:
@@ -323,6 +376,8 @@ class Board(object):
             opts['ports'] = ports
         if pieces is not None:
             opts['pieces'] = pieces
+        if players is not None:
+            opts['players'] = players
         boardbuilder.reset(self, opts=opts)
 
     def can_place_piece(self, piece, coord):
@@ -334,6 +389,9 @@ class Board(object):
             return True
         elif piece.type == PieceType.city:
             logging.warning('"Can place city" not yet implemented')
+            return True
+        elif piece.type == PieceType.robber:
+            logging.warning('"Can place robber" not yet implemented')
             return True
         else:
             logging.debug('Can\'t place piece={} on coord={}'.format(
@@ -349,11 +407,50 @@ class Board(object):
         logging.debug('Placed piece={} on coord={}'.format(
             piece, hex(coord)
         ))
-        if piece.type == PieceType.road:
-            hextype = hexgrid.EDGE
+        hex_type = self._piece_type_to_hex_type(piece.type)
+        self.pieces[(hex_type, coord)] = piece
+
+    def move_piece(self, piece, from_coord, to_coord):
+        from_index = (self._piece_type_to_hex_type(piece.type), from_coord)
+        if from_index not in self.pieces:
+            logging.warning('Attempted to move piece={} which was NOT on the board'.format(from_index))
+            return
+        self.place_piece(piece, to_coord)
+        self.remove_piece(piece, from_coord)
+
+    def remove_piece(self, piece, coord):
+        index = (self._piece_type_to_hex_type(piece.type), coord)
+        try:
+            self.pieces.pop(index)
+            logging.debug('Removed piece={}'.format(index))
+        except ValueError:
+            logging.critical('Attempted to remove piece={} which was NOT on the board'.format(index))
+
+    def get_pieces(self, types=tuple(), coord=None):
+        if coord is None:
+            logging.critical('Attempted to get_piece with coord={}'.format(coord))
+            return Piece(None, None)
+        indexes = set((self._piece_type_to_hex_type(t), coord) for t in types)
+        pieces = [self.pieces[idx] for idx in indexes if idx in self.pieces]
+        if len(pieces) == 0:
+            #logging.warning('Found zero pieces at {}'.format(indexes))
+            pass
+        elif len(pieces) == 1:
+            logging.debug('Found one piece at {}: {}'.format(indexes, pieces[0]))
+        elif len(pieces) > 1:
+            logging.debug('Found {} pieces at {}: {}'.format(len(pieces), indexes, coord, pieces))
+        return pieces
+
+    def _piece_type_to_hex_type(self, piece_type):
+        if piece_type in (PieceType.road, ):
+            return hexgrid.EDGE
+        elif piece_type in (PieceType.settlement, PieceType.city):
+            return hexgrid.NODE
+        elif piece_type in (PieceType.robber, ):
+            return hexgrid.TILE
         else:
-            hextype = hexgrid.NODE
-        self.pieces[(hextype, coord)] = piece
+            logging.critical('piece type={} has no corresponding hex type. Returning None'.format(piece_type))
+            return None
 
     def cycle_hex_type(self, tile_id):
         self.state.cycle_hex_type(tile_id)
@@ -362,23 +459,3 @@ class Board(object):
     def cycle_hex_number(self, tile_id):
         self.state.cycle_hex_number(tile_id)
         self.notify_observers()
-
-    def adjacent_tiles(self, tile_id):
-        coord = hexgrid.tile_id_to_coord(tile_id)
-        # clockwise from top-left. See Appendix A of JSettlers2 dissertation
-        adjacent_coords = [coord-0x20, coord-0x22, coord-0x02,
-                           coord+0x20, coord+0x22, coord+0x02]
-        legal_coords = hexgrid.legal_tile_coords()
-        adjacent_coords = [coord for coord in adjacent_coords
-                           if coord in legal_coords]
-        adjacent_tiles = map(hexgrid.tile_id_from_coord, adjacent_coords)
-        logging.debug('tile={}, adjacent_tiles={}'.format(tile_id, adjacent_tiles))
-        return adjacent_tiles
-
-    def adjacent_nodes(self, tile_id):
-        coord = hexgrid.tile_id_to_coord(tile_id)
-        # clockwise from top. See Appendix A of JSettlers2 dissertation
-        adjacent_coords = [coord+0x01, coord-0x10, coord-0x01,
-                           coord+0x10, coord+0x21, coord+0x12]
-        return adjacent_coords
-

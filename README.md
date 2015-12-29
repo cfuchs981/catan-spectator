@@ -80,10 +80,10 @@ See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with
 ### Todo
 
 Core
-- [ ] robber move, steal from player (account for steal from nobody case)
+- [x] robber move, steal from player (account for steal from nobody case)
 - [ ] trading with people
 - [x] trading with port
-- [ ] knight -> robber move, steal from player
+- [x] knight -> robber move, steal from player
 - [ ] ports changeable
 
 Nice to have

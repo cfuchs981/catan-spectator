@@ -24,7 +24,7 @@ class CatanLog(object):
 
     TODO log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=3, patch=0)
+    version = Version(major=0, minor=3, patch=1)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         self._log = str()
@@ -121,12 +121,6 @@ class CatanLog(object):
         $color rolls $number
         """
         self.logln('{0} rolls {1}'.format(player.color, roll))
-
-    def log_player_is_robbed(self, player):
-        """
-        $color is robbed
-        """
-        self.logln('{0} is robbed'.format(player.color))
 
     def log_player_moves_robber_and_steals(self, player, tile_id, victim):
         """
@@ -233,9 +227,9 @@ class CatanLog(object):
 
     def log_player_plays_dev_knight(self, player, tile_id, victim):
         """
-        $color plays dev card: knight on $hex, steals from $color
+        $color plays dev card: knight, moves robber to $hex, steals from $color
         """
-        self.logln('{0} plays dev card: knight on {1}, steals from {2}'.format(
+        self.logln('{0} plays dev card: knight, moves robber to {1}, steals from {2}'.format(
             player.color,
             tile_id,
             victim.color

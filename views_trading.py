@@ -55,10 +55,31 @@ class TradeFrame(tk.Frame):
         return self.frame.can_cancel()
 
     def on_make_trade(self):
-        logging.warning('make trade not implemented yet in views_trading')
+        logging.debug('trade MAKE: {} {} {} {}'.format(self.trade.giver(),
+                                                       self.trade.giving(),
+                                                       self.trade.getter(),
+                                                       self.trade.getting()))
+        giver = self.trade.giver().color
+        giving = [(n, t.value) for n, t in self.trade.giving()]
+        getting = [(n, t.value) for n, t in self.trade.getting()]
+        if self.trade.getter() in Port:
+            self._on_make_port_trade(giver, giving, getting)
+        else:
+            self._on_make_player_trade(giver, giving, getting)
+        self.on_cancel()
+        self.game.notify(None)
 
     def on_cancel(self):
+        self.trade = CatanTrade(giver=self.game.get_cur_player())
         self.set_frame(WithWhoFrame(self))
+
+    def _on_make_port_trade(self, giver, giving, getting):
+        getter = self.trade.getter().value
+        self.game.catanlog.log_player_trades_with_port(giver, giving, getter, getting)
+
+    def _on_make_player_trade(self, giver, giving, getting):
+        getter = self.trade.getter().color
+        self.game.catanlog.log_player_trades_with_other(giver, giving, getter, getting)
 
 
 class WithWhoFrame(tk.Frame):
@@ -256,8 +277,8 @@ class WhichResourcesOutputFrame(tk.Frame):
         self.set_states()
 
     def set_states(self):
-        self.giving_str.set('giving: {}'.format(self.trade().giving()))
-        self.getting_str.set('getting: {}'.format(self.trade().getting()))
+        self.giving_str.set('giving to {}: {}'.format(self.trade().getter(), self.trade().giving()))
+        self.getting_str.set('getting from {}: {}'.format(self.trade().getter(), self.trade().getting()))
         logging.debug('trade: giving_str="{}", getting_str="{}" (trade={})'.format(
             self.giving_str.get(),
             self.getting_str.get(),

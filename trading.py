@@ -40,10 +40,10 @@ class CatanTrade(object):
         """
         :param giver: Player
         """
-        self.giver = giver
+        self._giver = giver
 
     def set_getter(self, getter):
         """
         :param getter: Player
         """
-        self.getter = getter
+        self._getter = getter

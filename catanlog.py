@@ -174,7 +174,7 @@ class CatanLog(object):
         :param to_port: list of tuples: [(2, 'wood'), (2, 'brick')]
         :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
-        self.log('{0} trades '.format(player.color))
+        self.log('{0} trades '.format(player))
 
         # to_other items
         self.log('[')
@@ -203,23 +203,23 @@ class CatanLog(object):
         :param to_other: list of tuples: [(2, 'wood'), (2, 'brick')]
         :param to_player: list of tuples: [(1, 'ore'), (1, 'sheep')]
         """
-        self.log('{0} trades '.format(player.color))
+        self.log('{0} trades '.format(player))
 
         # to_other items
         self.log('[')
         for i, (num, res) in enumerate(to_other):
             if i > 0:
-                self.log(',')
+                self.log(', ')
             self.log('{0} {1}'.format(num, res))
         self.log(']')
 
-        self.log(' to player {0} for '.format(other.color))
+        self.log(' to player {0} for '.format(other))
 
         # to_player items
         self.log('[')
         for i, (num, res) in enumerate(to_player):
             if i > 0:
-                self.log(',')
+                self.log(', ')
             self.log('{0} {1}'.format(num, res))
         self.log(']')
 

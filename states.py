@@ -16,7 +16,9 @@ class GameState(object):
         """
         def method(*args):
             return None
-        logging.debug('Method {0} not found'.format(name))
+        if 'can_' not in name:
+            # can_do_xyz methods are ok to return None if not implemented
+            logging.debug('Method {0} not found'.format(name))
         return method
 
     def is_in_game(self):

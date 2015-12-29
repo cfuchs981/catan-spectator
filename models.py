@@ -187,9 +187,18 @@ class Game(object):
     def place_city(self, node_coord):
         self.state.place_city(node_coord)
 
-    def trade_with_port(self, to_port, port, to_player):
-        logging.debug('trading to_port={} to port={} to get={}'.format(to_port, port, to_player))
-        self.catanlog.log_player_trades_with_port(self.get_cur_player(), to_port, port, to_player)
+    def trade(self, trade):
+        giver = trade.giver().color
+        giving = [(n, t.value) for n, t in trade.giving()]
+        getting = [(n, t.value) for n, t in trade.getting()]
+        if trade.getter() in Port:
+            getter = trade.getter().value
+            self.catanlog.log_player_trades_with_port(giver, giving, getter, getting)
+            logging.debug('trading {} to port={} to get={}'.format(giving, getter, getting))
+        else:
+            getter = trade.getter().color
+            self.catanlog.log_player_trades_with_other(giver, giving, getter, getting)
+            logging.debug('trading {} to player={} to get={}'.format(giving, getter, getting))
         self.notify_observers()
 
     def trade_with_other(self, to_other, other, to_player):

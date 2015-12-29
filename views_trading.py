@@ -1,7 +1,6 @@
 import functools
 import logging
 import tkinter as tk
-import math
 from models import Port
 import models
 from trading import CatanTrade
@@ -14,6 +13,18 @@ can_do = {
 
 
 class TradeFrame(tk.Frame):
+    """
+    class TradeFrame is a tkinter Frame containing a dynamic trading interface
+
+    TradeFrame contains a swappable frame. The contents of the frame are responsible for
+    swapping themselves out when user input dictates it (eg click button -> swap frame)
+
+    TradeFrame is used inside the larger GameToolbarFrame.
+
+    TradeFrame observes the game object. On notify, it:
+    - calls the swappable frame's notify() method
+    - sets the state of its buttons
+    """
 
     def __init__(self, master, game):
         super(TradeFrame, self).__init__(master)
@@ -36,6 +47,7 @@ class TradeFrame(tk.Frame):
         self.set_states()
 
     def notify(self, observable):
+        self.frame.notify(self)
         self.set_states()
 
     def set_states(self):
@@ -59,27 +71,14 @@ class TradeFrame(tk.Frame):
                                                        self.trade.giving(),
                                                        self.trade.getter(),
                                                        self.trade.getting()))
-        giver = self.trade.giver().color
-        giving = [(n, t.value) for n, t in self.trade.giving()]
-        getting = [(n, t.value) for n, t in self.trade.getting()]
-        if self.trade.getter() in Port:
-            self._on_make_port_trade(giver, giving, getting)
-        else:
-            self._on_make_player_trade(giver, giving, getting)
+        self.game.trade(self.trade)
+
         self.on_cancel()
         self.game.notify(None)
 
     def on_cancel(self):
         self.trade = CatanTrade(giver=self.game.get_cur_player())
         self.set_frame(WithWhoFrame(self))
-
-    def _on_make_port_trade(self, giver, giving, getting):
-        getter = self.trade.getter().value
-        self.game.catanlog.log_player_trades_with_port(giver, giving, getter, getting)
-
-    def _on_make_player_trade(self, giver, giving, getting):
-        getter = self.trade.getter().color
-        self.game.catanlog.log_player_trades_with_other(giver, giving, getter, getting)
 
 
 class WithWhoFrame(tk.Frame):

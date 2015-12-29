@@ -14,7 +14,7 @@ This is a work in progress.
 ```
 $ python3 main.py --help
 usage: main.py [-h] [--terrain TERRAIN] [--numbers NUMBERS] [--ports PORTS]
-               [--pieces PIECES] [--pregame PREGAME]
+               [--pieces PIECES] [--players PLAYERS] [--pregame PREGAME]
 
 log a game of catan
 
@@ -24,6 +24,7 @@ optional arguments:
   --numbers NUMBERS  random|preset|empty|debug, default empty
   --ports PORTS      random|preset|empty|debug, default preset
   --pieces PIECES    random|preset|empty|debug, default empty
+  --players PLAYERS  random|preset|empty|debug, default preset
   --pregame PREGAME  on|off, default on
 ```
 
@@ -31,7 +32,7 @@ Make targets:
 - `make relaunch`: launch (or relaunch) the GUI
 - `make logs`: cat the python logs
 - `make tail`: tail the python logs
-- `make`: alias for relaunch
+- `make`: alias for relaunch && tail
 
 ### Demo
 ![Demo](/doc/gifs/demo3.gif)
@@ -43,7 +44,7 @@ Therefore, each `.catan` file contains sufficient information to 'replay' a game
 
 The header begins with a version, and ends with `...CATAN!`. The game begins after that.
 
-The format is not yet v1.0.
+The format is not yet v1.0. The current version is listed in `catanlog.py`.
 
 Example
 ```
@@ -84,16 +85,16 @@ Core
 - [x] trading with people
 - [x] trading with port
 - [x] knight -> robber move, steal from player
-- [ ] ports changeable
+- [ ] ports configurable
 
 Nice to have
-- [ ] cancelling of roads/settlements/cities
+- [ ] cancelling of roads/settlements/cities while placing
 - [ ] save log file to custom location on End Game
 - [ ] city-shaped polygon for cities
 - [ ] tile images instead of colored hexagons
 - [ ] port images instead of colored triangles
-- [ ] number images instead of text
 - [ ] piece images instead of colored polygons
+- [ ] number images instead of text
 
 ### Attribution
 

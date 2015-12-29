@@ -42,6 +42,13 @@ class CatanLog(object):
     version = Version(major=0, minor=3, patch=2)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
+        """
+        Create a CatanLog object using the given options. The defaults are fine.
+
+        :param auto_flush: flush the log to file after every log() call, bool
+        :param log_dir: directory to write the log to, str
+        :param use_stdout: if True, flush() will write to stdout instead of to file
+        """
         self._log = str()
 
         self._chars_flushed = 0

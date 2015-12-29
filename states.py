@@ -1,9 +1,82 @@
+"""
+module states provides catan state machines which semi-correctly implement the State Pattern
+
+State Pattern: https://en.wikipedia.org/wiki/State_pattern
+
+The Game has a state whose type is one of the GameState types defined in this module.
+The Game has a dev card state whose type is one of the DevCardPlayabilityState types defined in this module.
+The Board has a state whose type is one of the BoardState types defined in this module.
+
+Each state machine is described in base state's docstring.
+
+Actions
+-------
+
+Callers should invoke action methods on the object directly, and the object will delegate
+actions to its state as necessary.
+
+e.g.
+    # class Game
+    def steal(self, victim):
+        if victim is None:
+            victim = Player(1, 'nobody', 'nobody')
+        self.state.steal(victim)
+    # class GameStateSteal
+    def steal(self, victim):
+        self.game.catanlog.log_player_moves_robber_and_steals(
+            self.game.get_cur_player(),
+            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            victim
+        )
+        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
+    # class GameStateStealUsingKnight
+    def steal(self, victim):
+        self.game.catanlog.log_player_plays_dev_knight(
+            self.game.get_cur_player(),
+            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            victim
+        )
+        self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
+
+State Capabilities
+------------------
+
+Callers should query state capabilities through the state.
+
+e.g.
+    if game.state.can_trade():
+        tradingUI.show()
+    else:
+        tradingUI.hide()
+
+Any new state capabilities must be named like can_do_xyz() and must return True or False.
+When a GameState subclass doesn't implement can_do_xyz2(), the method call will be caught in
+GameState.__getattr__. The method call will be ignored and None will be returned instead.
+
+If the method does not look like can_do_xyz(), it will be logged.
+
+"""
+
 import hexgrid
 import models
+
+
 import logging
 
 
 class GameState(object):
+    """
+    class GameState is the base game state. All game states inherit from GameState.
+
+    sub-states are always allowed to override provided methods.
+
+    this state implements:
+        None
+    this state provides:
+        None
+    sub-states must implement:
+        is_in_game()
+    """
     def __init__(self, game):
         self.game = game
 
@@ -22,12 +95,19 @@ class GameState(object):
         return method
 
     def is_in_game(self):
-        return False
+        pass
 
 
 class GameStateNotInGame(GameState):
     """
     All NOT-IN-GAME states inherit from this state.
+
+    this state implements:
+        is_in_game()
+    this state provides:
+        None
+    sub-classes must implement:
+        None
     """
     def is_in_game(self):
         return False
@@ -37,9 +117,21 @@ class GameStateInGame(GameState):
     """
     All IN-GAME states inherit from this state.
 
-    Look at the comments separating the methods below for directions on
-    what to override, implement, etc in subclasses.
+    this state implements:
+        is_in_game
+    this state provides:
+        is_in_pregame
+        next_player
+        begin_trun
+    sub-states must implement:
+        is_in_game()
     """
+    def is_in_game(self):
+        return True
+
+    def is_in_pregame(self):
+        return False
+
     def next_player(self):
         """Compare to GameStatePreGame's implementation, which uses snake draft"""
         logging.warning('turn={}, players={}'.format(
@@ -51,12 +143,6 @@ class GameStateInGame(GameState):
     def begin_turn(self):
         """Compare to GameStatePreGame's implementation, which uses GameStatePreGamePlaceSettlement"""
         self.game.set_state(GameStateBeginTurn(self.game))
-
-    def is_in_game(self):
-        return True
-
-    def is_in_pregame(self):
-        return False
 
     def has_rolled(self):
         return self.game.last_player_to_roll == self.game.get_cur_player()

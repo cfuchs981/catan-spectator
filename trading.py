@@ -4,8 +4,6 @@ from collections import Counter
 
 class CatanTrade(object):
     def __init__(self, giver=None, getter=None):
-        if giver is None or getter is None:
-            logging.critical('Initializing catan trade with giver={}, getter={}, returning None'.format(giver, getter))
         self._give = list()
         self._get = list()
         self._giver = giver
@@ -34,3 +32,15 @@ class CatanTrade(object):
         """Returns tuples: [(2, Terrain.wood), (1, Terrain.brick)]"""
         c = Counter(self._get.copy())
         return [(n, t) for t, n in c]
+
+    def set_giver(self, giver):
+        """
+        :param giver: Player
+        """
+        self.giver = giver
+
+    def set_getter(self, getter):
+        """
+        :param getter: Player
+        """
+        self.getter = getter

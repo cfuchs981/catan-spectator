@@ -1,5 +1,13 @@
 import logging
 import tkinter as tk
+from models import Port
+from trading import CatanTrade
+
+can_do = {
+    True: tk.NORMAL,
+    False: tk.DISABLED,
+    None: tk.DISABLED
+}
 
 
 class TradeFrame(tk.Frame):
@@ -10,16 +18,17 @@ class TradeFrame(tk.Frame):
         self.game = game
         self.game.observers.add(self)
 
-        ###
-        #
-        #
-        self.title = tk.Label(self.player_frame, text="Trade")
-        self.frame = tk.Frame(self)
-        self.make_trade = tk.Button(self, text='Make Trade', command=self.on_make_trade)
+        self.trade = CatanTrade(giver=self.game.get_cur_player())
 
-        self.title.grid()
+        self.title = tk.Label(self, text="Trade")
+        self.frame = WithWhoFrame(self)
+        self.make_trade = tk.Button(self, text='Make Trade', state=tk.DISABLED, command=self.on_make_trade)
+        self.cancel = tk.Button(self, text='Cancel', state=tk.DISABLED, command=self.on_cancel)
+
+        self.title.grid(sticky=tk.W)
         self.frame.grid()
-        self.make_trade.grid()
+        self.make_trade.grid(row=2, column=0, sticky=tk.EW)
+        self.cancel.grid(row=2, column=3, sticky=tk.EW)
 
         self.set_states()
 
@@ -27,45 +36,65 @@ class TradeFrame(tk.Frame):
         self.set_states()
 
     def set_states(self):
-        """You can't trade with yourself, and you have to roll before trading"""
-        for player, button in zip(self.game.players, self.player_buttons):
-            button.configure(state=can_do[self.game.state.can_trade() and player != self.game.get_cur_player()])
-        self.btn_31.configure(state=can_do[self.game.state.can_trade()])
-        self.btn_21.configure(state=can_do[self.game.state.can_trade()])
+        self.make_trade.configure(state=can_do[self.can_make_trade()])
+        self.cancel.configure(state=can_do[self.can_cancel()])
 
     def set_frame(self, frame):
         self.frame.grid_remove()
         self.frame = frame
         self.frame.grid(row=1)
+        self.notify(None)
+
+    def can_make_trade(self):
+        return self.frame.can_make_trade()
+
+    def can_cancel(self):
+        return self.frame.can_cancel()
 
     def on_make_trade(self):
-        logging.warning('on make trade not yet implemented in views_trading')
+        logging.warning('make trade not implemented yet in views_trading')
+
+    def on_cancel(self):
+        self.set_frame(WithWhoFrame(self))
 
 
-class WithWho(tk.Frame):
+class WithWhoFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
-        super(WithWhichPort, self).__init__(*args, **kwargs)
+        super(WithWhoFrame, self).__init__(*args, **kwargs)
 
         tk.Button(self, text='Player', command=self._on_player).pack(side=tk.LEFT)
-        tk.Button(self, text='Port', command=self._on_port).pack(side=tk.right)
+        tk.Button(self, text='Port', command=self._on_port).pack(side=tk.RIGHT)
 
     def _on_player(self):
-        pass
+        self.master.set_frame(WithWhichPlayerFrame(self.master))
 
     def _on_port(self):
-        pass
+        self.master.set_frame(WithWhichPortFrame(self.master))
+
+    def can_make_trade(self):
+        return False
+
+    def can_cancel(self):
+        return False
 
 
-class WithWhichPlayer(tk.Frame):
+class WithWhichPlayerFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
-        super(WithWhichPort, self).__init__(*args, **kwargs)
+        super(WithWhichPlayerFrame, self).__init__(*args, **kwargs)
 
         tk.Label(self, text='which player').pack()
 
+    def can_make_trade(self):
+        return False
 
-class WithWhichPort(tk.Frame):
+    def can_cancel(self):
+        logging.debug('can_cancel in withwhichplayerframe')
+        return True
+
+
+class WithWhichPortFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
-        super(WithWhichPort, self).__init__(*args, **kwargs)
+        super(WithWhichPortFrame, self).__init__(*args, **kwargs)
 
         # grid of buttons
         # x x x
@@ -85,12 +114,24 @@ class WithWhichPort(tk.Frame):
         port = Port('{}2:1'.format(self.port_give.get()))
         self.game.trade_with_port(to_port, port.value, to_player)
 
+    def can_make_trade(self):
+        return False
 
-class WhichResources(tk.Frame):
+    def can_cancel(self):
+        return True
+
+
+class WhichResourcesFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
-        super(WithWhichPort, self).__init__(*args, **kwargs)
+        super(WhichResourcesFrame, self).__init__(*args, **kwargs)
 
         tk.Label(self, text='which resources').pack()
+
+    def can_make_trade(self):
+        return True
+
+    def can_cancel(self):
+        return True
 
 # ##
 # # Players

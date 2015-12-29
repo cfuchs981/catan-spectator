@@ -109,6 +109,13 @@ class Game(object):
         self.set_cur_player(self.players[0])
         self.notify_observers()
 
+    def cur_player_has_port(self, port):
+        return self.player_has_port(self.get_cur_player(), port)
+
+    def player_has_port(self, player, port):
+        logging.warning('player_has_port not yet implemented in models, returning True')
+        return True
+
     def roll(self, roll):
         self.catanlog.log_player_roll(self.get_cur_player(), roll)
         self.last_roll = roll
@@ -273,6 +280,9 @@ class Terrain(Enum):
     ore = 'ore'
     desert = 'desert'
 
+    def __repr__(self):
+        return self.value
+
 
 class HexNumber(Enum):
     none = None
@@ -290,11 +300,12 @@ class HexNumber(Enum):
 
 class Port(Enum):
     any = '3:1'
-    wood = 'wood2:1'
-    brick = 'brick2:1'
-    wheat = 'wheat2:1'
-    sheep = 'sheep2:1'
-    ore = 'ore2:1'
+    any4 = '4:1'
+    wood = 'wood'
+    brick = 'brick'
+    wheat = 'wheat'
+    sheep = 'sheep'
+    ore = 'ore'
 
 
 class PieceType(Enum):

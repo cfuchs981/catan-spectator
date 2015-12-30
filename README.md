@@ -85,7 +85,7 @@ Core
 - [x] trading with people
 - [x] trading with port
 - [x] knight -> robber move, steal from player
-- [ ] ports configurable
+- [x] ports configurable
 - [x] fix victory points do not work first click each turn
 - [x] robber movable during game setup
 - [ ] implement year of plenty dev card

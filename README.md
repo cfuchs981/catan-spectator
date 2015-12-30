@@ -5,7 +5,7 @@ Transcribe games of Settlers of Catan for research purposes, replay purposes, br
 
 This project introduces a machine-parsable, human-readable file format for describing a game of Catan.
 
-This is a work in progress.
+The UI is feature-complete, and can already be used to log games. However, this is still a work in progress. Todos are listed below.
 
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 
@@ -47,7 +47,8 @@ The header begins with a version, and ends with `...CATAN!`. The game begins aft
 Tiles are numbered 1 through 19 starting from the most northwest tile and spiralling countercockwise inward.
 See module hexgrid (`hexgrid.py`) for details.
 
-The format is not yet v1.0. The current version is listed in `catanlog.py`.
+The format is not yet v1.0, and could change at any time until then.
+The current version is listed in `catanlog.py`.
 
 Example
 ```
@@ -99,25 +100,15 @@ See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with
 
 ### Todo
 
-Core
-- [x] robber move, steal from player (account for steal from nobody case)
-- [x] trading with people
-- [x] trading with port
-- [x] knight -> robber move, steal from player
-- [x] ports configurable
-- [x] fix victory points do not work first click each turn
-- [x] robber movable during game setup
-- [x] implement year of plenty dev card
-- [x] catanlog: if a 2 is rolled, syntax is “$color rolls 2 …DEUCES!”
-- [x] modules documented
+Need to have
 - [ ] views documented
 
 Nice to have
 - [ ] board: random number setup obeys red number rule
 - [ ] ui+board+hexgrid: during piece placement, use little red x’s (at least in debug mode) on “killed spots”
 - [ ] ui+game+player+states: dev cards, i.e. keep a count of how many dev cards a player has played and enable Play Dev Card buttons if num > 0
-- [ ] ui+game+port+hexgrid: port trading, buttons are disabled if the current player doesn’t have the port. 4:1 is always enabled.
-- [ ] ui+port+hexgrid: port trading, can’t get or give more or less than defined by the port type (3:1, 2:1).
+- [ ] ui+game+port+hexgrid: port trading, disable buttons if the current player doesn’t have the port. 4:1 is always enabled.
+- [ ] ui+port+hexgrid: port trading, don't allow getting or giving more or less than defined by the port type (3:1, 2:1).
 - [ ] ui+port: port trading, don’t allow n for 0 trades
 - [ ] ui: large indicator off what the current player is (and what the order is)
 - [ ] ui: cancelling of roads/settlements/cities while placing
@@ -129,7 +120,7 @@ Nice to have
 - [ ] ui: piece images instead of colored polygons
 - [ ] ui: number images instead of text (or avoid contrast issues otherwise)
 - [ ] ui: roll frame: up on 12 goes to 2
-- [ ] ui+game+states+steal: steal dropdown has “nil” option always, for in case it goes on a person with no cards and no steal happens. Name it something obvious, don’t use an empty string.
+- [ ] ui+game+states+robber: steal dropdown has “nil” option always, for in case it goes on a person with no cards and no steal happens. Name it something obvious, don’t use an empty string.
 
 ### Attribution
 

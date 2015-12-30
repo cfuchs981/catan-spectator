@@ -117,6 +117,30 @@ class GameStateNotInGame(GameState):
         return False
 
 
+class GameStateNotInGameMoveRobber(GameStateNotInGame):
+    """
+    Moving the robber while setting up the board.
+    """
+    def can_move_robber(self):
+        return True
+
+    def move_robber(self, tile_id):
+        robbers = self.game.board.get_pieces((models.PieceType.robber, ),
+                                             hexgrid.tile_id_to_coord(self.game.robber_tile))
+        to_coord = hexgrid.tile_id_to_coord(tile_id)
+        if robbers:
+            robber = robbers[0]
+            from_coord = hexgrid.tile_id_to_coord(self.game.robber_tile)
+            self.game.board.move_piece(robber, from_coord, to_coord)
+        else:
+            robber = models.Piece(models.PieceType.robber, None)
+            self.game.board.place_piece(robber, to_coord)
+        if len(robbers) != 1:
+            logging.warning('{} robbers found in board.pieces'.format(len(robbers)))
+        self.game.robber_tile = tile_id
+        self.game.set_state(GameStateNotInGame(self.game))
+
+
 class GameStateInGame(GameState):
     """
     All IN-GAME states inherit from this state.
@@ -500,7 +524,6 @@ class GameStateMoveRobber(GameStateInGame):
 
     def can_move_robber(self):
         return True
-
 
     def move_robber(self, tile_id):
         robbers = self.game.board.get_pieces((models.PieceType.robber, ),

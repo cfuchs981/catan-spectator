@@ -505,6 +505,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
             tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
         tkinter.Button(self, text="Reset", command=self.on_reset, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Button(self, text="Move Robber", command=self.on_move_robber, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
 
         tkinter.Label(self, text="---").pack(side=tkinter.TOP)
         btn_start_game = tkinter.Button(self, text='Start Game', command=self.on_start_game)
@@ -513,6 +514,9 @@ class SetupGameToolbarFrame(tkinter.Frame):
     def on_reset(self):
         self.game.board.reset()
         self.game.notify_observers()
+
+    def on_move_robber(self):
+        self.game.set_state(states.GameStateNotInGameMoveRobber(self.game))
 
     def on_start_game(self):
         def get_name(var):
@@ -523,6 +527,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
 
         self.game.start([Player(i, get_name(var), get_color(var))
                          for i, (_, var) in enumerate(self.player_entries_vars, 1)])
+
 
 
 class GameToolbarFrame(tkinter.Frame):

@@ -156,7 +156,10 @@ class Game(object):
         self.notify_observers()
 
     def get_cur_player(self):
-        return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
+        if self._cur_player is None:
+            return Player(1, 'nobody', 'nobody')
+        else:
+            return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
 
     def set_cur_player(self, player):
         self._cur_player = Player(player.seat, player.name, player.color)

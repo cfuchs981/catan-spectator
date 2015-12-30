@@ -5,7 +5,9 @@ Transcribe games of Settlers of Catan for research purposes, replay purposes, br
 
 This project introduces a machine-parsable, human-readable file format for describing a game of Catan.
 
-The UI is feature-complete, and can already be used to log games. However, this is still a work in progress. Todos are listed below.
+The UI is feature-complete, and can be used to log games.
+
+Todos are listed below.
 
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 

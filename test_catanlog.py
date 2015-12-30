@@ -3,7 +3,7 @@ import models
 import random
 import re
 
-from models import Terrain, HexNumber, Port
+from models import Terrain, HexNumber, PortType
 """
 TODO
 - buy settlement
@@ -37,7 +37,7 @@ def get_log_with_random_board():
                [HexNumber.five]*2 + [HexNumber.six]*2 + [HexNumber.eight]*2 +
                [HexNumber.nine]*2 + [HexNumber.ten]*2 + [HexNumber.eleven]*2 +
                [HexNumber.twelve])
-    ports = [Port.any3, Port.ore, Port.any3, Port.sheep, Port.any3, Port.wood, Port.brick, Port.any3, Port.wheat]
+    ports = [PortType.any3, PortType.ore, PortType.any3, PortType.sheep, PortType.any3, PortType.wood, PortType.brick, PortType.any3, PortType.wheat]
 
     random.shuffle(terrain)
     random.shuffle(numbers)

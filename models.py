@@ -82,9 +82,9 @@ class Game(object):
         _old_board_state = self.board.state
         self.state = game_state
         if game_state.is_in_game():
-            self.board.state = states.BoardStateLocked(self.board)
+            self.board.lock()
         else:
-            self.board.state = states.BoardStateModifiable(self.board)
+            self.board.unlock()
         logging.info('Game now={}, was={}. Board now={}, was={}'.format(
             type(self.state).__name__,
             type(_old_state).__name__,
@@ -129,15 +129,13 @@ class Game(object):
         for tile in self.board.tiles:
             terrain.append(tile.terrain)
             numbers.append(tile.number)
-        for _, _, port in self.board.ports:
-            ports.append(port)
 
         for (_, coord), piece in self.board.pieces.items():
             if piece.type == PieceType.robber:
                 self.robber_tile = hexgrid.tile_id_from_coord(coord)
                 logging.debug('Found robber at coord={}, set robber_tile={}'.format(coord, self.robber_tile))
 
-        self.catanlog.log_game_start(self.players, terrain, numbers, ports)
+        self.catanlog.log_game_start(self.players, terrain, numbers, self.board.ports)
         self.notify_observers()
 
     def end(self):
@@ -251,7 +249,7 @@ class Game(object):
         giver = trade.giver().color
         giving = [(n, t.value) for n, t in trade.giving()]
         getting = [(n, t.value) for n, t in trade.getting()]
-        if trade.getter() in Port:
+        if trade.getter() in PortType:
             getter = trade.getter().value
             self.catanlog.log_player_trades_with_port(giver, giving, getter, getting)
             logging.debug('trading {} to port={} to get={}'.format(giving, getter, getting))
@@ -372,14 +370,47 @@ class HexNumber(Enum):
     twelve = 12
 
 
-class Port(Enum):
+class PortType(Enum):
+    any4 = '4:1' # not used in UI, only used in trading
     any3 = '3:1'
-    any4 = '4:1'
     wood = 'wood'
     brick = 'brick'
     wheat = 'wheat'
     sheep = 'sheep'
     ore = 'ore'
+    none = 'none' # only used in UI, not used in trading
+
+    @classmethod
+    def list_ui(cls):
+        return list(filter(lambda pt: pt != PortType.any4, PortType))
+
+    @classmethod
+    def list_trading(cls):
+        return list(filter(lambda pt: pt != PortType.none, PortType))
+
+    @classmethod
+    def next_ui(cls, ptype):
+        types = list(PortType)
+        next_idx = (types.index(ptype) + 1) % len(types)
+        next_port_type = types[next_idx]
+        if next_port_type == PortType.any4:
+            next_port_type = PortType.next_ui(next_port_type)
+        return next_port_type
+
+
+class Port(object):
+    """
+    class Port represents a single port on the board.
+
+    Allowed types are described in enum PortType.
+    """
+    def __init__(self, tile_id, direction, type):
+        self.tile_id = tile_id
+        self.direction = direction
+        self.type = type
+
+    def __repr__(self):
+        return '{}({},{})'.format(self.type.value, self.tile_id, self.direction)
 
 
 class PieceType(Enum):
@@ -390,7 +421,8 @@ class PieceType(Enum):
 
 
 class Piece(object):
-    """class Piece represents a single game piece on the board.
+    """
+    class Piece represents a single game piece on the board.
 
     Allowed types are described in enum PieceType
     """
@@ -422,10 +454,10 @@ class Board(object):
         :param pieces: pieces option, boardbuilder.Opt
         :param players: players option, boardbuilder.Opt
         """
-        self.tiles = None
-        self.ports = None
-        self.state = None
-        self.pieces = None
+        self.tiles = list()
+        self.ports = list()
+        self.state = states.BoardState(self)
+        self.pieces = dict()
 
         self.opts = dict()
         if terrain is not None:
@@ -445,6 +477,16 @@ class Board(object):
     def notify_observers(self):
         for obs in self.observers:
             obs.notify(self)
+
+    def lock(self):
+        self.state = states.BoardStateLocked(self)
+        for port in self.ports.copy():
+            if port.type == PortType.none:
+                self.ports.remove(port)
+        self.notify_observers()
+
+    def unlock(self):
+        self.state = states.BoardStateModifiable(self)
 
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None, players=None):
         import boardbuilder
@@ -522,6 +564,23 @@ class Board(object):
             logging.debug('Found {} pieces at {}: {}'.format(len(pieces), indexes, coord, pieces))
         return pieces
 
+    def get_port_at(self, tile_id, direction):
+        """
+        If no port is found, a new none port is made and added to self.ports.
+
+        Returns the port.
+
+        :param tile_id:
+        :param direction:
+        :return: Port
+        """
+        for port in self.ports:
+            if port.tile_id == tile_id and port.direction == direction:
+                return port
+        port = Port(tile_id, direction, PortType.none)
+        self.ports.append(port)
+        return port
+
     def _piece_type_to_hex_type(self, piece_type):
         if piece_type in (PieceType.road, ):
             return hexgrid.EDGE
@@ -534,9 +593,29 @@ class Board(object):
             return None
 
     def cycle_hex_type(self, tile_id):
-        self.state.cycle_hex_type(tile_id)
+        if self.state.modifiable():
+            tile = self.tiles[tile_id - 1]
+            next_idx = (list(Terrain).index(tile.terrain) + 1) % len(Terrain)
+            next_terrain = list(Terrain)[next_idx]
+            tile.terrain = next_terrain
+        else:
+            logging.debug('Attempted to cycle terrain on tile={} on a locked board'.format(tile_id))
         self.notify_observers()
 
     def cycle_hex_number(self, tile_id):
-        self.state.cycle_hex_number(tile_id)
+        if self.state.modifiable():
+            tile = self.tiles[tile_id - 1]
+            next_idx = (list(HexNumber).index(tile.number) + 1) % len(HexNumber)
+            next_hex_number = list(HexNumber)[next_idx]
+            tile.number = next_hex_number
+        else:
+            logging.debug('Attempted to cycle number on tile={} on a locked board'.format(tile_id))
+        self.notify_observers()
+
+    def cycle_port_type(self, tile_id, direction):
+        if self.state.modifiable():
+            port = self.get_port_at(tile_id, direction)
+            port.type = PortType.next_ui(port.type)
+        else:
+            logging.debug('Attempted to cycle port on coord=({},{}) on a locked board'.format(tile_id, direction))
         self.notify_observers()

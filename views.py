@@ -7,7 +7,7 @@ import functools
 import catanlog
 import hexgrid
 
-from models import Terrain, Port, Player, HexNumber, Piece, PieceType
+from models import Terrain, PortType, Player, HexNumber, Piece, PieceType
 import states
 import tkinterutils
 import views_trading
@@ -69,7 +69,7 @@ class BoardFrame(tkinter.Frame):
         self._center_to_edge = math.cos(math.radians(30)) * self._tile_radius
 
     def tile_click(self, event):
-        if not self._board.state.hex_change_allowed():
+        if not self._board.state.modifiable():
             return
 
         tag = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))[0]
@@ -99,6 +99,20 @@ class BoardFrame(tkinter.Frame):
             self.game.move_robber(hexgrid.tile_id_from_coord(self._coord_from_robber_tag(tag)))
         self.redraw()
 
+    def port_click(self, port, event):
+        if not self._board.state.modifiable():
+            return
+
+        logging.debug('port={} clicked'.format(port))
+        tags = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))
+        tag = tags[0]
+        if 'port' not in tag:
+            logging.warning('Port click handler running on non-port tag={}, returning early.'.format(tag))
+            return
+        tile_id, direction = self._tile_and_direction_from_port_tag(tag)
+        self._board.cycle_port_type(tile_id, direction)
+        # todo add onclick events for invisible ports yet to be clicked on and made into ports
+
     def notify(self, observable):
         self.redraw()
 
@@ -116,16 +130,20 @@ class BoardFrame(tkinter.Frame):
         """
         terrain_centers = self._draw_terrain(board)
         self._draw_numbers(board, terrain_centers)
-        self._draw_ports(board, terrain_centers)
         self._draw_pieces(board, terrain_centers)
         if self.game.state.can_place_road():
             self._draw_piece_shadows(PieceType.road, board, terrain_centers)
-        elif self.game.state.can_place_settlement():
+        if self.game.state.can_place_settlement():
             self._draw_piece_shadows(PieceType.settlement, board, terrain_centers)
-        elif self.game.state.can_place_city():
+        if self.game.state.can_place_city():
             self._draw_piece_shadows(PieceType.city, board, terrain_centers)
-        elif self.game.state.can_move_robber():
+        if self.game.state.can_move_robber():
             self._draw_piece_shadows(PieceType.robber, board, terrain_centers)
+
+        if self.game.state.is_in_game():
+            self._draw_ports(board, terrain_centers)
+        else:
+            self._draw_port_shadows(board, terrain_centers)
 
     def redraw(self):
         self._board_canvas.delete(tkinter.ALL)
@@ -144,7 +162,7 @@ class BoardFrame(tkinter.Frame):
             # Calculate the center of this tile as an offset from the center of
             # the neighboring tile in the given direction.
             ref_center = centers[last.tile_id]
-            direction = hexgrid.direction_to_tile(last, tile)
+            direction = hexgrid.direction_to_tile(last.tile_id, tile.tile_id)
             theta = self._tile_angle_order.index(direction) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
@@ -173,12 +191,15 @@ class BoardFrame(tkinter.Frame):
             tile = board.tiles[tile_id - 1]
             self._draw_number(x, y, tile.number, tile)
 
-    def _draw_ports(self, board, terrain_centers):
+    def _draw_ports(self, board, terrain_centers, ports=None, ghost=False):
+        if ports is None:
+            ports = board.ports
         logging.debug('Drawing ports')
+        logging.debug('ports={}'.format(ports))
         port_centers = []
-        for tile_id, dirn, port in board.ports:
-            tile_x, tile_y = terrain_centers[tile_id]
-            theta = self._tile_angle_order.index(dirn) * 60
+        for port in ports:
+            tile_x, tile_y = terrain_centers[port.tile_id]
+            theta = self._tile_angle_order.index(port.direction) * 60
             radius = 2 * self._center_to_edge + self._tile_padding
             dx = radius * math.cos(math.radians(theta))
             dy = radius * math.sin(math.radians(theta))
@@ -186,20 +207,40 @@ class BoardFrame(tkinter.Frame):
             port_centers.append((tile_x + dx, tile_y + dy, theta))
 
         port_centers = self._fixup_port_centers(port_centers)
-        for (x, y, angle), port in zip(port_centers, [port for _, _, port in board.ports]):
+        for (x, y, angle), port in zip(port_centers, ports):
             # logging.debug('Drawing port={} at ({},{})'.format(port, x, y))
-            self._draw_port(x, y, angle, port)
+            self._draw_port(x, y, angle, port, ghost=ghost)
 
-    def _draw_port(self, x, y, angle, port):
-        """Draw a equilateral triangle with the top point at x, y and the bottom facing the direction
-        given by the angle."""
+    def _draw_port_shadows(self, board, terrain_centers):
+        coastal_coords = hexgrid.coastal_coords()
+        ports = list(map(lambda cc: board.get_port_at(*cc), coastal_coords))
+        self._draw_ports(board, terrain_centers, ports=ports, ghost=True)
+
+
+    def _draw_port(self, x, y, angle, port, ghost=False):
+        """
+        Draw the given port.
+
+        Currently, draws a equilateral triangle with the top point at x, y and the
+        bottom facing the direction given by the angle.
+
+        :param x: int
+        :param y: int
+        :param angle: ccw from E, in degrees
+        :param port: Port
+        """
+        opts = self._port_tkinter_opts(port, ghost=ghost)
         points = [x, y]
         for adjust in (-30, 30):
             x1 = x + math.cos(math.radians(angle + adjust)) * self._tile_radius
             y1 = y + math.sin(math.radians(angle + adjust)) * self._tile_radius
             points.extend([x1, y1])
-        self._board_canvas.create_polygon(*points, fill=self._colors[port])
-        self._board_canvas.create_text(x, y, text=port.value, font=self._hex_font)
+        self._board_canvas.create_polygon(*points,
+                                          **opts)
+        if port.type != PortType.none:
+            self._board_canvas.create_text(x, y, text=port.type.value, font=self._hex_font)
+        self._board_canvas.tag_bind(self._port_tag(port), '<ButtonPress-1>',
+                                    functools.partial(self.port_click, port))
 
     def _draw_pieces(self, board, terrain_centers):
         roads, settlements, cities, robber = self._get_pieces(board)
@@ -216,30 +257,6 @@ class BoardFrame(tkinter.Frame):
 
         coord, robber = robber
         self._draw_piece(coord, robber, terrain_centers)
-
-    def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
-        x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
-        tag = None
-        if piece.type == PieceType.road:
-            self._draw_road(x, y, coord, piece, angle=angle, ghost=ghost)
-            tag = self._road_tag(coord)
-        elif piece.type == PieceType.settlement:
-            self._draw_settlement(x, y, coord, piece, ghost=ghost)
-            tag = self._settlement_tag(coord)
-        elif piece.type == PieceType.city:
-            self._draw_city(x, y, coord, piece, ghost=ghost)
-            tag = self._city_tag(coord)
-        elif piece.type == PieceType.robber:
-            self._draw_robber(x, y, coord, piece, ghost=ghost)
-            tag = self._robber_tag(coord)
-        else:
-            logging.warning('Attempted to draw piece of unknown type={}'.format(piece.type))
-
-        if ghost:
-            self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
-                                        func=functools.partial(self.piece_click, piece.type))
-        else:
-            self._board_canvas.tag_unbind(tag, '<ButtonPress-1>')
 
     def _draw_piece_shadows(self, piece_type, board, terrain_centers):
         logging.debug('Drawing piece shadows of type={}'.format(piece_type.value))
@@ -271,6 +288,30 @@ class BoardFrame(tkinter.Frame):
         else:
             logging.warning('Attempted to draw piece shadows for nonexistent type={}'.format(piece_type))
 
+    def _draw_piece(self, coord, piece, terrain_centers, ghost=False):
+        x, y, angle = self._get_piece_center(coord, piece, terrain_centers)
+        tag = None
+        if piece.type == PieceType.road:
+            self._draw_road(x, y, coord, piece, angle=angle, ghost=ghost)
+            tag = self._road_tag(coord)
+        elif piece.type == PieceType.settlement:
+            self._draw_settlement(x, y, coord, piece, ghost=ghost)
+            tag = self._settlement_tag(coord)
+        elif piece.type == PieceType.city:
+            self._draw_city(x, y, coord, piece, ghost=ghost)
+            tag = self._city_tag(coord)
+        elif piece.type == PieceType.robber:
+            self._draw_robber(x, y, coord, piece, ghost=ghost)
+            tag = self._robber_tag(coord)
+        else:
+            logging.warning('Attempted to draw piece of unknown type={}'.format(piece.type))
+
+        if ghost:
+            self._board_canvas.tag_bind(tag, '<ButtonPress-1>',
+                                        func=functools.partial(self.piece_click, piece.type))
+        else:
+            self._board_canvas.tag_unbind(tag, '<ButtonPress-1>')
+
     def _piece_tkinter_opts(self, coord, piece, **kwargs):
         opts = dict()
         tag_funcs = {
@@ -295,6 +336,23 @@ class BoardFrame(tkinter.Frame):
         opts.update(kwargs)
         return opts
 
+    def _port_tkinter_opts(self, port, **kwargs):
+        opts = dict()
+        color = self._colors[port.type]
+        next_color = self._colors[PortType.next_ui(port.type)]
+
+        ghost = 'ghost' in kwargs and kwargs['ghost'] == True
+
+        opts['tags'] = self._port_tag(port)
+        opts['outline'] = color
+        opts['fill'] = color
+        if ghost:
+            opts['activefill'] = next_color
+
+        del kwargs['ghost']
+        opts.update(kwargs)
+        return opts
+
     def _draw_road(self, x, y, coord, piece, angle, ghost=False):
         opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
         length = self._tile_radius * 0.7
@@ -308,7 +366,7 @@ class BoardFrame(tkinter.Frame):
         #     piece, coord, angle, opts
         # ))
         self._board_canvas.create_polygon(*points,
-                                            **opts)
+                                          **opts)
 
     def _draw_settlement(self, x, y, coord, piece, ghost=False):
         opts = self._piece_tkinter_opts(coord, piece, ghost=ghost)
@@ -441,6 +499,9 @@ class BoardFrame(tkinter.Frame):
     def _robber_tag(self, coord):
         return 'robber_' + hex(coord)
 
+    def _port_tag(self, port):
+        return 'port_{:02}_{}'.format(port.tile_id, port.direction)
+
     def _tile_id_from_tag(self, tag):
         return int(tag[len('tile_'):])
 
@@ -456,6 +517,11 @@ class BoardFrame(tkinter.Frame):
     def _coord_from_robber_tag(self, tag):
         return int(tag[len('robber_0x'):], 16)
 
+    def _tile_and_direction_from_port_tag(self, tag):
+        tile_id = int(tag[len('port_'):len('port_')+2])
+        direction = tag[len('port_##_'):]
+        return tile_id, direction
+
     _tile_radius  = 50
     _tile_padding = 3
     _board_center = (300, 300)
@@ -464,18 +530,20 @@ class BoardFrame(tkinter.Frame):
     _node_angle_order = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {
-        Terrain.ore: 'gray94',
-        Port.ore: 'gray94',
         Terrain.wood: 'forest green',
-        Port.wood: 'forest green',
-        Terrain.sheep: 'green yellow',
-        Port.sheep: 'green yellow',
         Terrain.brick: 'sienna4',
-        Port.brick: 'sienna4',
         Terrain.wheat: 'yellow2',
-        Port.wheat: 'yellow2',
+        Terrain.sheep: 'green yellow',
+        Terrain.ore: 'gray94',
         Terrain.desert: 'wheat1',
-        Port.any3: 'gray'}
+        PortType.wood: 'forest green',
+        PortType.brick: 'sienna4',
+        PortType.wheat: 'yellow2',
+        PortType.sheep: 'green yellow',
+        PortType.ore: 'gray94',
+        PortType.any3: 'gray',
+        PortType.none: '', # transparent
+    }
 
 
 class SetupGameToolbarFrame(tkinter.Frame):

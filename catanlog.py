@@ -31,7 +31,7 @@ class CatanLog(object):
     - #seat is the seat number of a player, eg 1, 2, 3, 4
     - $number is an integer number, eg 7, 2, 3, 11, 12
     - $location is a tile, node, or edge coordinate as defined in module hexgrid (see hexgrid.py)
-    - $port is the name of a port, eg 4:1, 3:1, wood, brick, wheat, sheep, ore
+    - $port is the name and location of a port, eg 4:1(1 NW), 3:1(2 W), wood(1 W)
     - $resource is the name of a terrain, resource, or card, eg 'wood', 'wheat', 'brick', 'ore', 'sheep'
 
     Use #dump to get the log as a string.
@@ -39,7 +39,7 @@ class CatanLog(object):
 
     TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=3, patch=2)
+    version = Version(major=0, minor=3, patch=3)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         """
@@ -135,7 +135,7 @@ class CatanLog(object):
         :param players: set of 3 or (ideally) 4 #Players
         :param terrain: list of 19 terrain types as defined in #models (eg resource.WOOD)
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
-        :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
+        :param ports: list of ports as defined in #models (eg port.THREE_FOR_ONE)
         """
         self.reset()
         self._set_players(players)
@@ -328,12 +328,25 @@ class CatanLog(object):
         None designates a tile where there is no number. Usually, this is
         the desert.
 
-        :param numbers: list of 19 numbers in models.HexNumber, eg [2, 4, 4, None, 3, 11, 2, ...]
+        :param numbers: list of 19 HexNumbers
         """
         self.logln('numbers: {0}'.format(' '.join(str(n.value) for n in numbers)))
 
     def _log_board_ports(self, ports):
-        self.logln('ports: {0}'.format(' '.join(p.value for p in ports)))
+        """
+        syntax: ports: ($port)*
+
+        A board with no ports is allowed.
+
+        In the logfile, ports must be sorted
+        - ascending by tile identifier (primary)
+        - alphabetical by edge direction (secondary)
+
+        :param ports: list of Ports
+        """
+        ports = sorted(ports, key=lambda port: (port.tile_id, port.direction))
+        self.logln('ports: {0}'.format(' '.join('{}({} {})'.format(p.type.value, p.tile_id, p.direction)
+                                                for p in ports)))
 
     def _log_players(self, players):
         """

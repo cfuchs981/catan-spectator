@@ -86,11 +86,15 @@ Core
 - [x] trading with port
 - [x] knight -> robber move, steal from player
 - [ ] ports configurable
+- [ ] fix victory point doesn't work first click each turn
+- [ ] robber movable during game setup
+- [ ] modules documented, including views
 
 Nice to have
+- [ ] random number setup obeys red number rule
 - [ ] cancelling of roads/settlements/cities while placing
 - [ ] save log file to custom location on End Game
-- [ ] images in UI buttons (eg dice for roll, )
+- [ ] images, colors in UI buttons (eg dice for roll, )
 - [ ] city-shaped polygon for cities
 - [ ] tile images instead of colored hexagons
 - [ ] port images instead of colored triangles

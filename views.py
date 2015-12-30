@@ -475,7 +475,7 @@ class BoardFrame(tkinter.Frame):
         Terrain.wheat: 'yellow2',
         Port.wheat: 'yellow2',
         Terrain.desert: 'wheat1',
-        Port.any: 'gray'}
+        Port.any3: 'gray'}
 
 
 class SetupGameToolbarFrame(tkinter.Frame):

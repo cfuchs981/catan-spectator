@@ -1,11 +1,80 @@
+"""
+module hexgrid provides methods for working with hexagonal grids. It implements the coordinate
+system described in Robert S. Thomas's PhD dissertation on JSettlers2, Appendix A. See the project at
+https://github.com/jdmonin/JSettlers2 for details.
+
+Grids have tiles, nodes, and edges. Tiles, nodes, and edges all have coordinates
+on the grid. Tiles also have identifiers numbered counter-clockwise starting from
+the north-west edge.
+
+Adjacent locations can be computed by adding an offset to the given location. These
+offsets are defined as dictionaries named _<type1>_<type2>_offsets, mapping offset->direction.
+This direction is a cardinal direction represented as a string.
+
+The edge and node coordinate spaces share values. That is, the coordinate value is
+not enough to uniquely identify a location on the grid. For that reason, it is recommended
+to represent locations as a (CoordType, 0xCoord) pair, each of which is guaranteed
+to be unique.
+
+See individual methods for usage.
+"""
+from enum import Enum
 import logging
+
 
 EDGE = 0
 NODE = 1
 TILE = 2
 
+_tile_id_to_coord = {
+    # 1-19 clockwise starting from Top-Left
+    1: 0x37, 12: 0x59, 11: 0x7B,
+    2: 0x35, 13: 0x57, 18: 0x79, 10: 0x9B,
+    3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
+    4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
+    5: 0x73, 6: 0x95, 7: 0xB7
+}
+
+_tile_tile_offsets = {
+    # tile_coord - tile_coord
+    -0x20: 'NW',
+    -0x22: 'W',
+    -0x02: 'SW',
+    +0x20: 'SE',
+    +0x22: 'E',
+    +0x02: 'NE',
+}
+
+_tile_node_offsets = {
+    # node_coord - tile_coord
+    +0x01: 'N',
+    -0x10: 'NW',
+    -0x01: 'SW',
+    +0x10: 'S',
+    +0x21: 'SE',
+    +0x12: 'NE',
+}
+
+_tile_edge_offsets = {
+    # edge_coord - tile_coord
+    -0x10: 'NW',
+    -0x11: 'W',
+    -0x01: 'SW',
+    +0x10: 'SE',
+    +0x11: 'E',
+    +0x01: 'NE',
+}
+
+
 def direction_to_tile(from_tile, to_tile):
-    """Convenience method for tile_tile_offset_to_direction, takes two tile ids"""
+    """
+    Convenience method wrapping tile_tile_offset_to_direction. Used to get the direction
+    of the offset between two tiles. The tiles must be adjacent.
+
+    :param from_tile: Tile
+    :param to_tile: Tile
+    :return: direction from from_tile to to_tile, str
+    """
     coord_from = tile_id_to_coord(from_tile.tile_id)
     coord_to = tile_id_to_coord(to_tile.tile_id)
     direction = tile_tile_offset_to_direction(coord_to - coord_from)
@@ -16,10 +85,13 @@ def direction_to_tile(from_tile, to_tile):
     # ))
     return direction
 
+
 def tile_tile_offset_to_direction(offset):
     """
-    :param offset: (tile_coord - tile_coord)
-    :return: direction string, one of the values of _tile_tile_offsets
+    Get the cardinal direction of a tile-tile offset. The tiles must be adjacent.
+
+    :param offset: tile_coord - tile_coord, int
+    :return: direction of the offset, str
     """
     try:
         return _tile_tile_offsets[offset]
@@ -27,10 +99,13 @@ def tile_tile_offset_to_direction(offset):
         logging.critical('Attempted getting direction of non-existent tile-tile offset={:x}'.format(offset))
         return 'ZZ'
 
+
 def tile_node_offset_to_direction(offset):
     """
-    :param offset: (node_coord - tile_coord)
-    :return: direction string, one of the values of _tile_node_offsets
+    Get the cardinal direction of a tile-node offset. The tile and node must be adjacent.
+
+    :param offset: node_coord - tile_coord, int
+    :return: direction of the offset, str
     """
     try:
         return _tile_node_offsets[offset]
@@ -38,10 +113,13 @@ def tile_node_offset_to_direction(offset):
         logging.critical('Attempted getting direction of non-existent tile-node offset={:x}'.format(offset))
         return 'ZZ'
 
+
 def tile_edge_offset_to_direction(offset):
     """
-    :param offset: (edge_coord - tile_coord)
-    :return: direction string, one of the values of _tile_edge_offsets
+    Get the cardinal direction of a tile-edge offset. The tile and edge must be adjacent.
+
+    :param offset: edge_coord - tile_coord, int
+    :return: direction of the offset, str
     """
     try:
         return _tile_edge_offsets[offset]
@@ -49,45 +127,91 @@ def tile_edge_offset_to_direction(offset):
         logging.critical('Attempted getting direction of non-existent tile-edge offset={:x}'.format(offset))
         return 'ZZ'
 
+
 def tile_id_to_coord(tile_id):
+    """
+    Convert a tile identifier to its corresponding grid coordinate.
+
+    :param tile_id: tile identifier, Tile.tile_id
+    :return: coordinate of the tile, int
+    """
     try:
         return _tile_id_to_coord[tile_id]
     except KeyError:
         logging.critical('Attempted conversion of non-existent tile_id={}'.format(tile_id))
         return -1
 
+
 def tile_id_from_coord(coord):
+    """
+    Convert a tile coordinate to its corresponding tile identifier.
+
+    :param coord: coordinate of the tile, int
+    :return: tile identifier, Tile.tile_id
+    """
     for i, c in _tile_id_to_coord.items():
         if c == coord:
             return i
     raise Exception('Tile id lookup failed, coord={} not found in map'.format(hex(coord)))
 
+
 def nearest_tile_to_edge(edge_coord):
-    """Convenience method for nearest_tile_to_edge_using_tiles which uses the set of legal tile ids"""
+    """
+    Convenience method wrapping nearest_tile_to_edge_using_tiles. Looks at all tiles in legal_tile_ids().
+    Returns a tile identifier.
+
+    :param edge_coord: edge coordinate to find an adjacent tile to, int
+    :return: tile identifier of an adjacent tile, Tile.tile_id
+    """
     return nearest_tile_to_edge_using_tiles(legal_tile_ids(), edge_coord)
 
+
 def nearest_tile_to_edge_using_tiles(tile_ids, edge_coord):
-    """Takes a list of tile ids and an edge coordinate.
-    Returns the id of a tile which is touching the edge"""
+    """
+    Get the first tile found adjacent to the given edge. Returns a tile identifier.
+
+    :param tile_ids: tiles to look at for adjacency, list(Tile.tile_id)
+    :param edge_coord: edge coordinate to find an adjacent tile to, int
+    :return: tile identifier of an adjacent tile, Tile.tile_id
+    """
     for tile_id in tile_ids:
         if edge_coord - tile_id_to_coord(tile_id) in _tile_edge_offsets.keys():
             return tile_id
     logging.critical('Did not find a tile touching edge={}'.format(edge_coord))
 
+
 def nearest_tile_to_node(node_coord):
-    """Convenience method for nearest_tile_to_node_using_tiles which uses the set of legal tile ids"""
+    """
+    Convenience method wrapping nearest_tile_to_node_using_tiles. Looks at all tiles in legal_tile_ids().
+    Returns a tile identifier.
+
+    :param node_coord: node coordinate to find an adjacent tile to, int
+    :return: tile identifier of an adjacent tile, Tile.tile_id
+    """
     return nearest_tile_to_node_using_tiles(legal_tile_ids(), node_coord)
 
+
 def nearest_tile_to_node_using_tiles(tile_ids, node_coord):
-    """Takes a list of tile ids and a node coordinate.
-    Returns the id of a tile which is touching the node"""
+    """
+    Get the first tile found adjacent to the given node. Returns a tile identifier.
+
+    :param tile_ids: tiles to look at for adjacency, list(Tile.tile_id)
+    :param node_coord: node coordinate to find an adjacent tile to, int
+    :return: tile identifier of an adjacent tile, Tile.tile_id
+    """
     for tile_id in tile_ids:
         if node_coord - tile_id_to_coord(tile_id) in _tile_node_offsets.keys():
             return tile_id
     logging.critical('Did not find a tile touching node={}'.format(node_coord))
 
+
 def edges_touching_tile(tile_id):
-    """Takes a tile id, returns a list of edge coordinates touching the tile"""
+    """
+    Get a list of edge coordinates touching the given tile.
+
+    :param tile_id: tile identifier, Tile.tile_id
+    :return: list of edge coordinates touching the given tile, list(int)
+    """
     coord = tile_id_to_coord(tile_id)
     edges = []
     for offset in _tile_edge_offsets.keys():
@@ -95,8 +219,14 @@ def edges_touching_tile(tile_id):
     # logging.debug('tile_id={}, edges touching={}'.format(tile_id, edges))
     return edges
 
+
 def nodes_touching_tile(tile_id):
-    """Takes a tile id, returns a list of node coordinates touching the tile"""
+    """
+    Get a list of node coordinates touching the given tile.
+
+    :param tile_id: tile identifier, Tile.tile_id
+    :return: list of node coordinates touching the given tile, list(int)
+    """
     coord = tile_id_to_coord(tile_id)
     nodes = []
     for offset in _tile_node_offsets.keys():
@@ -104,8 +234,11 @@ def nodes_touching_tile(tile_id):
     # logging.debug('tile_id={}, nodes touching={}'.format(tile_id, nodes))
     return nodes
 
+
 def legal_edge_coords():
-    """Returns all legal edge coordinates on the hexgrid"""
+    """
+    Return all legal edge coordinates on the grid.
+    """
     edges = set()
     for tile_id in legal_tile_ids():
         for edge in edges_touching_tile(tile_id):
@@ -113,8 +246,11 @@ def legal_edge_coords():
     logging.debug('Legal edge coords({})={}'.format(len(edges), edges))
     return edges
 
+
 def legal_node_coords():
-    """Returns all legal node coordinates on the hexgrid"""
+    """
+    Return all legal node coordinates on the grid
+    """
     nodes = set()
     for tile_id in legal_tile_ids():
         for node in nodes_touching_tile(tile_id):
@@ -122,46 +258,16 @@ def legal_node_coords():
     logging.debug('Legal node coords({})={}'.format(len(nodes), nodes))
     return nodes
 
+
 def legal_tile_ids():
-    """Returns all legal tile ids on the hexgrid. 1-19"""
+    """
+    Return all legal tile identifiers on the grid. In the range [1,19] inclusive.
+    """
     return set(_tile_id_to_coord.keys())
 
+
 def legal_tile_coords():
-    """Returns all legal tile coordinates on the hexgrid"""
+    """
+    Return all legal tile coordinates on the grid
+    """
     return set(_tile_id_to_coord.values())
-
-_tile_tile_offsets = {
-    -0x20: 'NW',
-    -0x22: 'W',
-    -0x02: 'SW',
-    +0x20: 'SE',
-    +0x22: 'E',
-    +0x02: 'NE',
-}
-
-_tile_node_offsets = {
-    +0x01: 'N',
-    -0x10: 'NW',
-    -0x01: 'SW',
-    +0x10: 'S',
-    +0x21: 'SE',
-    +0x12: 'NE',
-}
-
-_tile_edge_offsets = {
-    -0x10: 'NW',
-    -0x11: 'W',
-    -0x01: 'SW',
-    +0x10: 'SE',
-    +0x11: 'E',
-    +0x01: 'NE',
-}
-
-_tile_id_to_coord = {
-    # 1-19 clockwise starting from Top-Left. See JSettlers2 dissertation.
-    1: 0x37, 12: 0x59, 11: 0x7B,
-    2: 0x35, 13: 0x57, 18: 0x79, 10: 0x9B,
-    3: 0x33, 14: 0x55, 19: 0x77, 17: 0x99, 9: 0xBB,
-    4: 0x53, 15: 0x75, 16: 0x97, 8: 0xB9,
-    5: 0x73, 6: 0x95, 7: 0xB7
-}

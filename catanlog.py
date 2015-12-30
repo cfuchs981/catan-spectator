@@ -40,7 +40,7 @@ class CatanLog(object):
 
     TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=4, patch=3)
+    version = Version(major=0, minor=4, patch=4)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         """
@@ -277,6 +277,16 @@ class CatanLog(object):
         self.logln('{0} plays dev card: monopoly on {1}'.format(
             player.color,
             resource
+        ))
+
+    def log_player_plays_dev_year_of_plenty(self, player, resource1, resource2):
+        """
+        syntax: $color plays dev card: year of plenty, takes $resource and $resource
+        """
+        self.logln('{0} plays dev card: year of plenty, takes {1} and {2}'.format(
+            player.color,
+            resource1,
+            resource2
         ))
 
     def log_player_plays_dev_victory_point(self, player):

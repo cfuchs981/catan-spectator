@@ -50,7 +50,7 @@ The format is not yet v1.0. The current version is listed in `catanlog.py`.
 
 Example
 ```
-catanlog v0.4.3
+catanlog v0.4.4
 timestamp: 2015-12-30 03:21:56.572418
 players: 4
 name: yurick, color: green, seat: 1
@@ -106,7 +106,7 @@ Core
 - [x] ports configurable
 - [x] fix victory points do not work first click each turn
 - [x] robber movable during game setup
-- [ ] implement year of plenty dev card
+- [x] implement year of plenty dev card
 - [ ] catanlog: if a 2 is rolled, syntax is “$color rolls 2 …DEUCES!”
 - [x] modules documented
 - [ ] views documented

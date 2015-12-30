@@ -267,6 +267,10 @@ class Game(object):
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    def play_year_of_plenty(self, resource1, resource2):
+        self.catanlog.log_player_plays_dev_year_of_plenty(self.get_cur_player(), resource1, resource2)
+        self.set_dev_card_state(states.DevCardPlayedState(self))
+
     def play_road_builder(self, edge1, edge2):
         self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(), edge1, edge2)
         self.set_dev_card_state(states.DevCardPlayedState(self))

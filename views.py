@@ -803,14 +803,33 @@ class PlayDevCardFrame(tkinter.Frame):
         self.monopoly_choice.set(option_list[0])
         self.monopoly_picker = tkinter.OptionMenu(self.monopoly_frame, self.monopoly_choice, *option_list)
 
+        self.year_of_plenty_frame = tkinter.Frame(self)
+        self.year_of_plenty = tkinter.Button(self.year_of_plenty_frame, text="Year of Plenty", command=self.on_year_of_plenty)
+        option_list = list(t.value for t in Terrain if t != Terrain.desert)
+        self.year_of_plenty_choice1 = tkinter.StringVar()
+        self.year_of_plenty_choice2 = tkinter.StringVar()
+        self.year_of_plenty_choice1.set(option_list[0])
+        self.year_of_plenty_choice2.set(option_list[1])
+        self.year_of_plenty_picker1 = tkinter.OptionMenu(self.year_of_plenty_frame,
+                                                         self.year_of_plenty_choice1,
+                                                         *option_list)
+        self.year_of_plenty_picker2 = tkinter.OptionMenu(self.year_of_plenty_frame,
+                                                         self.year_of_plenty_choice2,
+                                                         *option_list)
+
         self.set_states()
 
         self.monopoly_picker.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
         self.monopoly.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
+        self.year_of_plenty_picker1.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        self.year_of_plenty_picker2.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        self.year_of_plenty.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
+
         self.label.pack(fill=tkinter.X)
         self.knight.pack(fill=tkinter.X, expand=True)
         self.monopoly_frame.pack(fill=tkinter.X, expand=True)
+        self.year_of_plenty_frame.pack(fill=tkinter.X, expand=True)
         self.road_builder.pack(fill=tkinter.X, expand=True)
         self.victory_point.pack(fill=tkinter.X, expand=True)
 
@@ -821,6 +840,9 @@ class PlayDevCardFrame(tkinter.Frame):
         self.knight.configure(state=can_do[self.game.state.can_play_knight()])
         self.monopoly.configure(state=can_do[self.game.state.can_play_monopoly()])
         self.monopoly_picker.configure(state=can_do[self.game.state.can_play_monopoly()])
+        self.year_of_plenty.configure(state=can_do[self.game.state.can_play_year_of_plenty()])
+        self.year_of_plenty_picker1.configure(state=can_do[self.game.state.can_play_year_of_plenty()])
+        self.year_of_plenty_picker2.configure(state=can_do[self.game.state.can_play_year_of_plenty()])
         self.road_builder.configure(state=can_do[self.game.state.can_play_road_builder()])
         self.victory_point.configure(state=can_do[self.game.state.can_play_victory_point()])
 
@@ -831,6 +853,13 @@ class PlayDevCardFrame(tkinter.Frame):
     def on_monopoly(self):
         logging.debug('play dev card: monopoly clicked, resource={}'.format(self.monopoly_choice.get()))
         self.game.play_monopoly(self.monopoly_choice.get())
+
+    def on_year_of_plenty(self):
+        logging.debug('play dev card: year of plenty clicked, resources=({} and {})'.format(
+            self.year_of_plenty_choice1.get(),
+            self.year_of_plenty_choice2.get()
+        ))
+        self.game.play_year_of_plenty(self.year_of_plenty_choice1.get(), self.year_of_plenty_choice2.get())
 
     def on_road_builder(self):
         logging.debug('play dev card: road builder clicked')

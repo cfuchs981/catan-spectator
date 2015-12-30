@@ -323,6 +323,14 @@ class GameStateInGame(GameState):
         """
         return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
 
+    def can_play_year_of_plenty(self):
+        """
+        Whether the current player can play a year of plenty dev card or not.
+
+        :return Boolean
+        """
+        return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
+
     def can_play_road_builder(self):
         """
         Whether the current player can play a road builder dev card or not.

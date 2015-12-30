@@ -1,7 +1,7 @@
 import functools
 import logging
 import tkinter as tk
-from models import Port
+from models import PortType
 import models
 from trading import CatanTrade
 
@@ -160,9 +160,9 @@ class WithWhichPortFrame(tk.Frame):
         # any in topleft (functions as both 3:1 and 4:1), others have text=terrain.value
         self.port_btns = list()
         count = 0
-        for p in models.Port:
-            b = tk.Button(self, text='{}'.format(p.value), state=tk.DISABLED,
-                          command=functools.partial(self.on_port, p))
+        for p_type in models.PortType:
+            b = tk.Button(self, text='{}'.format(p_type.value), state=tk.DISABLED,
+                          command=functools.partial(self.on_port, p_type))
             b.grid(row=count // 4, column=count % 4, sticky=tk.NSEW)
             self.port_btns.append(b)
             count += 1
@@ -174,15 +174,15 @@ class WithWhichPortFrame(tk.Frame):
 
     def set_states(self):
         can_trade = self.master.game.state.can_trade()
-        for btn, port in zip(self.port_btns, models.Port):
-            if port == Port.any3:
+        for btn, port_type in zip(self.port_btns, models.PortType):
+            if port_type == PortType.any3:
                 btn.configure(state=can_do[can_trade])
             else:
-                btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port(port)])
+                btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port(port_type)])
 
-    def on_port(self, port):
-        logging.debug('trade: port={} selected'.format(port))
-        self.master.trade.set_getter(port)
+    def on_port(self, port_type):
+        logging.debug('trade: port_type={} selected'.format(port_type))
+        self.master.trade.set_getter(port_type)
         self.master.set_frame(WhichResourcesFrame(self.master))
 
     def can_make_trade(self):

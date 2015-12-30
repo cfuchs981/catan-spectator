@@ -135,7 +135,7 @@ class CatanLog(object):
         :param players: set of 3 or (ideally) 4 #Players
         :param terrain: list of 19 terrain types as defined in #models (eg resource.WOOD)
         :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
-        :param ports: list of 9 ports as defined in #models (eg port.THREE_FOR_ONE)
+        :param ports: list of ports as defined in #models (eg port.THREE_FOR_ONE)
         """
         self.reset()
         self._set_players(players)
@@ -333,7 +333,8 @@ class CatanLog(object):
         self.logln('numbers: {0}'.format(' '.join(str(n.value) for n in numbers)))
 
     def _log_board_ports(self, ports):
-        self.logln('ports: {0}'.format(' '.join(p.value for p in ports)))
+        self.logln('ports: {0}'.format(' '.join('{}({},{})'.format(p.type.value, p.tile_id, p.direction)
+                                                for p in ports)))
 
     def _log_players(self, players):
         """

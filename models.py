@@ -129,15 +129,13 @@ class Game(object):
         for tile in self.board.tiles:
             terrain.append(tile.terrain)
             numbers.append(tile.number)
-        for _, _, port in self.board.ports:
-            ports.append(port)
 
         for (_, coord), piece in self.board.pieces.items():
             if piece.type == PieceType.robber:
                 self.robber_tile = hexgrid.tile_id_from_coord(coord)
                 logging.debug('Found robber at coord={}, set robber_tile={}'.format(coord, self.robber_tile))
 
-        self.catanlog.log_game_start(self.players, terrain, numbers, ports)
+        self.catanlog.log_game_start(self.players, terrain, numbers, self.board.ports)
         self.notify_observers()
 
     def end(self):
@@ -251,7 +249,7 @@ class Game(object):
         giver = trade.giver().color
         giving = [(n, t.value) for n, t in trade.giving()]
         getting = [(n, t.value) for n, t in trade.getting()]
-        if trade.getter() in Port:
+        if trade.getter() in PortType:
             getter = trade.getter().value
             self.catanlog.log_player_trades_with_port(giver, giving, getter, getting)
             logging.debug('trading {} to port={} to get={}'.format(giving, getter, getting))
@@ -372,7 +370,7 @@ class HexNumber(Enum):
     twelve = 12
 
 
-class Port(Enum):
+class PortType(Enum):
     any3 = '3:1'
     any4 = '4:1'
     wood = 'wood'
@@ -380,6 +378,18 @@ class Port(Enum):
     wheat = 'wheat'
     sheep = 'sheep'
     ore = 'ore'
+
+
+class Port(object):
+    """
+    class Port represents a single port on the board.
+
+    Allowed types are described in enum PortType.
+    """
+    def __init__(self, tile_id, direction, type):
+        self.tile_id = tile_id
+        self.direction = direction
+        self.type = type
 
 
 class PieceType(Enum):
@@ -390,7 +400,8 @@ class PieceType(Enum):
 
 
 class Piece(object):
-    """class Piece represents a single game piece on the board.
+    """
+    class Piece represents a single game piece on the board.
 
     Allowed types are described in enum PieceType
     """

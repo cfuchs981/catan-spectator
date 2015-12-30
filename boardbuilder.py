@@ -22,7 +22,7 @@ import pprint
 import random
 import hexgrid
 import states
-from models import Board, Terrain, HexNumber, Port, Tile, NUM_TILES, Piece, PieceType, Player, Game
+from models import Board, Terrain, HexNumber, PortType, Tile, NUM_TILES, Piece, PieceType, Player, Game, Port
 
 
 class Opt(Enum):
@@ -171,10 +171,11 @@ def _generate_ports(port_opts):
     - Opt.debug -> alias for Opt.preset
 
     :param port_opts: Opt
-    :return: list( (Tile.tile_id, direction:str, Port) )
+    :return: list(Port)
     """
     if port_opts in [Opt.preset, Opt.debug]:
-        return [(tile, dir, port) for (tile, dir), port in zip(_preset_port_locations, list(_preset_ports))]
+        return [Port(tile, dir, port_type)
+                for (tile, dir), port_type in zip(_preset_port_locations, _preset_port_types)]
     elif port_opts in [Opt.empty, Opt.random]:
         logging.warning('{} option not yet implemented'.format(port_opts))
         return []
@@ -233,4 +234,6 @@ def _check_red_placement(tiles):
 _preset_port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
                            (5, 'SW'), (6,  'SE'), (8,  'SE'),
                            (9, 'E' ), (10, 'NE'), (12, 'NE')]
-_preset_ports = [Port.any3, Port.ore, Port.any3, Port.sheep, Port.any3, Port.wood, Port.brick, Port.any3, Port.wheat]
+_preset_port_types = [PortType.any3, PortType.ore, PortType.any3,
+                      PortType.sheep, PortType.any3, PortType.wood,
+                      PortType.brick, PortType.any3, PortType.wheat]

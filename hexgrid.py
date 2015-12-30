@@ -65,6 +65,21 @@ _tile_edge_offsets = {
     +0x01: 'NE',
 }
 
+def location(hexgrid_type, coord):
+    if hexgrid_type == TILE:
+        return str(coord)
+    elif hexgrid_type == NODE:
+        tile_id = nearest_tile_to_node(coord)
+        dirn = tile_node_offset_to_direction(coord - tile_id_to_coord(tile_id))
+        return '({} {})'.format(tile_id, dirn)
+    elif hexgrid_type == EDGE:
+        tile_id = nearest_tile_to_edge(coord)
+        dirn = tile_edge_offset_to_direction(coord - tile_id_to_coord(tile_id))
+        return '({} {})'.format(tile_id, dirn)
+    else:
+        logging.warning('unsupported hexgrid_type={}'.format(hexgrid_type))
+        return None
+
 
 def coastal_tile_ids():
     return list(filter(lambda tid: len(coastal_edges(tid)) > 0, legal_tile_ids()))

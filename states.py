@@ -639,7 +639,7 @@ class GameStateStealUsingKnight(GameStateSteal):
     def steal(self, victim):
         self.game.catanlog.log_player_plays_dev_knight(
             self.game.get_cur_player(),
-            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            self.game.robber_tile,
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))

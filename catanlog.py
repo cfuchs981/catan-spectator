@@ -2,6 +2,7 @@ import datetime
 import os
 import sys
 import collections
+import hexgrid
 
 Version = collections.namedtuple('Version', ['major', 'minor', 'patch'])
 
@@ -30,16 +31,16 @@ class CatanLog(object):
     - $name is the name of a player, eg 'josh', 'yurick', 'zach', 'ross'
     - #seat is the seat number of a player, eg 1, 2, 3, 4
     - $number is an integer number, eg 7, 2, 3, 11, 12
-    - $location is a tile, node, or edge coordinate as defined in module hexgrid (see hexgrid.py)
-    - $port is the name and location of a port, eg 4:1(1 NW), 3:1(2 W), wood(1 W)
-    - $resource is the name of a terrain, resource, or card, eg 'wood', 'wheat', 'brick', 'ore', 'sheep'
+    - $location is a tile identifier and an optional direction, eg 1, 2, (1 NW), (2 W)
+    - $port is the name of a port, eg 4:1, 3:1, wood, brick, wheat
+    - $resource is the name of a terrain, resource, or card, eg wood, brick, wheat
 
     Use #dump to get the log as a string.
     Use #flush to write the log to a file.
 
     TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=3, patch=3)
+    version = Version(major=0, minor=4, patch=3)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         """
@@ -163,22 +164,24 @@ class CatanLog(object):
             victim.color
         ))
 
-    def log_player_buys_settlement(self, player, node_id):
+    def log_player_buys_settlement(self, player, node):
         """
         syntax: $color buys settlement, builds at $location
         """
+        location = hexgrid.location(hexgrid.NODE, node)
         self.logln('{0} buys settlement, builds at {1}'.format(
             player.color,
-            node_id
+            location
         ))
 
-    def log_player_buys_city(self, player, node_id):
+    def log_player_buys_city(self, player, node):
         """
         syntax: $color buys city, builds at $location
         """
+        location = hexgrid.location(hexgrid.NODE, node)
         self.logln('{0} buys city, builds at {1}'.format(
             player.color,
-            node_id
+            location
         ))
 
     def log_player_buys_dev_card(self, player):
@@ -193,9 +196,10 @@ class CatanLog(object):
         """
         syntax: $color buys road, builds at $location
         """
+        location = hexgrid.location(hexgrid.EDGE, edge)
         self.logln('{0} buys road, builds at {1}'.format(
             player.color,
-            edge
+            location
         ))
 
     def log_player_trades_with_port(self, player, to_port, port, to_player):
@@ -285,10 +289,12 @@ class CatanLog(object):
         """
         syntax: $color plays dev card: road builder, builds at $location and $location
         """
+        location1 = hexgrid.location(hexgrid.EDGE, edge1)
+        location2 = hexgrid.location(hexgrid.EDGE, edge2)
         self.logln('{0} plays dev card: road builder, builds at {1} and {2}'.format(
             player.color,
-            edge1,
-            edge2
+            location1,
+            location2
         ))
 
     def log_player_ends_turn(self, player):

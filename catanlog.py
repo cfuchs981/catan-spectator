@@ -133,10 +133,12 @@ class CatanLog(object):
 
         Erase the log, set the timestamp, set the players, and write the log header.
 
-        :param players: set of 3 or (ideally) 4 #Players
-        :param terrain: list of 19 terrain types as defined in #models (eg resource.WOOD)
-        :param numbers: list of 19 numbers, 1 each of (2,12), 2 each of all others
-        :param ports: list of ports as defined in #models (eg port.THREE_FOR_ONE)
+        The robber is assumed to start on the desert (or off-board).
+
+        :param players: set of 3 or (ideally) 4 Players
+        :param terrain: list of 19 Terrains. Proper rules: 3 each of (brick, ore), 4 each of all others
+        :param numbers: list of 19 HexNumbers. Proper rules: 1 each of (2, 12), 2 each of all others.
+        :param ports: list of Ports
         """
         self.reset()
         self._set_players(players)
@@ -353,7 +355,7 @@ class CatanLog(object):
 
     def _log_board_ports(self, ports):
         """
-        syntax: ports: ($port)*
+        syntax: ports: ($port$location )*
 
         A board with no ports is allowed.
 

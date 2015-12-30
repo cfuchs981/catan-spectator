@@ -44,7 +44,8 @@ Therefore, each `.catan` file contains sufficient information to 'replay' a game
 
 The header begins with a version, and ends with `...CATAN!`. The game begins after that.
 
-Locations are integer values of hexagonal coordinates as defined in module hexgrid (`hexgrid.py`).
+Tiles are numbered 1 through 19 starting from the most northwest tile and spiralling countercockwise inward.
+See module hexgrid (`hexgrid.py`) for details.
 
 The format is not yet v1.0. The current version is listed in `catanlog.py`.
 

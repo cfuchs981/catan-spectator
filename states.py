@@ -25,7 +25,7 @@ e.g.
     def steal(self, victim):
         self.game.catanlog.log_player_moves_robber_and_steals(
             self.game.get_cur_player(),
-            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            self.game.robber_tile,
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
@@ -33,7 +33,7 @@ e.g.
     def steal(self, victim):
         self.game.catanlog.log_player_plays_dev_knight(
             self.game.get_cur_player(),
-            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            self.game.robber_tile,
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))
@@ -597,7 +597,7 @@ class GameStateSteal(GameStateInGame):
     def steal(self, victim):
         self.game.catanlog.log_player_moves_robber_and_steals(
             self.game.get_cur_player(),
-            hexgrid.tile_id_to_coord(self.game.robber_tile),
+            self.game.robber_tile,
             victim
         )
         self.game.set_state(GameStateDuringTurnAfterRoll(self.game))

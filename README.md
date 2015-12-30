@@ -50,54 +50,48 @@ The format is not yet v1.0. The current version is listed in `catanlog.py`.
 
 Example
 ```
-catanlog v0.3.3
-timestamp: 2015-12-30 02:44:33.223377
+catanlog v0.4.3
+timestamp: 2015-12-30 03:21:56.572418
 players: 4
 name: yurick, color: green, seat: 1
 name: josh, color: blue, seat: 2
 name: zach, color: orange, seat: 3
 name: ross, color: red, seat: 4
-terrain: wood brick brick wheat wheat brick wood wood wood wood ore wheat brick wheat sheep wood brick desert brick
-numbers: 2 3 3 4 4 3 2 2 2 2 6 4 3 4 5 2 3 None 3
-ports: 3:1(1 NW) 3:1(2 NW) 3:1(4 W) sheep(5 SW) 3:1(6 SE) wood(8 SE) brick(9 E) 3:1(10 NE) wheat(12 NE)
+terrain: desert brick sheep brick ore brick wheat wood wood wheat wood sheep ore wood sheep sheep wheat ore wheat
+numbers: None 4 6 9 8 10 5 8 10 5 3 11 3 9 12 11 6 4 2
+ports: 3:1(1 NW) ore(2 W) 3:1(4 W) sheep(5 SW) 3:1(6 SE) wood(8 SE) brick(9 E) 3:1(10 NE) wheat(12 NE)
 ...CATAN!
-green buys settlement, builds at 137
-green buys road, builds at 136
+green buys settlement, builds at (17 NW)
+green buys road, builds at (17 NW)
 green ends turn
-blue buys settlement, builds at 103
-blue buys road, builds at 102
+blue buys settlement, builds at (8 NW)
+blue buys road, builds at (8 NW)
 blue ends turn
-orange buys settlement, builds at 139
-orange buys road, builds at 139
+orange buys settlement, builds at (3 SE)
+orange buys road, builds at (3 SE)
 orange ends turn
-red buys settlement, builds at 184
-red buys road, builds at 167
+red buys settlement, builds at (5 NE)
+red buys road, builds at (5 E)
 red ends turn
-red buys settlement, builds at 186
-red buys road, builds at 186
+red buys settlement, builds at (13 S)
+red buys road, builds at (13 SE)
 red ends turn
-orange buys settlement, builds at 116
-orange buys road, builds at 99
+orange buys settlement, builds at (10 NW)
+orange buys road, builds at (11 SW)
 orange ends turn
-blue buys settlement, builds at 69
-blue buys road, builds at 52
+blue buys settlement, builds at (9 NW)
+blue buys road, builds at (9 NW)
 blue ends turn
-green buys settlement, builds at 88
-green buys road, builds at 71
+green buys settlement, builds at (2 SW)
+green buys road, builds at (2 W)
 green ends turn
-green rolls 5
+green rolls 4
+green buys road, builds at (2 NW)
 green ends turn
-blue rolls 7
-blue moves robber to 153, steals from green
-blue plays dev card: knight, moves robber to 89, steals from green
-green trades [2 wood] to port wood for [1 brick]
-blue trades [3 sheep] to player green for [1 wheat]
-blue plays dev card: victory point
-blue ends turn
-orange rolls 6
-orange plays dev card: road builder, builds at 156 and 172
-orange ends turn
-red wins
+blue rolls 6
+blue plays dev card: road builder, builds at (9 W) and (10 E)
+blue buys settlement, builds at (10 NE)
+blue trades [1 wheat, 1 brick] to player green for [1 sheep]
 ```
 
 See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with their format.

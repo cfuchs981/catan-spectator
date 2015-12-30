@@ -95,6 +95,15 @@ class GameState(object):
         return method
 
     def is_in_game(self):
+        """
+        Returns whether the current session is in game or not.
+
+        In game is defined as taking turns, rolling dice, placing pieces, etc.
+
+        In game starts on 'Start Game', and ends on 'End Game'
+
+        :return Boolean
+        """
         pass
 
 
@@ -118,22 +127,51 @@ class GameStateInGame(GameState):
     All IN-GAME states inherit from this state.
 
     this state implements:
-        is_in_game
-    this state provides:
-        is_in_pregame
-        next_player
-        begin_trun
-    sub-states must implement:
         is_in_game()
+    this state provides:
+        is_in_pregame()
+        next_player()
+        begin_turn()
+        has_rolled()
+        can_roll()
+        can_move_robber()
+        can_steal()
+        can_buy_road()
+        can_buy_settlement()
+        can_buy_city()
+        can_buy_dev_card()
+        can_trade()
+        can_play_knight()
+        can_play_monopoly()
+        can_play_road_builder()
+        can_play_victory_point()
+    sub-states must implement:
+        can_end_turn()
     """
     def is_in_game(self):
         return True
 
     def is_in_pregame(self):
+        """
+        The pregame is defined as the initial placing of settlements in which
+        no dice are rolled, no cards picked up, and no trades made.
+
+        See GameStatePreGame for details.
+
+        :return: Boolean
+        """
         return False
 
     def next_player(self):
-        """Compare to GameStatePreGame's implementation, which uses snake draft"""
+        """
+        Returns the player whose turn it will be next.
+
+        Uses regular seat-wise clockwise rotation.
+
+        Compare to GameStatePreGame's implementation, which uses snake draft.
+
+        :return Player
+        """
         logging.warning('turn={}, players={}'.format(
             self.game._cur_turn,
             self.game.players
@@ -141,68 +179,154 @@ class GameStateInGame(GameState):
         return self.game.players[(self.game._cur_turn + 1) % len(self.game.players)]
 
     def begin_turn(self):
-        """Compare to GameStatePreGame's implementation, which uses GameStatePreGamePlaceSettlement"""
+        """
+        Begins the turn for the current player.
+
+        All that is required is to set the game's state.
+
+        Compare to GameStatePreGame's implementation, which uses GameStatePreGamePlaceSettlement
+
+        :return None
+        """
         self.game.set_state(GameStateBeginTurn(self.game))
 
     def has_rolled(self):
+        """
+        Whether the current player has rolled or not.
+
+        :return Boolean
+        """
         return self.game.last_player_to_roll == self.game.get_cur_player()
 
-    ##
-    # Child states MUST implement methods below
-    #
-
-    def can_end_turn(self):
-        raise NotImplemented()
-
-    ##
-    # Child states CAN implement methods below if they want.
-    # Otherwise, these defaults will be used.
-    #
-
     def can_roll(self):
+        """
+        Whether the current player can roll or not.
+
+        A player can roll only if they have not yet rolled.
+
+        :return Boolean
+        """
         return not self.has_rolled()
 
     def can_move_robber(self):
+        """
+        Whether the current player can move the robber or not.
+
+        :return Boolean
+        """
         return False
 
     def can_steal(self):
+        """
+        Whether the current player can steal or not.
+
+        :return Boolean
+        """
         return False
 
     def can_buy_road(self):
+        """
+        Whether the current player can buy a road or not.
+
+        :return Boolean
+        """
         return self.has_rolled()
 
     def can_buy_settlement(self):
+        """
+        Whether the current player can buy a settlement or not.
+
+        :return Boolean
+        """
         return self.has_rolled()
 
     def can_buy_city(self):
+        """
+        Whether the current player can buy a city or not.
+
+        :return Boolean
+        """
         return self.has_rolled()
 
     def can_place_road(self):
+        """
+        Whether the current player can place a road or not.
+
+        :return Boolean
+        """
         return False
 
     def can_place_settlement(self):
+        """
+        Whether the current player can place a settlement or not.
+
+        :return Boolean
+        """
         return False
 
     def can_place_city(self):
+        """
+        Whether the current player can place a city or not.
+
+        :return Boolean
+        """
         return False
 
     def can_buy_dev_card(self):
+        """
+        Whether the current player can buy a dev card or not.
+
+        :return Boolean
+        """
         return self.has_rolled()
 
     def can_trade(self):
+        """
+        Whether the current player can trade or not.
+
+        :return Boolean
+        """
         return self.has_rolled()
 
     def can_play_knight(self):
+        """
+        Whether the current player can play a knight dev card or not.
+
+        :return Boolean
+        """
         return self.game.dev_card_state.can_play_dev_card()
 
     def can_play_monopoly(self):
+        """
+        Whether the current player can play a monopoly dev card or not.
+
+        :return Boolean
+        """
         return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
 
     def can_play_road_builder(self):
+        """
+        Whether the current player can play a road builder dev card or not.
+
+        :return Boolean
+        """
         return self.has_rolled() and self.game.dev_card_state.can_play_dev_card()
 
     def can_play_victory_point(self):
+        """
+        Whether the current player can play a victory point dev card or not.
+
+        :return Boolean
+        """
         return True
+
+    def can_end_turn(self):
+        """
+        Whether the current player can end their turn or not.
+
+        :return Boolean
+        """
+        raise NotImplemented()
 
 
 class GameStatePreGame(GameStateInGame):

@@ -89,19 +89,28 @@ Core
 - [x] fix victory points do not work first click each turn
 - [x] robber movable during game setup
 - [ ] implement year of plenty dev card
+- [ ] catanlog: if a 2 is rolled, syntax is “$color rolls 2 …DEUCES!”
 - [x] modules documented
 - [ ] views documented
 
 Nice to have
-- [ ] random number setup obeys red number rule
-- [ ] cancelling of roads/settlements/cities while placing
-- [ ] save log file to custom location on End Game
-- [ ] images, colors in UI buttons (eg dice for roll, )
-- [ ] city-shaped polygon for cities
-- [ ] tile images instead of colored hexagons
-- [ ] port images instead of colored triangles
-- [ ] piece images instead of colored polygons
-- [ ] number images instead of text
+- [ ] board: random number setup obeys red number rule
+- [ ] ui+board+hexgrid: during piece placement, use little red x’s (at least in debug mode) on “killed spots”
+- [ ] ui+game+player+states: dev cards, i.e. keep a count of how many dev cards a player has played and enable Play Dev Card buttons if num > 0
+- [ ] ui+game+port+hexgrid: port trading, buttons are disabled if the current player doesn’t have the port. 4:1 is always enabled.
+- [ ] ui+port+hexgrid: port trading, can’t get or give more or less than defined by the port type (3:1, 2:1).
+- [ ] ui+port: port trading, don’t allow n for 0 trades
+- [ ] ui: large indicator off what the current player is (and what the order is)
+- [ ] ui: cancelling of roads/settlements/cities while placing
+- [ ] ui+catanlog: save log file to custom location on End Game
+- [ ] ui: images, colors in UI buttons (eg dice for roll, )
+- [ ] ui: city-shaped polygon for cities
+- [ ] ui: tile images instead of colored hexagons
+- [ ] ui: port images instead of colored triangles
+- [ ] ui: piece images instead of colored polygons
+- [ ] ui: number images instead of text (or avoid contrast issues otherwise)
+- [ ] ui: roll frame: up on 12 goes to 2
+- [ ] ui+game+states+steal: steal dropdown has “nil” option always, for in case it goes on a person with no cards and no steal happens. Name it something obvious, don’t use an empty string.
 
 ### Attribution
 

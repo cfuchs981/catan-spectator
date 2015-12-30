@@ -82,9 +82,9 @@ class Game(object):
         _old_board_state = self.board.state
         self.state = game_state
         if game_state.is_in_game():
-            self.board.state = states.BoardStateLocked(self.board)
+            self.board.lock()
         else:
-            self.board.state = states.BoardStateModifiable(self.board)
+            self.board.unlock()
         logging.info('Game now={}, was={}. Board now={}, was={}'.format(
             type(self.state).__name__,
             type(_old_state).__name__,
@@ -409,6 +409,9 @@ class Port(object):
         self.direction = direction
         self.type = type
 
+    def __repr__(self):
+        return '{}({},{})'.format(self.type.value, self.tile_id, self.direction)
+
 
 class PieceType(Enum):
     settlement = 'settlement'
@@ -451,8 +454,8 @@ class Board(object):
         :param pieces: pieces option, boardbuilder.Opt
         :param players: players option, boardbuilder.Opt
         """
-        self.tiles = list(Tile)
-        self.ports = list(Port)
+        self.tiles = list()
+        self.ports = list()
         self.state = states.BoardState(self)
         self.pieces = dict()
 
@@ -474,6 +477,16 @@ class Board(object):
     def notify_observers(self):
         for obs in self.observers:
             obs.notify(self)
+
+    def lock(self):
+        self.state = states.BoardStateLocked(self)
+        for port in self.ports.copy():
+            if port.type == PortType.none:
+                self.ports.remove(port)
+        self.notify_observers()
+
+    def unlock(self):
+        self.state = states.BoardStateModifiable(self)
 
     def reset(self, terrain=None, numbers=None, ports=None, pieces=None, players=None):
         import boardbuilder
@@ -551,6 +564,23 @@ class Board(object):
             logging.debug('Found {} pieces at {}: {}'.format(len(pieces), indexes, coord, pieces))
         return pieces
 
+    def get_port_at(self, tile_id, direction):
+        """
+        If no port is found, a new none port is made and added to self.ports.
+
+        Returns the port.
+
+        :param tile_id:
+        :param direction:
+        :return: Port
+        """
+        for port in self.ports:
+            if port.tile_id == tile_id and port.direction == direction:
+                return port
+        port = Port(tile_id, direction, PortType.none)
+        self.ports.append(port)
+        return port
+
     def _piece_type_to_hex_type(self, piece_type):
         if piece_type in (PieceType.road, ):
             return hexgrid.EDGE
@@ -563,8 +593,8 @@ class Board(object):
             return None
 
     def cycle_hex_type(self, tile_id):
-        if self.state.is_modifiable():
-            tile = self.board.tiles[tile_id - 1]
+        if self.state.modifiable():
+            tile = self.tiles[tile_id - 1]
             next_idx = (list(Terrain).index(tile.terrain) + 1) % len(Terrain)
             next_terrain = list(Terrain)[next_idx]
             tile.terrain = next_terrain
@@ -573,8 +603,8 @@ class Board(object):
         self.notify_observers()
 
     def cycle_hex_number(self, tile_id):
-        if self.state.is_modifiable():
-            tile = self.board.tiles[tile_id - 1]
+        if self.state.modifiable():
+            tile = self.tiles[tile_id - 1]
             next_idx = (list(HexNumber).index(tile.number) + 1) % len(HexNumber)
             next_hex_number = list(HexNumber)[next_idx]
             tile.number = next_hex_number
@@ -583,16 +613,9 @@ class Board(object):
         self.notify_observers()
 
     def cycle_port_type(self, tile_id, direction):
-        if self.state.is_modifiable():
-            port = self.board.get_port(tile_id, direction)
+        if self.state.modifiable():
+            port = self.get_port_at(tile_id, direction)
             port.type = PortType.next_ui(port.type)
         else:
             logging.debug('Attempted to cycle port on coord=({},{}) on a locked board'.format(tile_id, direction))
         self.notify_observers()
-
-    def get_port(self, tile_id, direction):
-        for port in self.ports:
-            if port.tile_id == tile_id and port.direction == direction:
-                return port
-        logging.critical('Failed to find port at tile={}, direction={}, returning (1,NW)'.format(tile_id, direction))
-        return Port(1, 'NW', PortType.brick)

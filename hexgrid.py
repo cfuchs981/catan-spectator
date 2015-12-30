@@ -20,7 +20,7 @@ See individual methods for usage.
 """
 from enum import Enum
 import logging
-
+from models import Tile
 
 EDGE = 0
 NODE = 1
@@ -66,17 +66,75 @@ _tile_edge_offsets = {
 }
 
 
-def direction_to_tile(from_tile, to_tile):
+def coastal_tile_ids():
+    return list(filter(lambda tid: len(coastal_edges(tid)) > 0, legal_tile_ids()))
+
+
+def coastal_coords():
+    """
+    A coastal coord is a 2-tuple: (tile id, direction).
+
+    An edge is coastal if it is on the grid's border.
+
+    :param tile_id:
+    :return: list( (tile_id, direction) )
+    """
+    coast = list()
+    for tile_id in coastal_tile_ids():
+        tile_coord = tile_id_to_coord(tile_id)
+        for edge_coord in coastal_edges(tile_id):
+            dirn = tile_edge_offset_to_direction(edge_coord - tile_coord)
+            if tile_id_in_direction(tile_id, dirn) is None:
+                coast.append((tile_id, dirn))
+    # logging.debug('coast={}'.format(coast))
+    return coast
+
+
+def coastal_edges(tile_id):
+    """
+    Returns a list of coastal edge coordinate.
+
+    An edge is coastal if it is on the grid's border.
+    :param tile_id:
+    :return: list(int)
+    """
+    edges = list()
+    tile_coord = tile_id_to_coord(tile_id)
+    for edge_coord in edges_touching_tile(tile_id):
+        dirn = tile_edge_offset_to_direction(edge_coord - tile_coord)
+        if tile_id_in_direction(tile_id, dirn) is None:
+            edges.append(edge_coord)
+    return edges
+
+
+def tile_id_in_direction(from_tile_id, direction):
+    """
+    Variant on direction_to_tile. Returns None if there's no tile there.
+
+    :param from_tile_id: tile identifier, int
+    :param direction: str
+    :return: tile identifier, int or None
+    """
+    coord_from = tile_id_to_coord(from_tile_id)
+    for offset, dirn in _tile_tile_offsets.items():
+        if dirn == direction:
+            coord_to = coord_from + offset
+            if coord_to in legal_tile_coords():
+                return tile_id_from_coord(coord_to)
+    return None
+
+
+def direction_to_tile(from_tile_id, to_tile_id):
     """
     Convenience method wrapping tile_tile_offset_to_direction. Used to get the direction
     of the offset between two tiles. The tiles must be adjacent.
 
-    :param from_tile: Tile
-    :param to_tile: Tile
+    :param from_tile_id: tile identifier, int
+    :param to_tile_id: tile identifier, int
     :return: direction from from_tile to to_tile, str
     """
-    coord_from = tile_id_to_coord(from_tile.tile_id)
-    coord_to = tile_id_to_coord(to_tile.tile_id)
+    coord_from = tile_id_to_coord(from_tile_id)
+    coord_to = tile_id_to_coord(to_tile_id)
     direction = tile_tile_offset_to_direction(coord_to - coord_from)
     # logging.debug('Tile direction: {}->{} is {}'.format(
     #     from_tile.tile_id,

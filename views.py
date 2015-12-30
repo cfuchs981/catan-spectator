@@ -103,8 +103,12 @@ class BoardFrame(tkinter.Frame):
         logging.debug('port={} clicked'.format(port))
         tags = self._board_canvas.gettags(event.widget.find_closest(event.x, event.y))
         tag = tags[0]
+        if 'port' not in tag:
+            logging.warning('Port click handler running on non-port tag={}, returning early.'.format(tag))
+            return
+        tile_id, direction = self._tile_and_direction_from_port_tag(tag)
+        self._board.cycle_port_type(tile_id, direction)
         # todo add onclick events for invisible ports yet to be clicked on and made into ports
-        # todo cycle port onclick (add Board method)
 
     def notify(self, observable):
         self.redraw()

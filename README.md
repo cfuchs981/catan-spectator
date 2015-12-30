@@ -86,9 +86,11 @@ Core
 - [x] trading with port
 - [x] knight -> robber move, steal from player
 - [ ] ports configurable
-- [ ] fix victory point doesn't work first click each turn
+- [ ] fix victory points do not work first click each turn
 - [ ] robber movable during game setup
-- [ ] modules documented, including views
+- [ ] implement year of plenty dev card
+- [x] modules documented
+- [ ] views documented
 
 Nice to have
 - [ ] random number setup obeys red number rule

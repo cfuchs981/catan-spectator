@@ -25,7 +25,6 @@ class TradeFrame(tk.Frame):
     - calls the swappable frame's notify() method
     - sets the state of its buttons
     """
-
     def __init__(self, master, game):
         super(TradeFrame, self).__init__(master)
         self.master = master

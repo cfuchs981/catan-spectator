@@ -56,11 +56,8 @@ GameState.__getattr__. The method call will be ignored and None will be returned
 If the method does not look like can_do_xyz(), it will be logged.
 
 """
-
 import hexgrid
 import models
-
-
 import logging
 
 

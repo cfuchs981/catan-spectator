@@ -1,3 +1,21 @@
+"""
+module models provides classes and enums useful for representing a catan game.
+
+The main class is Game, which contains Players, a Board, and a CatanLog.
+
+See module boardbuilder for the mechanics of creating and modifying Board objects.
+
+All classes in this module:
+- Game
+- Player
+- Board
+- Tile
+- Terrain
+- HexNumber
+- Port
+- Piece
+- PieceType
+"""
 import logging
 import hexgrid
 import states
@@ -6,8 +24,30 @@ from enum import Enum
 
 
 class Game(object):
+    """
+    class Game represents a single game of catan. It has players, a board, and a log.
 
+    A Game has observers. Observers register themselves by adding themselves to
+    the Game's observers set. When the Game changes, it will notify all its observers,
+    who can then poll the game state and make changes accordingly.
+
+    e.g. self.game.observers.add(self)
+
+    A Game has state. When changing state, remember to pass the current game to the
+    state's constructor. This allows the state to modify the game as appropriate in
+    the current state.
+
+    e.g. self.set_state(states.GameStateNotInGame(self))
+    """
     def __init__(self, players=None, board=None, log=None, pregame='on'):
+        """
+        Create a Game with the given options.
+
+        :param players: list(Player)
+        :param board: Board
+        :param log: CatanLog
+        :param pregame: (on|off)
+        """
         self.observers = set()
         self.options = {
             'pregame': pregame,
@@ -57,6 +97,19 @@ class Game(object):
         self.notify_observers()
 
     def start(self, players):
+        """
+        Start the game.
+
+        The value of option 'pregame' determines whether the pregame will occur or not.
+
+        - Resets the board
+        - Sets the players
+        - Sets the game state to the appropriate first turn of the game
+        - Finds the robber on the board, sets the robber_tile appropriately
+        - Logs the catanlog header
+
+        :param players: players to start the game with
+        """
         import boardbuilder
         self.reset()
         if self.board.opts.get('players') == boardbuilder.Opt.debug:
@@ -241,6 +294,7 @@ class Game(object):
 
 class Player(object):
     """class Player represents a single player on the game board.
+
     :param seat: integer, with 1 being top left, and increasing clockwise
     :param name: will be lowercased, spaces will be removed
     :param color: will be lowercased, spaces will be removed
@@ -269,14 +323,22 @@ class Player(object):
 
 class Tile(object):
     """
-    Tiles are arranged in counter-clockwise order, spiralling inwards.
-    The first tile is the top-left tile.
+    class Tile represents a hex tile on the catan board.
+
+    It contains a tile identifier, a terrain type, and a number.
     """
     def __init__(self, tile_id, terrain, number):
+        """
+        :param tile_id: tile identifier, int, see module hexgrid
+        :param terrain: Terrain
+        :param number: HexNumber
+        :return:
+        """
         self.tile_id = tile_id
         self.terrain = terrain
         self.number = number
 
+# Number of tiles on the catan board. This should probably be in module hexgrid.
 NUM_TILES = 3+4+5+4+3
 
 
@@ -337,26 +399,24 @@ class Piece(object):
 
 
 class Board(object):
-    """Represents a single game board.
-
-    Encapsulates
-    - the layout of the board (which tiles are connected to which),
-    - the values of the tiles (including ports)
-
-    Board.tiles() returns an iterable that gives the tiles in a guaranteed
-    connected path that covers every node in the board graph.
-
-    Board.direction(from, to) gives the compass direction you need to take to
-    get from the origin tile to the destination tile.
     """
-    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, players=None, center=1):
+    class Board represents a catan board. It has tiles, ports, and pieces.
+
+    A Board has pieces, which is a dictionary mapping (hexgrid.TYPE, coord) -> Piece.
+
+    Use #place_piece, #move_piece, and #remove_piece to manage pieces on the board.
+
+    Use #get_pieces to get all the pieces at a particular coordinate of the allowed types.
+    """
+    def __init__(self, terrain=None, numbers=None, ports=None, pieces=None, players=None):
         """
-        method Board creates a new board.
-        :param tiles:
-        :param ports:
-        :param graph:
-        :param center:
-        :return:
+        Create a new board. Creation will be delegated to module boardbuilder.
+
+        :param terrain: terrain option, boardbuilder.Opt
+        :param numbers: numbers option, boardbuilder.Opt
+        :param ports: ports option, boardbuilder.Opt
+        :param pieces: pieces option, boardbuilder.Opt
+        :param players: players option, boardbuilder.Opt
         """
         self.tiles = None
         self.ports = None
@@ -377,8 +437,6 @@ class Board(object):
 
         self.reset()
         self.observers = set()
-
-        self.center_tile = self.tiles[center or 10]
 
     def notify_observers(self):
         for obs in self.observers:

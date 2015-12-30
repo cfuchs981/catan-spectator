@@ -57,7 +57,8 @@ class Game(object):
         self.robber = Piece(PieceType.robber, None)
         self.catanlog = log or catanlog.CatanLog()
 
-        self.state = None
+        self.state = None # set in #set_state
+        self.dev_card_state = None # set in #set_dev_card_state
         self._cur_player = None # set in #set_players
         self.last_roll = None # set in #roll
         self.last_player_to_roll = None # set in #roll
@@ -266,12 +267,12 @@ class Game(object):
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
     def play_road_builder(self, edge1, edge2):
-        self.set_dev_card_state(states.DevCardPlayedState(self))
         self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(), edge1, edge2)
+        self.set_dev_card_state(states.DevCardPlayedState(self))
 
     def play_victory_point(self):
-        self.set_dev_card_state(states.DevCardPlayedState(self))
         self.catanlog.log_player_plays_dev_victory_point(self.get_cur_player())
+        self.set_dev_card_state(states.DevCardPlayedState(self))
 
     def end_turn(self):
         self.catanlog.log_player_ends_turn(self.get_cur_player())

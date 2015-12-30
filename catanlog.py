@@ -40,7 +40,7 @@ class CatanLog(object):
 
     TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=4, patch=4)
+    version = Version(major=0, minor=4, patch=5)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         """
@@ -151,8 +151,11 @@ class CatanLog(object):
     def log_player_roll(self, player, roll):
         """
         syntax: $color rolls $number
+
+        alternate syntax: if roll == 2, syntax: $color rolls $number ...DEUCES!
         """
-        self.logln('{0} rolls {1}'.format(player.color, roll))
+        self.logln('{0} rolls {1} {2}'.format(player.color, roll,
+                                            '...DEUCES!' if int(roll) == 2 else ''))
 
     def log_player_moves_robber_and_steals(self, player, tile_id, victim):
         """

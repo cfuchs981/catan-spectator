@@ -50,7 +50,7 @@ The format is not yet v1.0. The current version is listed in `catanlog.py`.
 
 Example
 ```
-catanlog v0.4.4
+catanlog v0.4.5
 timestamp: 2015-12-30 03:21:56.572418
 players: 4
 name: yurick, color: green, seat: 1
@@ -88,7 +88,7 @@ green ends turn
 green rolls 4
 green buys road, builds at (2 NW)
 green ends turn
-blue rolls 6
+blue rolls 2 ...DEUCES!
 blue plays dev card: road builder, builds at (9 W) and (10 E)
 blue buys settlement, builds at (10 NE)
 blue trades [1 wheat, 1 brick] to player green for [1 sheep]
@@ -107,7 +107,7 @@ Core
 - [x] fix victory points do not work first click each turn
 - [x] robber movable during game setup
 - [x] implement year of plenty dev card
-- [ ] catanlog: if a 2 is rolled, syntax is “$color rolls 2 …DEUCES!”
+- [x] catanlog: if a 2 is rolled, syntax is “$color rolls 2 …DEUCES!”
 - [x] modules documented
 - [ ] views documented
 

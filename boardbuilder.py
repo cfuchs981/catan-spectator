@@ -233,4 +233,4 @@ def _check_red_placement(tiles):
 _preset_port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
                            (5, 'SW'), (6,  'SE'), (8,  'SE'),
                            (9, 'E' ), (10, 'NE'), (12, 'NE')]
-_preset_ports = [Port.any, Port.ore, Port.any, Port.sheep, Port.any, Port.wood, Port.brick, Port.any, Port.wheat]
+_preset_ports = [Port.any3, Port.ore, Port.any3, Port.sheep, Port.any3, Port.wood, Port.brick, Port.any3, Port.wheat]

@@ -96,11 +96,7 @@ class GameState(object):
 
     def is_in_game(self):
         """
-        Returns whether the current session is in game or not.
-
-        In game is defined as taking turns, rolling dice, placing pieces, etc.
-
-        In game starts on 'Start Game', and ends on 'End Game'
+        See GameStateInGame for details.
 
         :return Boolean
         """
@@ -110,6 +106,8 @@ class GameState(object):
 class GameStateNotInGame(GameState):
     """
     All NOT-IN-GAME states inherit from this state.
+
+    See GameStateInGame for details.
 
     this state implements:
         is_in_game()
@@ -125,6 +123,9 @@ class GameStateNotInGame(GameState):
 class GameStateInGame(GameState):
     """
     All IN-GAME states inherit from this state.
+
+    In game is defined as taking turns, rolling dice, placing pieces, etc.
+    In game starts on 'Start Game', and ends on 'End Game'
 
     this state implements:
         is_in_game()
@@ -153,9 +154,6 @@ class GameStateInGame(GameState):
 
     def is_in_pregame(self):
         """
-        The pregame is defined as the initial placing of settlements in which
-        no dice are rolled, no cards picked up, and no trades made.
-
         See GameStatePreGame for details.
 
         :return: Boolean
@@ -336,7 +334,18 @@ class GameStatePreGame(GameStateInGame):
     - BEFORE the first dice roll
 
     In other words, it is the placing of the initial settlements and roads, in snake draft order.
+
+    this state implements:
+        can_end_turn()
+
+    this state provides:
+        None
+    sub-classes must implement:
+        None
     """
+    def can_end_turn(self):
+        return False
+
     def is_in_pregame(self):
         return True
 
@@ -385,9 +394,6 @@ class GameStatePreGame(GameStateInGame):
     def can_buy_dev_card(self):
         """No dev cards in the pregame"""
         return False
-
-    def can_end_turn(self):
-        raise NotImplemented()
 
     def can_trade(self):
         """No trading in the pregame"""

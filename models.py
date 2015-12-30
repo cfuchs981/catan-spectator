@@ -1,5 +1,4 @@
 import logging
-from builtins import *
 import hexgrid
 import states
 import catanlog
@@ -58,9 +57,11 @@ class Game(object):
         self.notify_observers()
 
     def start(self, players):
+        import boardbuilder
         self.reset()
-
-        self.set_players(Game.get_debug_players()) #todo use players
+        if self.board.opts.get('players') == boardbuilder.Opt.debug:
+            players = Game.get_debug_players()
+        self.set_players(players)
         if self.options.get('pregame') is None or self.options.get('pregame') == 'on':
             logging.debug('Entering pregame, game options={}'.format(self.options))
             self.set_state(states.GameStatePreGamePlaceSettlement(self))
@@ -97,6 +98,8 @@ class Game(object):
         self.last_player_to_roll = None
         self._cur_player = None
         self._cur_turn = 0
+
+        self.notify_observers()
 
     def get_cur_player(self):
         return Player(self._cur_player.seat, self._cur_player.name, self._cur_player.color)
@@ -201,10 +204,6 @@ class Game(object):
             logging.debug('trading {} to player={} to get={}'.format(giving, getter, getting))
         self.notify_observers()
 
-    def trade_with_other(self, to_other, other, to_player):
-        # todo trade with other
-        logging.warning('trading with other players not yet implemented')
-
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
@@ -308,7 +307,7 @@ class HexNumber(Enum):
 
 
 class Port(Enum):
-    any = '3:1'
+    any3 = '3:1'
     any4 = '4:1'
     wood = 'wood'
     brick = 'brick'

@@ -176,7 +176,7 @@ class WithWhichPortFrame(tk.Frame):
     def set_states(self):
         can_trade = self.master.game.state.can_trade()
         for btn, port in zip(self.port_btns, models.Port):
-            if port == Port.any:
+            if port == Port.any3:
                 btn.configure(state=can_do[can_trade])
             else:
                 btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port(port)])
@@ -226,7 +226,7 @@ class WhichResourcesInputFrame(tk.Frame):
 
         self.give_btns = list()
         self.get_btns = list()
-        for t in models.Terrain:
+        for t in filter(lambda t: t != models.Terrain.desert, models.Terrain):
             self.give_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_give, t)))
             self.get_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_get, t)))
 

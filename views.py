@@ -572,15 +572,22 @@ class SetupGameToolbarFrame(tkinter.Frame):
             option.callback()
             tkinter.Checkbutton(self, text=option.text, justify=tkinter.LEFT, command=option.callback, var=option.var) \
                 .pack(side=tkinter.TOP, fill=tkinter.X)
-        tkinter.Button(self, text="Reset", command=self.on_reset, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Button(self, text="Reset Board", command=self.on_reset_board, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Button(self, text="Reset Pieces", command=self.on_reset_pieces, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         tkinter.Button(self, text="Move Robber", command=self.on_move_robber, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
 
         tkinter.Label(self, text="---").pack(side=tkinter.TOP)
         btn_start_game = tkinter.Button(self, text='Start Game', command=self.on_start_game)
         btn_start_game.pack(side=tkinter.TOP, fill=tkinter.X)
 
-    def on_reset(self):
+    def on_reset_board(self):
         self.game.board.reset()
+        self.game.notify_observers()
+
+    def on_reset_pieces(self):
+        for (hextype, coord), piece in self.game.board.pieces.copy().items():
+            if piece.type != PieceType.robber:
+                self.game.board.remove_piece(piece, coord)
         self.game.notify_observers()
 
     def on_move_robber(self):

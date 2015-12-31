@@ -66,6 +66,7 @@ class TradeFrame(tk.Frame):
         return self.frame.can_cancel()
 
     def on_make_trade(self):
+        self.trade.set_giver(self.game.get_cur_player())
         logging.debug('trade MAKE: {} {} {} {}'.format(self.trade.giver(),
                                                        self.trade.giving(),
                                                        self.trade.getter(),

@@ -104,6 +104,8 @@ See `catanlog.CatanLog` (in `catanlog.py`) for all available actions, along with
 
 Need to have
 - [ ] views documented
+- [ ] piece placing should be cancellable
+- [ ] all actions should be undoable
 
 Nice to have
 - [ ] board: random number setup obeys red number rule

@@ -174,8 +174,17 @@ def _generate_ports(port_opts):
     :return: list(Port)
     """
     if port_opts in [Opt.preset, Opt.debug]:
+        _preset_ports = [(1, 'NW', PortType.any3),
+                         (2, 'W', PortType.wood),
+                         (4, 'W', PortType.brick),
+                         (5, 'SW', PortType.any3),
+                         (6, 'SE', PortType.any3),
+                         (8, 'SE', PortType.sheep),
+                         (9, 'E', PortType.any3),
+                         (10, 'NE', PortType.ore),
+                         (12, 'NE', PortType.wheat)]
         return [Port(tile, dir, port_type)
-                for (tile, dir), port_type in zip(_preset_port_locations, _preset_port_types)]
+                for tile, dir, port_type in _preset_ports]
     elif port_opts in [Opt.empty, Opt.random]:
         logging.warning('{} option not yet implemented'.format(port_opts))
         return []
@@ -229,11 +238,3 @@ def _check_red_placement(tiles):
     Not yet implemented.
     """
     logging.warning('"Check red placement" not yet implemented')
-
-
-_preset_port_locations = [(1, 'NW'), (2,  'W'),  (4,  'W' ),
-                           (5, 'SW'), (6,  'SE'), (8,  'SE'),
-                           (9, 'E' ), (10, 'NE'), (12, 'NE')]
-_preset_port_types = [PortType.any3, PortType.ore, PortType.any3,
-                      PortType.sheep, PortType.any3, PortType.wood,
-                      PortType.brick, PortType.any3, PortType.wheat]

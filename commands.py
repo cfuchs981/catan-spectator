@@ -22,13 +22,13 @@ class CmdRoll(Command):
         self.prev_state = self.game.state
 
         # perform action
-        self.game.catanlog.log_player_roll(self.get_cur_player(), self.roll)
+        self.game.catanlog.log_player_roll(self.game.get_cur_player(), self.roll)
         self.game.last_roll = self.roll
         self.game.last_player_to_roll = self.game.get_cur_player()
         if int(self.roll) == 7:
-            self.set_state(states.GameStateMoveRobber(self))
+            self.game.set_state(states.GameStateMoveRobber(self.game))
         else:
-            self.set_state(states.GameStateDuringTurnAfterRoll(self))
+            self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
 
     def undo(self):
         # undo catanlog

@@ -188,7 +188,7 @@ class Game(object):
         self.undo_manager.do(commands.CmdRoll(self, roll))
 
     def move_robber(self, tile):
-        self.state.move_robber(tile)
+        self.undo_manager.do(commands.CmdMoveRobber(self, tile))
 
     def steal(self, victim):
         if victim is None:

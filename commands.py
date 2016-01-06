@@ -35,3 +35,16 @@ class CmdRoll(Command):
         self.game.last_roll = self.prev_last_roll
         self.game.last_player_to_roll = self.prev_last_player_to_roll
         self.game.set_state(self.prev_state)
+
+
+class CmdMoveRobber(Command):
+    def __init__(self, game, tile):
+        self.game = game
+        self.tile = tile
+
+    def do(self):
+
+        self.game.state.move_robber(self.tile)
+
+    def undo(self):
+        pass

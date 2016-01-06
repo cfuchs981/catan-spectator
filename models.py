@@ -17,10 +17,12 @@ All classes in this module:
 - PieceType
 """
 import logging
+import commands
 import hexgrid
 import states
 import catanlog
 from enum import Enum
+import undo
 
 
 class Game(object):
@@ -49,6 +51,7 @@ class Game(object):
         :param pregame: (on|off)
         """
         self.observers = set()
+        self.undo_manager = undo.UndoManager()
         self.options = {
             'pregame': pregame,
         }
@@ -69,6 +72,13 @@ class Game(object):
 
         self.set_state(states.GameStateNotInGame(self))
         self.set_dev_card_state(states.DevCardNotPlayedState(self))
+
+    def undo(self):
+        """
+        Rewind the game to the previous state.
+        :return:
+        """
+        self.undo_manager.undo()
 
     def notify(self, observable):
         self.notify_observers()
@@ -175,13 +185,7 @@ class Game(object):
         return True
 
     def roll(self, roll):
-        self.catanlog.log_player_roll(self.get_cur_player(), roll)
-        self.last_roll = roll
-        self.last_player_to_roll = self.get_cur_player()
-        if int(roll) == 7:
-            self.set_state(states.GameStateMoveRobber(self))
-        else:
-            self.set_state(states.GameStateDuringTurnAfterRoll(self))
+        self.undo_manager.do(commands.CmdRoll(self, roll))
 
     def move_robber(self, tile):
         self.state.move_robber(tile)

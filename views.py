@@ -620,6 +620,7 @@ class GameToolbarFrame(tkinter.Frame):
 
         label_cur_player_name = tkinter.Label(self, textvariable=self._cur_player_name, anchor=tkinter.W)
         frame_roll = RollFrame(self, self.game)
+        frame_undo = UndoFrame(self, self.game)
         frame_robber = RobberFrame(self, self.game)
         frame_build = BuildFrame(self, self.game)
         frame_trade = views_trading.TradeFrame(self, self.game)
@@ -627,13 +628,14 @@ class GameToolbarFrame(tkinter.Frame):
         frame_end_turn = EndTurnFrame(self, self.game)
         frame_end_game = EndGameFrame(self, self.game)
 
-        label_cur_player_name.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_robber.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_build.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_trade.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_play_dev.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
+        label_cur_player_name.pack(fill=tkinter.X)
+        frame_roll.pack(fill=tkinter.X)
+        frame_undo.pack(fill=tkinter.X)
+        frame_robber.pack(fill=tkinter.X)
+        frame_build.pack(fill=tkinter.X)
+        frame_trade.pack(fill=tkinter.X)
+        frame_play_dev.pack(fill=tkinter.X)
+        frame_end_turn.pack(fill=tkinter.X)
         frame_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
 
     def set_game(self, game):
@@ -649,6 +651,20 @@ class GameToolbarFrame(tkinter.Frame):
             self._cur_player.color,
             self._cur_player.name
         ))
+
+
+class UndoFrame(tkinter.Frame):
+
+    def __init__(self, master, game, *args, **kwargs):
+        super(UndoFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+
+        tkinter.Label(self, text="Undo").pack(anchor=tkinter.W)
+        tkinter.Button(self, text="Undo", command=self.on_undo).pack(fill=tkinter.X)
+
+    def on_undo(self):
+        self.game.undo()
 
 
 class RollFrame(tkinter.Frame):

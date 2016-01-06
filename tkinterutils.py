@@ -1,9 +1,13 @@
 """
 module tkinterutils provides methods useful in tkinter graphics programming
 
-Currently, it provides polygon rotation methods.
+Currently, it provides
+- polygon rotation methods
+- OptionMenu refresh-ability
 """
 import math
+import tkinter
+
 
 def rotate_2poly(angle, coords, origin):
     """
@@ -19,6 +23,7 @@ def rotate_2poly(angle, coords, origin):
         raise Exception('Malformed 2poly={}'.format(coords))
     return rotate_poly(angle, zip(xs, ys), origin)
 
+
 def rotate_poly(angle, points, origin):
     """
     Rotates an iterable of points about the origin.
@@ -28,6 +33,7 @@ def rotate_poly(angle, points, origin):
     :return: Rotated list of points
     """
     return list(rotate_point(angle, point, origin) for point in points)
+
 
 def rotate_rect(angle, top_left, bottom_right, origin):
     """
@@ -41,6 +47,7 @@ def rotate_rect(angle, top_left, bottom_right, origin):
     points = top_left.copy()
     points.extend(bottom_right)
     return rotate_poly(angle, points, origin)
+
 
 def rotate_point(angle, point, origin):
     """
@@ -57,4 +64,13 @@ def rotate_point(angle, point, origin):
     cosT = math.cos(math.radians(angle))
     return (origin[0] + (cosT * (point[0] - origin[0]) - sinT * (point[1] - origin[1])),
             origin[1] + (sinT * (point[0] - origin[0]) + cosT * (point[1] - origin[1])))
+
+
+def refresh_option_menu(option_menu, var, new_options):
+    """http://stackoverflow.com/a/17581364/1817465"""
+    option_menu['menu'].delete(0, 'end')
+
+    # Insert list of new options (tk._setit hooks them up to var)
+    for choice in new_options:
+        option_menu['menu'].add_command(label=choice, command=tkinter._setit(var, choice))
 

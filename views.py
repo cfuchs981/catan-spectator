@@ -676,9 +676,8 @@ class RollFrame(tkinter.Frame):
         self.button.configure(state=can_do[self.game.state.can_roll()])
 
     def on_roll(self):
-        self.button.configure(state=tkinter.DISABLED)
-        self.spinner.configure(state=tkinter.DISABLED)
         self.game.roll(self.roll.get())
+        self.set_states()
 
 
 class RobberFrame(tkinter.Frame):

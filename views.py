@@ -688,15 +688,21 @@ class RobberFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
+        self.label = tkinter.Label(self, text="Steal", anchor=tkinter.W)
+
+        self.steal_frame = tkinter.Frame(self)
         self.player_strs = [str(player) for player in self.game.players]
         self.player_str = tkinter.StringVar()
-        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(), *self.player_strs) # reassigned in set_states
-        self.steal = tkinter.Button(self, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
+        self.player_picker = tkinter.OptionMenu(self.steal_frame, self.player_str, self.player_str.get(), *self.player_strs) # reassigned in set_states
+        self.steal = tkinter.Button(self.steal_frame, text="Steal", state=tkinter.DISABLED, command=self.on_steal)
+
+        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.X, expand=True)
+        self.steal.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=True)
 
         self.set_states()
 
-        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
-        self.steal.pack(side=tkinter.RIGHT, fill=tkinter.BOTH, expand=True)
+        self.label.pack(fill=tkinter.X)
+        self.steal_frame.pack(fill=tkinter.X, expand=True)
 
     def notify(self, observable):
         self.set_states()
@@ -712,10 +718,9 @@ class RobberFrame(tkinter.Frame):
                 type(stealable_strs[0]), stealable_strs,
                 type(self.player_str.get()), self.player_str.get()
             ))
-        self.player_picker.destroy()
-        self.player_picker = tkinter.OptionMenu(self, self.player_str, self.player_str.get(),
-                                                *(s for s in stealable_strs if s != self.player_str.get()))
-        self.player_picker.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        tkinterutils.refresh_option_menu(self.player_picker, self.player_str,
+                                         new_options=[s for s in stealable_strs if s != self.player_str.get()])
+
         self.player_picker.configure(state=can_do[self.game.state.can_steal()])
         self.steal.configure(state=can_do[self.game.state.can_steal()])
 

@@ -40,7 +40,7 @@ class CatanLog(object):
 
     TODO maybe log private information as well (which dev card picked up, which card stolen)
     """
-    version = Version(major=0, minor=4, patch=5)
+    version = Version(major=0, minor=5, patch=5)
 
     def __init__(self, auto_flush=True, log_dir='log', use_stdout=False):
         """
@@ -73,6 +73,12 @@ class CatanLog(object):
         Write a string to the log, appending a newline
         """
         self.log('{0}\n'.format(content))
+
+    def eraseln(self):
+        """
+        Erase the latest line from the log
+        """
+        self._log = '\n'.join(self._log.split('\n')[:-2])
 
     def reset(self):
         """

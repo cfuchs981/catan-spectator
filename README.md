@@ -54,7 +54,7 @@ The current version is listed in `catanlog.py`.
 
 Example
 ```
-catanlog v0.4.5
+catanlog v0.5.5
 timestamp: 2015-12-30 03:21:56.572418
 players: 4
 name: yurick, color: green, seat: 1

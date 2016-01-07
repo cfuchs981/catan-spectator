@@ -659,9 +659,19 @@ class UndoFrame(tkinter.Frame):
         super(UndoFrame, self).__init__(master)
         self.master = master
         self.game = game
+        self.game.observers.add(self)
 
         tkinter.Label(self, text="Undo").pack(anchor=tkinter.W)
-        tkinter.Button(self, text="Undo", command=self.on_undo).pack(fill=tkinter.X)
+        self.undo = tkinter.Button(self, text="Undo", command=self.on_undo)
+        self.undo.pack(fill=tkinter.X)
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        self.undo.configure(state=can_do[self.game.undo_manager.can_undo()])
 
     def on_undo(self):
         self.game.undo()

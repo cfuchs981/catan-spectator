@@ -16,6 +16,7 @@ All classes in this module:
 - Piece
 - PieceType
 """
+import copy
 import logging
 import commands
 import hexgrid
@@ -73,12 +74,55 @@ class Game(object):
         self.set_state(states.GameStateNotInGame(self))
         self.set_dev_card_state(states.DevCardNotPlayedState(self))
 
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'observers':
+                setattr(result, k, set(v))
+            elif k == 'state':
+                setattr(result, k, v)
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
     def undo(self):
         """
         Rewind the game to the previous state.
         :return:
         """
         self.undo_manager.undo()
+
+    def copy(self):
+        """
+        Return a copy of this Game object.
+        :return: Game
+        """
+        return copy.deepcopy(self)
+
+    def restore(self, game):
+        """
+        Restore this Game object to match the properties and state of the given Game object
+        :param game: properties to restore to the current (self) Game
+        """
+        self.observers = game.observers
+        self.undo_manager = game.undo_manager
+        self.options = game.options
+        self.players = game.players
+        self.board = game.board
+        self.robber = game.robber
+        self.catanlog = game.catanlog
+
+        self.state = game.state
+        self.dev_card_state = game.dev_card_state
+        self._cur_player = game._cur_player
+        self.last_roll = game.last_roll
+        self.last_player_to_roll = game.last_player_to_roll
+        self._cur_turn = game._cur_turn
+        self.robber_tile = game.robber_tile
+
+        self.notify_observers()
 
     def notify(self, observable):
         self.notify_observers()
@@ -191,9 +235,7 @@ class Game(object):
         self.undo_manager.do(commands.CmdMoveRobber(self, tile))
 
     def steal(self, victim):
-        if victim is None:
-            victim = Player(1, 'nobody', 'nobody')
-        self.state.steal(victim)
+        self.undo_manager.do(commands.CmdSteal(self, victim))
 
     def stealable_players(self):
         if self.robber_tile is None:
@@ -481,6 +523,17 @@ class Board(object):
 
         self.reset()
         self.observers = set()
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'observers':
+                setattr(result, k, set(v))
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     def notify_observers(self):
         for obs in self.observers:

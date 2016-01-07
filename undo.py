@@ -20,6 +20,9 @@ class UndoManager(object):
         self.command_stack.append(command)
         command.do()
 
+    def can_undo(self):
+        return len(self.command_stack) > 0
+
     def undo(self):
         if len(self.command_stack) < 1:
             raise Exception('Cannot perform undo, command stack is empty')

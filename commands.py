@@ -2,6 +2,8 @@
 module commands provides implementations of the Command interface specified in module undo
 which are useful for catan. They are used alongside classes defined in module models.
 """
+import logging
+import models
 import states
 from undo import Command
 
@@ -11,17 +13,10 @@ class CmdRoll(Command):
         self.game = game
         self.roll = roll
 
-        self.prev_last_roll = None
-        self.prev_last_player_to_roll = None
-        self.prev_state = None
+        self.restore_point = self.game.copy()
 
     def do(self):
-        # save state
-        self.prev_last_roll = self.game.last_roll
-        self.prev_last_player_to_roll = self.game.last_player_to_roll
-        self.prev_state = self.game.state
-
-        # perform action
+        self.restore_point = self.game.copy()
         self.game.catanlog.log_player_roll(self.game.get_cur_player(), self.roll)
         self.game.last_roll = self.roll
         self.game.last_player_to_roll = self.game.get_cur_player()
@@ -31,10 +26,7 @@ class CmdRoll(Command):
             self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
 
     def undo(self):
-        # undo catanlog
-        self.game.last_roll = self.prev_last_roll
-        self.game.last_player_to_roll = self.prev_last_player_to_roll
-        self.game.set_state(self.prev_state)
+        self.game.restore(self.restore_point)
 
 
 class CmdMoveRobber(Command):
@@ -42,9 +34,28 @@ class CmdMoveRobber(Command):
         self.game = game
         self.tile = tile
 
-    def do(self):
+        self.restore_point = self.game.copy()
 
+    def do(self):
+        self.restore_point = self.game.copy()
         self.game.state.move_robber(self.tile)
 
     def undo(self):
-        pass
+        self.game.restore(self.restore_point)
+
+
+class CmdSteal(Command):
+    def __init__(self, game, victim):
+        self.game = game
+        self.victim = victim
+
+        self.restore_point = self.game.copy()
+
+    def do(self):
+        self.restore_point = self.game.copy()
+        if self.victim is None:
+            self.victim = models.Player(1, 'nobody', 'nobody')
+        self.game.state.steal(self.victim)
+
+    def undo(self):
+        self.game.restore(self.restore_point)

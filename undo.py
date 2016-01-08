@@ -1,6 +1,7 @@
 """
 module undo provides class definitions useful for undo/redo functionality in catan.
 """
+import logging
 
 
 class UndoManager(object):
@@ -19,6 +20,7 @@ class UndoManager(object):
     def do(self, command):
         self.command_stack.append(command)
         command.do()
+        logging.debug('{}.do() called, stack now={}'.format(type(command), self.command_stack))
 
     def can_undo(self):
         return len(self.command_stack) > 0
@@ -26,7 +28,9 @@ class UndoManager(object):
     def undo(self):
         if len(self.command_stack) < 1:
             raise Exception('Cannot perform undo, command stack is empty')
-        self.command_stack.pop().undo()
+        command = self.command_stack.pop()
+        command.undo()
+        logging.debug('{}.undo() called, stack now={}'.format(type(command), self.command_stack))
 
 
 class Command(object):

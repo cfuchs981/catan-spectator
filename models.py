@@ -93,10 +93,12 @@ class Game(object):
         :return:
         """
         self.undo_manager.undo()
+        self.notify_observers()
+        logging.debug('undo_manager.stack={}'.format(self.undo_manager.command_stack))
 
     def copy(self):
         """
-        Return a copy of this Game object.
+        Return a deep copy of this Game object. See Game.__deepcopy__ for the copy implementation.
         :return: Game
         """
         return copy.deepcopy(self)
@@ -107,15 +109,23 @@ class Game(object):
         :param game: properties to restore to the current (self) Game
         """
         self.observers = game.observers
-        self.undo_manager = game.undo_manager
+        # self.undo_manager = game.undo_manager
         self.options = game.options
         self.players = game.players
-        self.board = game.board
+        self.board.restore(game.board)
         self.robber = game.robber
         self.catanlog = game.catanlog
 
-        self.state = game.state
-        self.dev_card_state = game.dev_card_state
+        cls = game.state.__class__
+        state = object.__new__(cls)
+        cls.__init__(state, self)
+        self.state = state
+
+        cls = game.dev_card_state.__class__
+        dev_card_state = object.__new__(cls)
+        cls.__init__(dev_card_state, self)
+        self.dev_card_state = dev_card_state
+
         self._cur_player = game._cur_player
         self.last_roll = game.last_roll
         self.last_player_to_roll = game.last_player_to_roll
@@ -526,7 +536,7 @@ class Board(object):
 
     def __deepcopy__(self, memo):
         cls = self.__class__
-        result = cls.__new__(cls)
+        result = object.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             if k == 'observers':
@@ -534,6 +544,25 @@ class Board(object):
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
         return result
+
+    def restore(self, board):
+        """
+        Restore this Board object to match the properties and state of the given Board object
+        :param board: properties to restore to the current (self) Board
+        """
+        self.tiles = board.tiles
+        self.ports = board.ports
+
+        cls = board.state.__class__
+        state = object.__new__(cls)
+        cls.__init__(state, self)
+        self.state = state
+
+        self.pieces = board.pieces
+        self.opts = board.opts
+        self.observers = board.observers
+
+        self.notify_observers()
 
     def notify_observers(self):
         for obs in self.observers:

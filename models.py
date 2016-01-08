@@ -116,15 +116,10 @@ class Game(object):
         self.robber = game.robber
         self.catanlog = game.catanlog
 
-        cls = game.state.__class__
-        state = object.__new__(cls)
-        cls.__init__(state, self)
-        self.state = state
+        self.state = game.state
+        self.state.game = self
 
-        cls = game.dev_card_state.__class__
-        dev_card_state = object.__new__(cls)
-        cls.__init__(dev_card_state, self)
-        self.dev_card_state = dev_card_state
+        self.dev_card_state = game.dev_card_state
 
         self._cur_player = game._cur_player
         self.last_roll = game.last_roll
@@ -547,10 +542,8 @@ class Board(object):
         self.tiles = board.tiles
         self.ports = board.ports
 
-        cls = board.state.__class__
-        state = object.__new__(cls)
-        cls.__init__(state, self)
-        self.state = state
+        self.state = board.state
+        self.state.board = self
 
         self.pieces = board.pieces
         self.opts = board.opts

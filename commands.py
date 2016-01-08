@@ -76,3 +76,20 @@ class CmdBuyRoad(Command):
 
     def undo(self):
         self.game.restore(self.restore_point)
+
+
+class CmdBuySettlement(Command):
+    def __init__(self, game, node):
+        self.game = game
+        self.node = node
+        self.restore_point = None
+
+    def do(self):
+        self.restore_point = self.game.copy()
+        piece = models.Piece(models.PieceType.settlement, self.game.get_cur_player())
+        self.game.board.place_piece(piece, self.node)
+        self.game.catanlog.log_player_buys_settlement(self.game.get_cur_player(), self.node)
+        if self.game.state.is_in_pregame():
+            self.game.set_state(states.GameStatePreGamePlaceRoad(self.game))
+        else:
+            self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))

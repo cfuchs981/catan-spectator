@@ -262,13 +262,7 @@ class Game(object):
 
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
-        piece = Piece(PieceType.settlement, self.get_cur_player())
-        self.board.place_piece(piece, node)
-        self.catanlog.log_player_buys_settlement(self.get_cur_player(), node)
-        if self.state.is_in_pregame():
-            self.set_state(states.GameStatePreGamePlaceRoad(self))
-        else:
-            self.set_state(states.GameStateDuringTurnAfterRoll(self))
+        self.undo_manager.do(commands.CmdBuySettlement(self, node))
 
     def buy_city(self, node):
         #self.assert_legal_city(node)

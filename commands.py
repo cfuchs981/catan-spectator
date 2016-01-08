@@ -12,8 +12,7 @@ class CmdRoll(Command):
     def __init__(self, game, roll):
         self.game = game
         self.roll = roll
-
-        self.restore_point = self.game.copy()
+        self.restore_point = None
 
     def do(self):
         self.restore_point = self.game.copy()
@@ -33,8 +32,7 @@ class CmdMoveRobber(Command):
     def __init__(self, game, tile):
         self.game = game
         self.tile = tile
-
-        self.restore_point = self.game.copy()
+        self.restore_point = None
 
     def do(self):
         self.restore_point = self.game.copy()
@@ -48,8 +46,7 @@ class CmdSteal(Command):
     def __init__(self, game, victim):
         self.game = game
         self.victim = victim
-
-        self.restore_point = self.game.copy()
+        self.restore_point = None
 
     def do(self):
         self.restore_point = self.game.copy()

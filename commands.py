@@ -56,3 +56,23 @@ class CmdSteal(Command):
 
     def undo(self):
         self.game.restore(self.restore_point)
+
+
+class CmdBuyRoad(Command):
+    def __init__(self, game, edge):
+        self.game = game
+        self.edge = edge
+        self.restore_point = None
+
+    def do(self):
+        self.restore_point = self.game.copy()
+        piece = models.Piece(models.PieceType.road, self.game.get_cur_player())
+        self.game.board.place_piece(piece, self.edge)
+        self.game.catanlog.log_player_buys_road(self.game.get_cur_player(), self.edge)
+        if self.game.state.is_in_pregame():
+            self.game.end_turn()
+        else:
+            self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
+
+    def undo(self):
+        self.game.restore(self.restore_point)

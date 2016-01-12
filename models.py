@@ -316,6 +316,8 @@ class Player(object):
     def __eq__(self, other):
         if other is None:
             return False
+        if other.__class__ != Player:
+            return False
         return (self.color == other.color
                 and self.name == other.name
                 and self.seat == other.seat)

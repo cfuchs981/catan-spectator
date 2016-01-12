@@ -72,6 +72,12 @@ class CatanTrade(object):
         c = Counter(self._get.copy())
         return [(n, t) for t, n in c.items()]
 
+    def num_giving(self):
+        return len(self._give)
+
+    def num_getting(self):
+        return len(self._get)
+
     def set_giver(self, giver):
         self._giver = giver
 

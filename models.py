@@ -184,7 +184,6 @@ class Game(object):
 
         terrain = list()
         numbers = list()
-        ports = list()
         for tile in self.board.tiles:
             terrain.append(tile.terrain)
             numbers.append(tile.number)

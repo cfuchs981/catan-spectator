@@ -666,8 +666,8 @@ class UndoRedoFrame(tkinter.Frame):
         self.undo = tkinter.Button(self, text="Undo", command=self.on_undo)
         self.redo = tkinter.Button(self, text="Redo", command=self.on_redo)
 
-        self.undo.pack(side=tkinter.LEFT, fill=tkinter.X)
-        self.redo.pack(side=tkinter.RIGHT, fill=tkinter.X)
+        self.undo.pack(side=tkinter.LEFT, fill=tkinter.X, expand=tkinter.YES)
+        self.redo.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=tkinter.YES)
 
         self.set_states()
 

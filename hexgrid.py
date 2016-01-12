@@ -18,9 +18,7 @@ to be unique.
 
 See individual methods for usage.
 """
-from enum import Enum
 import logging
-from models import Tile
 
 EDGE = 0
 NODE = 1
@@ -66,6 +64,18 @@ _tile_edge_offsets = {
 }
 
 def location(hexgrid_type, coord):
+    """
+    Returns a formatted string representing the coordinate. The format depends on the
+    coordinate type.
+
+    Tiles look like: 1, 12
+    Nodes look like: (1 NW), (12 S)
+    Edges look like: (1 NW), (12 SE)
+
+    :param hexgrid_type: hexgrid.TILE, hexgrid.NODE, hexgrid.EDGE
+    :param coord: integer coordinate in this module's hexadecimal coordinate system
+    :return: formatted string for display
+    """
     if hexgrid_type == TILE:
         return str(coord)
     elif hexgrid_type == NODE:
@@ -82,6 +92,9 @@ def location(hexgrid_type, coord):
 
 
 def coastal_tile_ids():
+    """
+    Returns a list of tile identifiers which lie on the border of the grid.
+    """
     return list(filter(lambda tid: len(coastal_edges(tid)) > 0, legal_tile_ids()))
 
 
@@ -201,6 +214,25 @@ def tile_edge_offset_to_direction(offset):
         return 'ZZ'
 
 
+def edge_coord_in_direction(tile_id, direction):
+    """
+    Returns the edge coordinate in the given direction at the given tile identifier.
+
+    :param tile_id: tile identifier, int
+    :param direction: direction, str
+    :return: edge coord, int
+    """
+    tile_coord = tile_id_to_coord(tile_id)
+    for edge_coord in edges_touching_tile(tile_id):
+        if tile_edge_offset_to_direction(edge_coord - tile_coord) == direction:
+            return edge_coord
+    raise ValueError('No edge found in direction={} at tile_id={}'.format(
+        direction,
+        tile_id
+    ))
+
+
+
 def tile_id_to_coord(tile_id):
     """
     Convert a tile identifier to its corresponding grid coordinate.
@@ -308,6 +340,20 @@ def nodes_touching_tile(tile_id):
     return nodes
 
 
+def nodes_touching_edge(edge_coord):
+    """
+    Returns the two node coordinates which are on the given edge coordinate.
+
+    :return: list of 2 node coordinates which are on the given edge coordinate, list(int)
+    """
+    a, b = hex_digit(edge_coord, 1), hex_digit(edge_coord, 2)
+    if a % 2 == 0 and b % 2 == 0:
+        return [coord_from_hex_digits(a, b + 1),
+                coord_from_hex_digits(a + 1, b)]
+    else:
+        return [coord_from_hex_digits(a, b),
+                coord_from_hex_digits(a + 1, b + 1)]
+
 def legal_edge_coords():
     """
     Return all legal edge coordinates on the grid.
@@ -344,3 +390,31 @@ def legal_tile_coords():
     Return all legal tile coordinates on the grid
     """
     return set(_tile_id_to_coord.values())
+
+def hex_digit(coord, digit=1):
+    """
+    Returns either the first or second digit of the hexadecimal representation of the given coordinate.
+    :param coord: hexadecimal coordinate, int
+    :param digit: 1 or 2, meaning either the first or second digit of the hexadecimal
+    :return: int, either the first or second digit
+    """
+    if digit not in [1,2]:
+        raise ValueError('hex_digit can only get the first or second digit of a hex number, was passed digit={}'.format(
+            digit
+        ))
+    return int(hex(coord)[1+digit], 16)
+
+def coord_from_hex_digits(digit_1, digit_2):
+    """
+    Returns an integer representing the hexadecimal coordinate with the two given hexadecimal digits.
+
+    >> hex(coord_from_hex_digits(1, 3))
+    '0x13'
+    >> hex(coord_from_hex_digits(1, 10))
+    '0x1A'
+
+    :param digit_1: first digit, int
+    :param digit_2: second digit, int
+    :return: hexadecimal coordinate, int
+    """
+    return digit_1*16 + digit_2

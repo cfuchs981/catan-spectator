@@ -470,6 +470,7 @@ class BoardFrame(tkinter.Frame):
             return
         # logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
         color = 'red' if number.value in (6, 8) else 'black'
+        self._board_canvas.create_oval(tkinterutils.circle_bbox(15, (x, y)), fill='white', tags=self._tile_tag(tile))
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 
     def _hex_points(self, radius, offset, rotate):
@@ -530,18 +531,18 @@ class BoardFrame(tkinter.Frame):
     _node_angle_order = ('SE', 'S', 'SW', 'NW', 'N', 'NE') # 30 + 60*index
     _hex_font     = (('Helvetica'), 18)
     _colors = {
-        Terrain.wood: 'forest green',
-        Terrain.brick: 'sienna4',
-        Terrain.wheat: 'yellow2',
-        Terrain.sheep: 'green yellow',
-        Terrain.ore: 'gray94',
-        Terrain.desert: 'wheat1',
-        PortType.wood: 'forest green',
-        PortType.brick: 'sienna4',
-        PortType.wheat: 'yellow2',
-        PortType.sheep: 'green yellow',
-        PortType.ore: 'gray94',
-        PortType.any3: 'gray',
+        Terrain.wood: '#12782D',
+        Terrain.brick: '#D14728',
+        Terrain.wheat: '#F7FF08',
+        Terrain.sheep: '#AEFA66',
+        Terrain.ore: '#8A8A8A',
+        Terrain.desert: 'white',
+        PortType.wood: '#12782D',
+        PortType.brick: '#D14728',
+        PortType.wheat: '#F7FF08',
+        PortType.sheep: '#AEFA66',
+        PortType.ore: '#8A8A8A',
+        PortType.any3: 'white',
         PortType.none: '', # transparent
     }
 

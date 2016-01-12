@@ -226,12 +226,30 @@ class Game(object):
         self.set_cur_player(self.players[0])
         self.notify_observers()
 
-    def cur_player_has_port(self, port):
-        return self.player_has_port(self.get_cur_player(), port)
+    def cur_player_has_port_type(self, port_type):
+        return self.player_has_port_type(self.get_cur_player(), port_type)
 
-    def player_has_port(self, player, port):
-        logging.warning('player_has_port not yet implemented in models, returning True')
-        return True
+    def player_has_port_type(self, player, port_type):
+        for port in self.board.ports:
+            if port.type == port_type and self._player_has_port(player, port):
+                return True
+        return False
+
+    def _player_has_port(self, player, port):
+        edge_coord = hexgrid.edge_coord_in_direction(port.tile_id, port.direction)
+        for node in hexgrid.nodes_touching_edge(edge_coord):
+            pieces = self.board.get_pieces((PieceType.settlement, PieceType.city), node)
+            if len(pieces) < 1:
+                continue
+            elif len(pieces) > 1:
+                raise Exception('Probably a bug, num={} pieces found on node={}'.format(
+                    len(pieces), node
+                ))
+            assert len(pieces) == 1  # will be asserted by previous if/elif combo
+            piece = pieces[0]
+            if piece.owner == player:
+                return True
+        return False
 
     def roll(self, roll):
         self.undo_manager.do(commands.CmdRoll(self, roll))
@@ -354,6 +372,8 @@ class Player(object):
 
     def __eq__(self, other):
         if other is None:
+            return False
+        if other.__class__ != Player:
             return False
         return (self.color == other.color
                 and self.name == other.name

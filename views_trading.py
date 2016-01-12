@@ -176,10 +176,10 @@ class WithWhichPortFrame(tk.Frame):
     def set_states(self):
         can_trade = self.master.game.state.can_trade()
         for btn, port_type in zip(self.port_btns, models.PortType):
-            if port_type == PortType.any3:
+            if port_type == PortType.any4:
                 btn.configure(state=can_do[can_trade])
             else:
-                btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port(port_type)])
+                btn.configure(state=can_do[can_trade and self.master.game.cur_player_has_port_type(port_type)])
 
     def on_port(self, port_type):
         logging.debug('trade: port_type={} selected'.format(port_type))

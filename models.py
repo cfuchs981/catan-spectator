@@ -291,7 +291,7 @@ class Game(object):
         logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
         return stealable
 
-    @undoredo.undoable
+    # @undoredo.undoable # state.place_road calls this, place_road is undoable
     def buy_road(self, edge):
         #self.assert_legal_road(edge)
         piece = Piece(PieceType.road, self.get_cur_player())
@@ -302,7 +302,7 @@ class Game(object):
         else:
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
-    @undoredo.undoable
+    # @undoredo.undoable # state.place_settlement calls this, place_settlement is undoable
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
         piece = Piece(PieceType.settlement, self.get_cur_player())
@@ -313,7 +313,7 @@ class Game(object):
         else:
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
-    @undoredo.undoable
+    # @undoredo.undoable # state.place_city calls this, place_city is undoable
     def buy_city(self, node):
         #self.assert_legal_city(node)
         piece = Piece(PieceType.city, self.get_cur_player())
@@ -326,15 +326,19 @@ class Game(object):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())
         self.notify_observers()
 
+    @undoredo.undoable
     def place_road(self, edge_coord):
         self.state.place_road(edge_coord)
 
+    @undoredo.undoable
     def place_settlement(self, node_coord):
         self.state.place_settlement(node_coord)
 
+    @undoredo.undoable
     def place_city(self, node_coord):
         self.state.place_city(node_coord)
 
+    @undoredo.undoable
     def trade(self, trade):
         giver = trade.giver().color
         giving = [(n, t.value) for n, t in trade.giving()]
@@ -349,26 +353,32 @@ class Game(object):
             logging.debug('trading {} to player={} to get={}'.format(giving, getter, getting))
         self.notify_observers()
 
+    @undoredo.undoable
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
 
+    @undoredo.undoable
     def play_monopoly(self, resource):
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_year_of_plenty(self, resource1, resource2):
         self.catanlog.log_player_plays_dev_year_of_plenty(self.get_cur_player(), resource1, resource2)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_road_builder(self, edge1, edge2):
         self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(), edge1, edge2)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_victory_point(self):
         self.catanlog.log_player_plays_dev_victory_point(self.get_cur_player())
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def end_turn(self):
         self.catanlog.log_player_ends_turn(self.get_cur_player())
         self.set_cur_player(self.state.next_player())

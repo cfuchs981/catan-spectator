@@ -798,24 +798,15 @@ class BuildFrame(tkinter.Frame):
 
     def on_buy_road(self):
         # actual road purchase and catanlog happens in the piece onclick in BoardFrame
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.road))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.road))
+        self.game.begin_placing(PieceType.road)
 
     def on_buy_settlement(self):
         # see on_buy_road
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.settlement))
+        self.game.begin_placing(PieceType.settlement)
 
     def on_buy_city(self):
         # see on_buy_road
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.city))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.city))
+        self.game.begin_placing(PieceType.city)
 
     def on_buy_dev_card(self):
         self.game.buy_dev_card()

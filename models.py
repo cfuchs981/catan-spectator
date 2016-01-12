@@ -291,6 +291,13 @@ class Game(object):
         logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
         return stealable
 
+    @undoredo.undoable
+    def begin_placing(self, piece_type):
+        if self.state.is_in_pregame():
+            self.set_state(states.GameStatePreGamePlacingPiece(self, piece_type))
+        else:
+            self.set_state(states.GameStatePlacingPiece(self, piece_type))
+
     # @undoredo.undoable # state.place_road calls this, place_road is undoable
     def buy_road(self, edge):
         #self.assert_legal_road(edge)

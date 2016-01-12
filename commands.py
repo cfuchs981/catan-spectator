@@ -90,4 +90,25 @@ class CmdBuySettlement(GameCmd):
             self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
 
 
+class CmdBuyCity(GameCmd):
+    def __init__(self, game, node):
+        super(CmdBuyCity, self).__init__(game)
+        self.node = node
+
+    def do(self):
+        super(CmdBuyCity, self).do()
+        piece = models.Piece(models.PieceType.city, self.game.get_cur_player())
+        self.game.board.place_piece(piece, self.node)
+        self.game.catanlog.log_player_buys_city(self.game.get_cur_player(), self.node)
+        self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
+
+
+class CmdBuyDevCard(GameCmd):
+    def __init__(self, game):
+        super(CmdBuyDevCard, self).__init__(game)
+
+    def do(self):
+        super(CmdBuyDevCard, self).do()
+        self.game.catanlog.log_player_buys_dev_card(self.game.get_cur_player())
+        self.game.notify_observers()
 

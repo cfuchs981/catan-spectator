@@ -283,14 +283,10 @@ class Game(object):
 
     def buy_city(self, node):
         #self.assert_legal_city(node)
-        piece = Piece(PieceType.city, self.get_cur_player())
-        self.board.place_piece(piece, node)
-        self.catanlog.log_player_buys_city(self.get_cur_player(), node)
-        self.set_state(states.GameStateDuringTurnAfterRoll(self))
+        self.undo_manager.do(commands.CmdBuyCity(self, node))
 
     def buy_dev_card(self):
-        self.catanlog.log_player_buys_dev_card(self.get_cur_player())
-        self.notify_observers()
+        self.undo_manager.do(commands.CmdBuyDevCard(self))
 
     def place_road(self, edge_coord):
         self.state.place_road(edge_coord)

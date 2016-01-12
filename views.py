@@ -621,6 +621,7 @@ class GameToolbarFrame(tkinter.Frame):
 
         label_cur_player_name = tkinter.Label(self, textvariable=self._cur_player_name, anchor=tkinter.W)
         frame_roll = RollFrame(self, self.game)
+        frame_undo = UndoRedoFrame(self, self.game)
         frame_robber = RobberFrame(self, self.game)
         frame_build = BuildFrame(self, self.game)
         frame_trade = views_trading.TradeFrame(self, self.game)
@@ -628,13 +629,14 @@ class GameToolbarFrame(tkinter.Frame):
         frame_end_turn = EndTurnFrame(self, self.game)
         frame_end_game = EndGameFrame(self, self.game)
 
-        label_cur_player_name.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_roll.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_robber.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_build.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_trade.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_play_dev.pack(side=tkinter.TOP, fill=tkinter.X)
-        frame_end_turn.pack(side=tkinter.TOP, fill=tkinter.X)
+        label_cur_player_name.pack(fill=tkinter.X)
+        frame_roll.pack(fill=tkinter.X)
+        frame_undo.pack(fill=tkinter.X)
+        frame_robber.pack(fill=tkinter.X)
+        frame_build.pack(fill=tkinter.X)
+        frame_trade.pack(fill=tkinter.X)
+        frame_play_dev.pack(fill=tkinter.X)
+        frame_end_turn.pack(fill=tkinter.X)
         frame_end_game.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH)
 
     def set_game(self, game):
@@ -650,6 +652,37 @@ class GameToolbarFrame(tkinter.Frame):
             self._cur_player.color,
             self._cur_player.name
         ))
+
+
+class UndoRedoFrame(tkinter.Frame):
+
+    def __init__(self, master, game, *args, **kwargs):
+        super(UndoRedoFrame, self).__init__(master)
+        self.master = master
+        self.game = game
+        self.game.observers.add(self)
+
+        tkinter.Label(self, text="Undo").pack(anchor=tkinter.W)
+        self.undo = tkinter.Button(self, text="Undo", command=self.on_undo)
+        self.redo = tkinter.Button(self, text="Redo", command=self.on_redo)
+
+        self.undo.pack(side=tkinter.LEFT, fill=tkinter.X, expand=tkinter.YES)
+        self.redo.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=tkinter.YES)
+
+        self.set_states()
+
+    def notify(self, observable):
+        self.set_states()
+
+    def set_states(self):
+        self.undo.configure(state=can_do[self.game.undo_manager.can_undo()])
+        self.redo.configure(state=can_do[self.game.undo_manager.can_redo()])
+
+    def on_undo(self):
+        self.game.undo()
+
+    def on_redo(self):
+        self.game.redo()
 
 
 class RollFrame(tkinter.Frame):
@@ -772,24 +805,15 @@ class BuildFrame(tkinter.Frame):
 
     def on_buy_road(self):
         # actual road purchase and catanlog happens in the piece onclick in BoardFrame
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.road))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.road))
+        self.game.begin_placing(PieceType.road)
 
     def on_buy_settlement(self):
         # see on_buy_road
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.settlement))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.settlement))
+        self.game.begin_placing(PieceType.settlement)
 
     def on_buy_city(self):
         # see on_buy_road
-        if self.game.state.is_in_pregame():
-            self.game.set_state(states.GameStatePreGamePlacingPiece(self.game, PieceType.city))
-        else:
-            self.game.set_state(states.GameStatePlacingPiece(self.game, PieceType.city))
+        self.game.begin_placing(PieceType.city)
 
     def on_buy_dev_card(self):
         self.game.buy_dev_card()

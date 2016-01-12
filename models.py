@@ -16,11 +16,13 @@ All classes in this module:
 - Piece
 - PieceType
 """
+import copy
 import logging
 import hexgrid
 import states
 import catanlog
 from enum import Enum
+import undoredo
 
 
 class Game(object):
@@ -49,6 +51,7 @@ class Game(object):
         :param pregame: (on|off)
         """
         self.observers = set()
+        self.undo_manager = undoredo.UndoManager()
         self.options = {
             'pregame': pregame,
         }
@@ -69,6 +72,76 @@ class Game(object):
 
         self.set_state(states.GameStateNotInGame(self))
         self.set_dev_card_state(states.DevCardNotPlayedState(self))
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'observers':
+                setattr(result, k, set(v))
+            elif k == 'state':
+                setattr(result, k, v)
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
+    def do(self, command: undoredo.Command):
+        """
+        Does the command using the undo_manager's stack
+        :param command: Command
+        """
+        self.undo_manager.do(command)
+        self.notify_observers()
+
+    def undo(self):
+        """
+        Rewind the game to the previous state.
+        """
+        self.undo_manager.undo()
+        self.notify_observers()
+        logging.debug('undo_manager undo stack={}'.format(self.undo_manager._undo_stack))
+
+    def redo(self):
+        """
+        Redo the latest undone command.
+        """
+        self.undo_manager.redo()
+        self.notify_observers()
+        logging.debug('undo_manager redo stack={}'.format(self.undo_manager._redo_stack))
+
+    def copy(self):
+        """
+        Return a deep copy of this Game object. See Game.__deepcopy__ for the copy implementation.
+        :return: Game
+        """
+        return copy.deepcopy(self)
+
+    def restore(self, game):
+        """
+        Restore this Game object to match the properties and state of the given Game object
+        :param game: properties to restore to the current (self) Game
+        """
+        self.observers = game.observers
+        # self.undo_manager = game.undo_manager
+        self.options = game.options
+        self.players = game.players
+        self.board.restore(game.board)
+        self.robber = game.robber
+        self.catanlog = game.catanlog
+
+        self.state = game.state
+        self.state.game = self
+
+        self.dev_card_state = game.dev_card_state
+
+        self._cur_player = game._cur_player
+        self.last_roll = game.last_roll
+        self.last_player_to_roll = game.last_player_to_roll
+        self._cur_turn = game._cur_turn
+        self.robber_tile = game.robber_tile
+
+        self.notify_observers()
 
     def notify(self, observable):
         self.notify_observers()
@@ -125,7 +198,6 @@ class Game(object):
 
         terrain = list()
         numbers = list()
-        ports = list()
         for tile in self.board.tiles:
             terrain.append(tile.terrain)
             numbers.append(tile.number)
@@ -192,6 +264,7 @@ class Game(object):
                 return True
         return False
 
+    @undoredo.undoable
     def roll(self, roll):
         self.catanlog.log_player_roll(self.get_cur_player(), roll)
         self.last_roll = roll
@@ -201,9 +274,11 @@ class Game(object):
         else:
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def move_robber(self, tile):
         self.state.move_robber(tile)
 
+    @undoredo.undoable
     def steal(self, victim):
         if victim is None:
             victim = Player(1, 'nobody', 'nobody')
@@ -223,6 +298,14 @@ class Game(object):
         logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
         return stealable
 
+    @undoredo.undoable
+    def begin_placing(self, piece_type):
+        if self.state.is_in_pregame():
+            self.set_state(states.GameStatePreGamePlacingPiece(self, piece_type))
+        else:
+            self.set_state(states.GameStatePlacingPiece(self, piece_type))
+
+    # @undoredo.undoable # state.place_road calls this, place_road is undoable
     def buy_road(self, edge):
         #self.assert_legal_road(edge)
         piece = Piece(PieceType.road, self.get_cur_player())
@@ -233,6 +316,7 @@ class Game(object):
         else:
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    # @undoredo.undoable # state.place_settlement calls this, place_settlement is undoable
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
         piece = Piece(PieceType.settlement, self.get_cur_player())
@@ -243,6 +327,7 @@ class Game(object):
         else:
             self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    # @undoredo.undoable # state.place_city calls this, place_city is undoable
     def buy_city(self, node):
         #self.assert_legal_city(node)
         piece = Piece(PieceType.city, self.get_cur_player())
@@ -250,19 +335,24 @@ class Game(object):
         self.catanlog.log_player_buys_city(self.get_cur_player(), node)
         self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def buy_dev_card(self):
         self.catanlog.log_player_buys_dev_card(self.get_cur_player())
         self.notify_observers()
 
+    @undoredo.undoable
     def place_road(self, edge_coord):
         self.state.place_road(edge_coord)
 
+    @undoredo.undoable
     def place_settlement(self, node_coord):
         self.state.place_settlement(node_coord)
 
+    @undoredo.undoable
     def place_city(self, node_coord):
         self.state.place_city(node_coord)
 
+    @undoredo.undoable
     def trade(self, trade):
         giver = trade.giver().color
         giving = [(n, t.value) for n, t in trade.giving()]
@@ -277,26 +367,32 @@ class Game(object):
             logging.debug('trading {} to player={} to get={}'.format(giving, getter, getting))
         self.notify_observers()
 
+    @undoredo.undoable
     def play_knight(self):
         self.set_dev_card_state(states.DevCardPlayedState(self))
         self.set_state(states.GameStateMoveRobberUsingKnight(self))
 
+    @undoredo.undoable
     def play_monopoly(self, resource):
         self.catanlog.log_player_plays_dev_monopoly(self.get_cur_player(), resource)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_year_of_plenty(self, resource1, resource2):
         self.catanlog.log_player_plays_dev_year_of_plenty(self.get_cur_player(), resource1, resource2)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_road_builder(self, edge1, edge2):
         self.catanlog.log_player_plays_dev_road_builder(self.get_cur_player(), edge1, edge2)
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def play_victory_point(self):
         self.catanlog.log_player_plays_dev_victory_point(self.get_cur_player())
         self.set_dev_card_state(states.DevCardPlayedState(self))
 
+    @undoredo.undoable
     def end_turn(self):
         self.catanlog.log_player_ends_turn(self.get_cur_player())
         self.set_cur_player(self.state.next_player())
@@ -497,6 +593,34 @@ class Board(object):
 
         self.reset()
         self.observers = set()
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = object.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'observers':
+                setattr(result, k, set(v))
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
+    def restore(self, board):
+        """
+        Restore this Board object to match the properties and state of the given Board object
+        :param board: properties to restore to the current (self) Board
+        """
+        self.tiles = board.tiles
+        self.ports = board.ports
+
+        self.state = board.state
+        self.state.board = self
+
+        self.pieces = board.pieces
+        self.opts = board.opts
+        self.observers = board.observers
+
+        self.notify_observers()
 
     def notify_observers(self):
         for obs in self.observers:

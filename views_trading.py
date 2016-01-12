@@ -255,8 +255,6 @@ class WhichResourcesInputFrame(tk.Frame):
                 btn.configure(state=can_do[num_giving < 3])
             elif getter in PortType:
                 btn.configure(state=can_do[num_giving < 2 and btn['text'] == getter.value])
-            else:
-                btn.configure(state=can_do[btn['text'] not in getting_types])
 
         num_getting = self.trade().num_getting()
         giving_types = [giving_type.value for _, giving_type in self.trade().giving()]

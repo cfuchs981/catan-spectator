@@ -8,14 +8,25 @@ import states
 from undo import Command
 
 
-class CmdRoll(Command):
-    def __init__(self, game, roll):
+class GameCmd(Command):
+    def __init__(self, game, *args, **kwargs):
         self.game = game
-        self.roll = roll
         self.restore_point = None
 
     def do(self):
         self.restore_point = self.game.copy()
+
+    def undo(self):
+        self.game.restore(self.restore_point)
+
+
+class CmdRoll(GameCmd):
+    def __init__(self, game, roll):
+        super(CmdRoll, self).__init__(game)
+        self.roll = roll
+
+    def do(self):
+        super(CmdRoll, self).do()
         self.game.catanlog.log_player_roll(self.game.get_cur_player(), self.roll)
         self.game.last_roll = self.roll
         self.game.last_player_to_roll = self.game.get_cur_player()
@@ -24,48 +35,36 @@ class CmdRoll(Command):
         else:
             self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
 
-    def undo(self):
-        self.game.restore(self.restore_point)
 
-
-class CmdMoveRobber(Command):
+class CmdMoveRobber(GameCmd):
     def __init__(self, game, tile):
-        self.game = game
+        super(CmdMoveRobber, self).__init__(game)
         self.tile = tile
-        self.restore_point = None
 
     def do(self):
-        self.restore_point = self.game.copy()
+        super(CmdMoveRobber, self).do()
         self.game.state.move_robber(self.tile)
 
-    def undo(self):
-        self.game.restore(self.restore_point)
 
-
-class CmdSteal(Command):
+class CmdSteal(GameCmd):
     def __init__(self, game, victim):
-        self.game = game
+        super(CmdSteal, self).__init__(game)
         self.victim = victim
-        self.restore_point = None
 
     def do(self):
-        self.restore_point = self.game.copy()
+        super(CmdSteal, self).do()
         if self.victim is None:
             self.victim = models.Player(1, 'nobody', 'nobody')
         self.game.state.steal(self.victim)
 
-    def undo(self):
-        self.game.restore(self.restore_point)
 
-
-class CmdBuyRoad(Command):
+class CmdBuyRoad(GameCmd):
     def __init__(self, game, edge):
-        self.game = game
+        super(CmdBuyRoad, self).__init__(game)
         self.edge = edge
-        self.restore_point = None
 
     def do(self):
-        self.restore_point = self.game.copy()
+        super(CmdBuyRoad, self).do()
         piece = models.Piece(models.PieceType.road, self.game.get_cur_player())
         self.game.board.place_piece(piece, self.edge)
         self.game.catanlog.log_player_buys_road(self.game.get_cur_player(), self.edge)
@@ -74,18 +73,14 @@ class CmdBuyRoad(Command):
         else:
             self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
 
-    def undo(self):
-        self.game.restore(self.restore_point)
 
-
-class CmdBuySettlement(Command):
+class CmdBuySettlement(GameCmd):
     def __init__(self, game, node):
-        self.game = game
+        super(CmdBuySettlement, self).__init__(game)
         self.node = node
-        self.restore_point = None
 
     def do(self):
-        self.restore_point = self.game.copy()
+        super(CmdBuySettlement, self).do()
         piece = models.Piece(models.PieceType.settlement, self.game.get_cur_player())
         self.game.board.place_piece(piece, self.node)
         self.game.catanlog.log_player_buys_settlement(self.game.get_cur_player(), self.node)
@@ -93,3 +88,6 @@ class CmdBuySettlement(Command):
             self.game.set_state(states.GameStatePreGamePlaceRoad(self.game))
         else:
             self.game.set_state(states.GameStateDuringTurnAfterRoll(self.game))
+
+
+

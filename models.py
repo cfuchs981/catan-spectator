@@ -18,12 +18,11 @@ All classes in this module:
 """
 import copy
 import logging
-import commands
 import hexgrid
 import states
 import catanlog
 from enum import Enum
-import undo
+import undoredo
 
 
 class Game(object):
@@ -52,7 +51,7 @@ class Game(object):
         :param pregame: (on|off)
         """
         self.observers = set()
-        self.undo_manager = undo.UndoManager()
+        self.undo_manager = undoredo.UndoManager()
         self.options = {
             'pregame': pregame,
         }
@@ -86,6 +85,14 @@ class Game(object):
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
         return result
+
+    def do(self, command: undoredo.Command):
+        """
+        Does the command using the undo_manager's stack
+        :param command: Command
+        """
+        self.undo_manager.do(command)
+        self.notify_observers()
 
     def undo(self):
         """
@@ -250,14 +257,25 @@ class Game(object):
                 return True
         return False
 
+    @undoredo.undoable
     def roll(self, roll):
-        self.undo_manager.do(commands.CmdRoll(self, roll))
+        self.catanlog.log_player_roll(self.get_cur_player(), roll)
+        self.last_roll = roll
+        self.last_player_to_roll = self.get_cur_player()
+        if int(roll) == 7:
+            self.set_state(states.GameStateMoveRobber(self))
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def move_robber(self, tile):
-        self.undo_manager.do(commands.CmdMoveRobber(self, tile))
+        self.state.move_robber(tile)
 
+    @undoredo.undoable
     def steal(self, victim):
-        self.undo_manager.do(commands.CmdSteal(self, victim))
+        if victim is None:
+            victim = Player(1, 'nobody', 'nobody')
+        self.state.steal(victim)
 
     def stealable_players(self):
         if self.robber_tile is None:
@@ -273,20 +291,40 @@ class Game(object):
         logging.debug('stealable players={} at robber tile={}'.format(stealable, self.robber_tile))
         return stealable
 
+    @undoredo.undoable
     def buy_road(self, edge):
         #self.assert_legal_road(edge)
-        self.undo_manager.do(commands.CmdBuyRoad(self, edge))
+        piece = Piece(PieceType.road, self.get_cur_player())
+        self.board.place_piece(piece, edge)
+        self.catanlog.log_player_buys_road(self.get_cur_player(), edge)
+        if self.state.is_in_pregame():
+            self.end_turn()
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def buy_settlement(self, node):
         #self.assert_legal_settlement(node)
-        self.undo_manager.do(commands.CmdBuySettlement(self, node))
+        piece = Piece(PieceType.settlement, self.get_cur_player())
+        self.board.place_piece(piece, node)
+        self.catanlog.log_player_buys_settlement(self.get_cur_player(), node)
+        if self.state.is_in_pregame():
+            self.set_state(states.GameStatePreGamePlaceRoad(self))
+        else:
+            self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def buy_city(self, node):
         #self.assert_legal_city(node)
-        self.undo_manager.do(commands.CmdBuyCity(self, node))
+        piece = Piece(PieceType.city, self.get_cur_player())
+        self.board.place_piece(piece, node)
+        self.catanlog.log_player_buys_city(self.get_cur_player(), node)
+        self.set_state(states.GameStateDuringTurnAfterRoll(self))
 
+    @undoredo.undoable
     def buy_dev_card(self):
-        self.undo_manager.do(commands.CmdBuyDevCard(self))
+        self.catanlog.log_player_buys_dev_card(self.get_cur_player())
+        self.notify_observers()
 
     def place_road(self, edge_coord):
         self.state.place_road(edge_coord)

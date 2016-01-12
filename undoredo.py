@@ -40,9 +40,30 @@ class Command(object):
     Commands must be doable and undoable. The actual method of do/undo is left
     up to the implementing class.
     """
+    def __init__(self, game, do_method, *args):
+        self.game = game
+        self.do_method = do_method
+        self.args = list(args)
+
+        self.restore_point = None
+
     def do(self):
-        raise NotImplemented()
+        self.restore_point = self.game.copy()
+        self.do_method(self.game, *self.args)
 
     def undo(self):
-        raise NotImplemented()
+        self.game.restore(self.restore_point)
+
+
+def undoable(method):
+    """
+    decorator undoable allows a Game method to be undone.
+
+    It does this by wrapping the method call as a Command, then game.do()ing
+    the command.
+    """
+    def undoable_method(self, *args):
+        self.do(Command(self, method, *args))
+    return undoable_method
+
 

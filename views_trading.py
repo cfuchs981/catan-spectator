@@ -265,8 +265,6 @@ class WhichResourcesInputFrame(tk.Frame):
                 btn.configure(state=can_do[num_getting < 1
                                            and btn['text'] != getter.value
                                            and btn['text'] not in giving_types])
-            elif getter.__class__ == models.Player:
-                btn.configure(state=can_do[btn['text'] not in giving_types])
 
     def on_give(self, terrain):
         getter = self.trade().getter()

@@ -97,11 +97,18 @@ class Game(object):
     def undo(self):
         """
         Rewind the game to the previous state.
-        :return:
         """
         self.undo_manager.undo()
         self.notify_observers()
-        logging.debug('undo_manager.stack={}'.format(self.undo_manager.command_stack))
+        logging.debug('undo_manager undo stack={}'.format(self.undo_manager._undo_stack))
+
+    def redo(self):
+        """
+        Redo the latest undone command.
+        """
+        self.undo_manager.redo()
+        self.notify_observers()
+        logging.debug('undo_manager redo stack={}'.format(self.undo_manager._redo_stack))
 
     def copy(self):
         """

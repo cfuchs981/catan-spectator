@@ -15,22 +15,37 @@ class UndoManager(object):
         undo_manager.undo()
     """
     def __init__(self):
-        self.command_stack = list()
+        self._undo_stack = list()
+        self._redo_stack = list()
 
     def do(self, command):
-        self.command_stack.append(command)
+        self._redo_stack.clear()
+        self._undo_stack.append(command)
         command.do()
-        logging.debug('{}.do() called, stack now={}'.format(type(command), self.command_stack))
+        logging.debug('{}.do() called, stack now={}'.format(type(command), self._undo_stack))
 
     def can_undo(self):
-        return len(self.command_stack) > 0
+        return len(self._undo_stack) > 0
+
+    def can_redo(self):
+        return len(self._redo_stack) > 0
 
     def undo(self):
-        if len(self.command_stack) < 1:
-            raise Exception('Cannot perform undo, command stack is empty')
-        command = self.command_stack.pop()
+        if len(self._undo_stack) < 1:
+            raise Exception('Cannot perform undo, undo stack is empty')
+        command = self._undo_stack.pop()
+        self._redo_stack.append(command)
         command.undo()
-        logging.debug('{}.undo() called, stack now={}'.format(type(command), self.command_stack))
+        logging.debug('{}.undo() called, undo stack now={}'.format(type(command), self._undo_stack))
+
+    def redo(self):
+        if len(self._redo_stack) < 1:
+            raise Exception('Cannot perform redo, redo stack is empty')
+        command = self._redo_stack.pop()
+        self._undo_stack.append(command)
+        command.do()
+        logging.debug('{}.redo() called, redo stack now={}'.format(type(command), self._redo_stack))
+
 
 
 class Command(object):

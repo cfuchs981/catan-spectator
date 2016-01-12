@@ -621,7 +621,7 @@ class GameToolbarFrame(tkinter.Frame):
 
         label_cur_player_name = tkinter.Label(self, textvariable=self._cur_player_name, anchor=tkinter.W)
         frame_roll = RollFrame(self, self.game)
-        frame_undo = UndoFrame(self, self.game)
+        frame_undo = UndoRedoFrame(self, self.game)
         frame_robber = RobberFrame(self, self.game)
         frame_build = BuildFrame(self, self.game)
         frame_trade = views_trading.TradeFrame(self, self.game)
@@ -654,17 +654,20 @@ class GameToolbarFrame(tkinter.Frame):
         ))
 
 
-class UndoFrame(tkinter.Frame):
+class UndoRedoFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(UndoFrame, self).__init__(master)
+        super(UndoRedoFrame, self).__init__(master)
         self.master = master
         self.game = game
         self.game.observers.add(self)
 
         tkinter.Label(self, text="Undo").pack(anchor=tkinter.W)
         self.undo = tkinter.Button(self, text="Undo", command=self.on_undo)
-        self.undo.pack(fill=tkinter.X)
+        self.redo = tkinter.Button(self, text="Redo", command=self.on_redo)
+
+        self.undo.pack(side=tkinter.LEFT, fill=tkinter.X)
+        self.redo.pack(side=tkinter.RIGHT, fill=tkinter.X)
 
         self.set_states()
 
@@ -673,9 +676,13 @@ class UndoFrame(tkinter.Frame):
 
     def set_states(self):
         self.undo.configure(state=can_do[self.game.undo_manager.can_undo()])
+        self.redo.configure(state=can_do[self.game.undo_manager.can_redo()])
 
     def on_undo(self):
         self.game.undo()
+
+    def on_redo(self):
+        self.game.redo()
 
 
 class RollFrame(tkinter.Frame):

@@ -536,7 +536,7 @@ class BoardFrame(tkinter.Frame):
         Terrain.wheat: '#F7FF08',
         Terrain.sheep: '#AEFA66',
         Terrain.ore: '#8A8A8A',
-        Terrain.desert: '#FDFFD1',
+        Terrain.desert: 'white',
         PortType.wood: '#12782D',
         PortType.brick: '#D14728',
         PortType.wheat: '#F7FF08',

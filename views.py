@@ -470,6 +470,7 @@ class BoardFrame(tkinter.Frame):
             return
         # logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))
         color = 'red' if number.value in (6, 8) else 'black'
+        self._board_canvas.create_oval(tkinterutils.circle_bbox(15, (x, y)), fill='white', tags=self._tile_tag(tile))
         self._board_canvas.create_text(x, y, text=str(number.value), font=self._hex_font, fill=color, tags=self._tile_tag(tile))
 
     def _hex_points(self, radius, offset, rotate):

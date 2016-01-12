@@ -2,8 +2,8 @@
 module tkinterutils provides methods useful in tkinter graphics programming
 
 Currently, it provides
-- polygon rotation methods
-- OptionMenu refresh-ability
+- polygon methods: rotation, point generation
+- tkinter.OptionMenu option update
 """
 import math
 import tkinter
@@ -64,6 +64,35 @@ def rotate_point(angle, point, origin):
     cosT = math.cos(math.radians(angle))
     return (origin[0] + (cosT * (point[0] - origin[0]) - sinT * (point[1] - origin[1])),
             origin[1] + (sinT * (point[0] - origin[0]) + cosT * (point[1] - origin[1])))
+
+
+def hexagon_points(radius, center, rotate):
+    """
+    Computes the (x,y) points of a hexagon with the given properties.
+    :param radius: radius of the hexagon
+    :param center: (x,y) pair, the center of the hexagon
+    :param rotate: degrees the hexagon is rotated. 0 -> flat top, 30 -> pointed top
+    :return:
+    """
+    center_x, center_y = center
+    points = []
+    for theta in (60 * n for n in range(6)):
+        x = (math.cos(math.radians(theta + rotate)) * radius) + center_x
+        y = (math.sin(math.radians(theta + rotate)) * radius) + center_y
+        points += [x, y]
+    return points
+
+
+def circle_bbox(radius, center):
+    """
+    Computes the bounding box (upper-left, bottom-right) of a circle
+    :param radius: radius of the circle
+    :param center: (x,y) 2-tuple
+    :return: list of 2 points representing the bounding box
+    """
+    x, y = center
+    return [[x-radius, y-radius],
+            [x+radius, y+radius]]
 
 
 def refresh_option_menu(option_menu, var, new_options):

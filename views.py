@@ -576,6 +576,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
         tkinter.Button(self, text="Reset Board", command=self.on_reset_board, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         tkinter.Button(self, text="Reset Pieces", command=self.on_reset_pieces, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         tkinter.Button(self, text="Move Robber", command=self.on_move_robber, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+        tkinter.Button(self, text="Rotate Ports", command=self.on_rotate_ports, anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
 
         tkinter.Label(self, text="---").pack(side=tkinter.TOP)
         btn_start_game = tkinter.Button(self, text='Start Game', command=self.on_start_game)
@@ -593,6 +594,9 @@ class SetupGameToolbarFrame(tkinter.Frame):
 
     def on_move_robber(self):
         self.game.set_state(states.GameStateNotInGameMoveRobber(self.game))
+
+    def on_rotate_ports(self):
+        self.game.board.rotate_ports()
 
     def on_start_game(self):
         def get_name(var):

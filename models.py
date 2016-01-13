@@ -767,3 +767,13 @@ class Board(object):
         else:
             logging.debug('Attempted to cycle port on coord=({},{}) on a locked board'.format(tile_id, direction))
         self.notify_observers()
+
+    def rotate_ports(self):
+        """
+        Rotates the ports 90 degrees. Useful when using the default port setup but the spectator is watching
+        at a "rotated" angle from "true north".
+        """
+        for port in self.ports:
+            port.tile_id = ((port.tile_id + 1) % len(hexgrid.coastal_tile_ids())) + 1
+            port.direction = hexgrid.rotate_direction(hexgrid.EDGE, port.direction, ccw=True)
+        self.notify_observers()

@@ -63,6 +63,7 @@ _tile_edge_offsets = {
     +0x01: 'NE',
 }
 
+
 def location(hexgrid_type, coord):
     """
     Returns a formatted string representing the coordinate. The format depends on the
@@ -354,6 +355,7 @@ def nodes_touching_edge(edge_coord):
         return [coord_from_hex_digits(a, b),
                 coord_from_hex_digits(a + 1, b + 1)]
 
+
 def legal_edge_coords():
     """
     Return all legal edge coordinates on the grid.
@@ -391,6 +393,7 @@ def legal_tile_coords():
     """
     return set(_tile_id_to_coord.values())
 
+
 def hex_digit(coord, digit=1):
     """
     Returns either the first or second digit of the hexadecimal representation of the given coordinate.
@@ -403,6 +406,7 @@ def hex_digit(coord, digit=1):
             digit
         ))
     return int(hex(coord)[1+digit], 16)
+
 
 def coord_from_hex_digits(digit_1, digit_2):
     """
@@ -418,3 +422,22 @@ def coord_from_hex_digits(digit_1, digit_2):
     :return: hexadecimal coordinate, int
     """
     return digit_1*16 + digit_2
+
+
+def rotate_direction(hexgrid_type, direction, ccw=True):
+    """
+    Takes a direction string associated with a type of hexgrid element, and rotates it one tick in the given direction.
+    :param direction: string, eg 'NW', 'N', 'SE'
+    :param ccw: if True, rotates counter clockwise. Otherwise, rotates clockwise.
+    :return: the rotated direction string, eg 'SW', 'NW', 'S'
+    """
+    if hexgrid_type in [TILE, EDGE]:
+        directions = ['NW', 'W', 'SW', 'SE', 'E', 'NE', 'NW'] if ccw \
+                else ['NW', 'NE', 'E', 'SE', 'SW', 'W', 'NW']
+        return directions[directions.index(direction) + 1]
+    elif hexgrid_type in [NODE]:
+        directions = ['N', 'NW', 'SW', 'S', 'SE', 'NE', 'N'] if ccw \
+            else ['N', 'NE', 'SE', 'S', 'SW', 'NW', 'N']
+        return directions[directions.index(direction) + 1]
+    else:
+        raise ValueError('Invalid hexgrid type={} passed to rotate direction'.format(hexgrid_type))

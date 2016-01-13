@@ -82,6 +82,8 @@ class Game(object):
                 setattr(result, k, set(v))
             elif k == 'state':
                 setattr(result, k, v)
+            elif k == 'undo_manager':
+                setattr(result, k, v)
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
         return result

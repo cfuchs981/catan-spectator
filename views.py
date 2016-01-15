@@ -34,7 +34,7 @@ class LogFrame(tkinter.Frame):
         self.game.observers.add(self)
 
         self.log = tkinter.Text(self, width=85, height=LOG_MIN_HEIGHT, state=tkinter.NORMAL)
-        self.log.insert(tkinter.END, '{} {}'.format(catanlog.name(), catanlog.version()))
+        self.log.insert(tkinter.END, '{} {}'.format(catanlog.__name__, catanlog.__version__))
         self.log.see(tkinter.END)
         self.log.pack(expand=tkinter.YES, fill=tkinter.BOTH)
 

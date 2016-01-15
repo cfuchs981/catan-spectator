@@ -5,6 +5,8 @@ Transcribe games of Settlers of Catan for research purposes, replay purposes, br
 
 The UI is feature-complete, and can be used to log games.
 
+Packages written for this project: [`catanlog`](https://github.com/rosshamish/catanlog), [`hexgrid`](https://github.com/rosshamish/hexgrid), [`undoredo`](https://github.com/rosshamish/undoredo).
+
 Todos are listed below.
 
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
@@ -47,7 +49,7 @@ Make targets:
 
 ### File Format
 
-catan-spectator writes game logs in the `.catan` format described by module `catanlog` (https://github.com/rosshamish/catanlog).
+catan-spectator writes game logs in the `.catan` format described by package [`catanlog`](https://github.com/rosshamish/catanlog).
 
 ### Todo
 
@@ -78,8 +80,6 @@ Nice to have
 ### Attribution
 
 Codebase originally forked from [fruitnuke/catan](https://github.com/fruitnuke/catan), a catan board generator
-
-Hexagonal grid system based off of [jdmonin/JSettlers2](https://github.com/jdmonin/JSettlers2), a catan implementation used for research
 
 ### License
 

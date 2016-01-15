@@ -9,6 +9,14 @@ Todos are listed below.
 
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 
+### Installation
+
+```
+$ git clone https://github.com/rosshamish/catan-spectator
+$ cd catan-spectator
+$ pip install -r requirements.txt
+```
+
 ### Usage
 
 ```

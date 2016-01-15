@@ -11,7 +11,7 @@ class UndoManager(object):
 
     Usage:
         undo_manager = UndoManager()
-        undo_manager.do(CmdXYZ(params...))
+        undo_manager.do(Command(params...))
         undo_manager.undo()
     """
     def __init__(self):
@@ -47,38 +47,63 @@ class UndoManager(object):
         logging.debug('{}.redo() called, redo stack now={}'.format(type(command), self._redo_stack))
 
 
-
 class Command(object):
     """
-    class Command describes an interface which all commands must implement.
-
-    Commands must be doable and undoable. The actual method of do/undo is left
-    up to the implementing class.
+    A Command wraps a method call in an object which can do() and undo(). It's used with UndoManager.
     """
-    def __init__(self, game, do_method, *args):
-        self.game = game
+    def __init__(self, obj, do_method, *args):
+        """
+        Create a Command by passing an object, a method to call on the object, and a variable number
+        of arguments to pass to the method.
+
+        The object must support methods .copy() and .restore(obj).
+        - copy() returns a copy of the object
+        - restore(obj) restores the calling object to the state of the passed object
+
+        These methods allow undo to work properly.
+
+        :param obj: object to call the method on
+        :param do_method: method to call
+        :param args: arguments to pass to the method
+        :return: Command object representing the method call
+        """
+        assert(hasattr(obj, 'copy'))
+        assert(hasattr(obj, 'restore'))
+        self.obj = obj
         self.do_method = do_method
         self.args = list(args)
 
         self.restore_point = None
 
     def do(self):
-        self.restore_point = self.game.copy()
-        self.do_method(self.game, *self.args)
+        """
+        Set a restore point (copy the object), then call the method.
+        :return: obj.do_method(*args)
+        """
+        self.restore_point = self.obj.copy()
+        return self.do_method(self.obj, *self.args)
 
     def undo(self):
-        self.game.restore(self.restore_point)
+        """
+        Restore the object to the restore point created during do()
+        :return: obj.restore(restore_point)
+        """
+        return self.obj.restore(self.restore_point)
 
 
 def undoable(method):
     """
-    decorator undoable allows a Game method to be undone.
+    Decorator undoable allows an instance method to be undone.
 
-    It does this by wrapping the method call as a Command, then game.do()ing
-    the command.
+    It does this by wrapping the method call as a Command, then calling self.do() on the command.
+
+    Classes which use this decorator should implement a do() method like such:
+
+        def do(command):
+            return self.undo_manager.do(command)
     """
     def undoable_method(self, *args):
-        self.do(Command(self, method, *args))
+        return self.do(Command(self, method, *args))
     return undoable_method
 
 

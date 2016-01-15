@@ -1,0 +1,4 @@
+catanlog
+hexgrid
+undoredo
+Pillow==3.1.0

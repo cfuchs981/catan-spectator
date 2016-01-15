@@ -1,5 +1,51 @@
 """
-module undo provides class definitions useful for undo/redo functionality in catan.
+module undo provides undo/redo functionality for arbitrary classes.
+
+Any class can gain undo/redo functionality by doing the following:
+- keep around an instance of UndoManager
+- annotate undoable methods with the @undoable decorator
+- implement do(), undo(), and redo() methods as shown in the following example
+- implement copy(), and restore(obj) methods
+    - copy() returns a copy of the object (probably a deep copy)
+    - restore(obj) restores the calling object to the state of the passed object
+
+e.g.
+    import undoredo
+
+    class Counter(object):
+        def __init__(self, value=0):
+            self.undo_mgr = undoredo.UndoManager()
+            self.value = value
+
+        @undoredo.undoable
+        def increment(self):
+            self.value += 1
+
+        @undoredo.undoable
+        def decrement(self):
+            self.value -= 1
+
+        def do(self, command):
+            return self.undo_mgr.do(command)
+
+        def undo(self):
+            return self.undo_mgr.undo()
+
+        def redo(self):
+            return self.undo_mgr.redo()
+
+        def copy(self):
+            return Counter(self.value)
+
+        def restore(self, counter):
+            self.value = counter.value
+
+    c = Counter(0)  -> 0
+    c.increment()   -> 1
+    c.increment()   -> 2
+    c.undo()        -> 1
+    c.redo()        -> 2
+
 """
 import logging
 
@@ -10,9 +56,12 @@ class UndoManager(object):
     implementing undo/redo functionality.
 
     Usage:
-        undo_manager = UndoManager()
-        undo_manager.do(Command(params...))
-        undo_manager.undo()
+        undo_mgr = UndoManager()
+        undo_mgr.do(Command(params...))
+        if undo_mgr.can_undo():
+            undo_mgr.undo()
+        if undo_mgr.can_redo():
+            undo_mgr.redo()
     """
     def __init__(self):
         self._undo_stack = list()
@@ -21,8 +70,9 @@ class UndoManager(object):
     def do(self, command):
         self._redo_stack.clear()
         self._undo_stack.append(command)
-        command.do()
+        result = command.do()
         logging.debug('{}.do() called, stack now={}'.format(type(command), self._undo_stack))
+        return result
 
     def can_undo(self):
         return len(self._undo_stack) > 0
@@ -35,16 +85,18 @@ class UndoManager(object):
             raise Exception('Cannot perform undo, undo stack is empty')
         command = self._undo_stack.pop()
         self._redo_stack.append(command)
-        command.undo()
+        result = command.undo()
         logging.debug('{}.undo() called, undo stack now={}'.format(type(command), self._undo_stack))
+        return result
 
     def redo(self):
         if len(self._redo_stack) < 1:
             raise Exception('Cannot perform redo, redo stack is empty')
         command = self._redo_stack.pop()
         self._undo_stack.append(command)
-        command.do()
+        result = command.do()
         logging.debug('{}.redo() called, redo stack now={}'.format(type(command), self._redo_stack))
+        return result
 
 
 class Command(object):
@@ -99,7 +151,7 @@ def undoable(method):
 
     Classes which use this decorator should implement a do() method like such:
 
-        def do(command):
+        def do(self, command):
             return self.undo_manager.do(command)
     """
     def undoable_method(self, *args):

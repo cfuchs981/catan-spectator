@@ -57,6 +57,8 @@ Need to have
 - [ ] views documented
 - [x] piece placing should be cancellable (via undo)
 - [x] all actions should be undoable
+- [ ] ui+catanlog: save log file to custom location on End Game
+- [ ] ui: city-shaped polygon for cities
 
 Nice to have
 - [ ] board: random number setup obeys red number rule
@@ -67,9 +69,7 @@ Nice to have
 - [ ] ui+port: port trading, don’t allow n for 0 trades
 - [ ] ui: large indicator off what the current player is (and what the order is)
 - [x] ui: cancelling of roads/settlements/cities while placing
-- [ ] ui+catanlog: save log file to custom location on End Game
 - [ ] ui: images, colors in UI buttons (eg dice for roll, )
-- [ ] ui: city-shaped polygon for cities
 - [attempted, might be worse] ui: tile images instead of colored hexagons
 - [ ] ui: port images instead of colored triangles
 - [ ] ui: piece images instead of colored polygons

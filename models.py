@@ -172,6 +172,7 @@ class Game(object):
         self.dev_card_state = dev_state
         self.notify_observers()
 
+    @undoredo.undoable
     def start(self, players):
         """
         Start the game.

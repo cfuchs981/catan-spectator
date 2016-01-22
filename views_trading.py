@@ -1,9 +1,8 @@
 import functools
 import logging
 import tkinter as tk
-from models import PortType
-import models
-from trading import CatanTrade
+from catan.board import PortType, Terrain
+from catan.trading import CatanTrade
 
 can_do = {
     True: tk.NORMAL,
@@ -161,7 +160,7 @@ class WithWhichPortFrame(tk.Frame):
         # any in topleft (functions as both 3:1 and 4:1), others have text=terrain.value
         self.port_btns = list()
         count = 0
-        for p_type in models.PortType:
+        for p_type in PortType:
             b = tk.Button(self, text='{}'.format(p_type.value), state=tk.DISABLED,
                           command=functools.partial(self.on_port, p_type))
             b.grid(row=count // 4, column=count % 4, sticky=tk.NSEW)
@@ -175,7 +174,7 @@ class WithWhichPortFrame(tk.Frame):
 
     def set_states(self):
         can_trade = self.master.game.state.can_trade()
-        for btn, port_type in zip(self.port_btns, models.PortType):
+        for btn, port_type in zip(self.port_btns, PortType):
             if port_type == PortType.any4:
                 btn.configure(state=can_do[can_trade])
             else:
@@ -226,7 +225,7 @@ class WhichResourcesInputFrame(tk.Frame):
 
         self.give_btns = list()
         self.get_btns = list()
-        for t in filter(lambda t: t != models.Terrain.desert, models.Terrain):
+        for t in filter(lambda t: t != Terrain.desert, Terrain):
             self.give_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_give, t)))
             self.get_btns.append(tk.Button(self, text=t.value, command=functools.partial(self.on_get, t)))
 

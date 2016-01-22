@@ -2,9 +2,10 @@ import tkinter
 import pprint
 import logging
 import argparse
+from catan.board import Board
+from catan.game import Game
 
 import views
-import models
 
 
 class CatanSpectator(tkinter.Frame):
@@ -12,12 +13,12 @@ class CatanSpectator(tkinter.Frame):
     def __init__(self, options=None, *args, **kwargs):
         super(CatanSpectator, self).__init__()
         self.options = options or dict()
-        board = models.Board(terrain=self.options.get('terrain'),
-                             numbers=self.options.get('numbers'),
-                             ports=self.options.get('ports'),
-                             pieces=self.options.get('pieces'),
-                             players=self.options.get('players'))
-        self.game = models.Game(board=board, pregame=self.options.get('pregame'))
+        board = Board(terrain=self.options.get('terrain'),
+                      numbers=self.options.get('numbers'),
+                      ports=self.options.get('ports'),
+                      pieces=self.options.get('pieces'),
+                      players=self.options.get('players'))
+        self.game = Game(board=board, pregame=self.options.get('pregame'))
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 

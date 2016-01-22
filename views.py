@@ -6,9 +6,10 @@ import collections
 import functools
 import catanlog
 import hexgrid
-
-from models import Terrain, PortType, Player, HexNumber, Piece, PieceType
-import states
+from catan import states
+from catan.board import PortType, HexNumber, Terrain
+from catan.game import Player
+from catan.pieces import PieceType, Piece
 import tkinterutils
 import views_trading
 
@@ -52,8 +53,8 @@ class LogFrame(tkinter.Frame):
         logging.debug('Redrew latest={} lines of game log'.format(len(logs.split('\n'))))
         self.log.see(tkinter.END) # scroll to end
 
-class BoardFrame(tkinter.Frame):
 
+class BoardFrame(tkinter.Frame):
     def __init__(self, master, game, *args, **kwargs):
         super(BoardFrame, self).__init__()
         self.master = master
@@ -178,7 +179,7 @@ class BoardFrame(tkinter.Frame):
 
         return dict(centers)
 
-    def _draw_tile(self, x, y, terrain: Terrain, tile):
+    def _draw_tile(self, x, y, terrain, tile):
         self._draw_hexagon(self._tile_radius, offset=(x, y), fill=self._colors[terrain], tags=self._tile_tag(tile))
 
     def _draw_hexagon(self, radius, offset=(0, 0), rotate=30, fill='black', tags=None):
@@ -465,7 +466,7 @@ class BoardFrame(tkinter.Frame):
     def _fixup_port_centers(self, port_centers):
         return [(x, y, angle + 180) for x, y, angle in port_centers]
 
-    def _draw_number(self, x, y, number: HexNumber, tile):
+    def _draw_number(self, x, y, number, tile):
         if number is HexNumber.none:
             return
         # logging.debug('Drawing number={}, HexNumber={}'.format(number.value, number))

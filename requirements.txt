@@ -1,3 +1,4 @@
+catan
 catanlog
 hexgrid
 undoredo

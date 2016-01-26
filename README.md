@@ -49,7 +49,18 @@ Make targets:
 
 ### File Format
 
+<!-- remember to update this section in sync with "File Format" in github.com/rosshamish/catan-py/README.md -->
+
 catan-spectator writes game logs in the `.catan` format described by package [`catanlog`](https://github.com/rosshamish/catanlog).
+
+They look like this:
+
+```
+green rolls 6
+blue buys settlement, builds at (1 NW)
+orange buys city, builds at (1 SE)
+red plays dev card: monopoly on ore
+```
 
 ### Todo
 

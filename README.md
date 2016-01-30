@@ -70,6 +70,7 @@ Need to have
 - [x] all actions should be undoable
 - [ ] ui+catanlog: save log file to custom location on End Game
 - [ ] ui: city-shaped polygon for cities
+- [ ] ui/ux improvements
 
 Nice to have
 - [ ] board: random number setup obeys red number rule

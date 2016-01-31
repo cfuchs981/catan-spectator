@@ -52,6 +52,7 @@ class CatanSpectator(tkinter.Frame):
     def setup_options(self):
         return self._setup_game_toolbar_frame.options.copy()
 
+
 def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s',
                         datefmt='%H:%M:%S',

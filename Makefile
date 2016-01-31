@@ -4,8 +4,9 @@ SHELL := /bin/bash
 OPTS_DEBUG=--terrain debug --numbers debug --ports preset --pieces debug --players debug
 OPTS_DEBUG_NO_PREGAME=$(OPTS_DEBUG) --pregame off
 OPTS_PROD=--terrain empty --numbers empty --ports preset --pieces preset --players preset
+OPTS_DEMO=--terrain random --numbers random --ports preset --pieces preset --players preset
 
-OPTS=$(OPTS_DEBUG_NO_PREGAME)
+OPTS=$(OPTS_DEMO)
 
 all: relaunch
 

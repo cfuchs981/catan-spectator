@@ -561,16 +561,10 @@ class SetupGameToolbarFrame(tkinter.Frame):
             'hex_number_selection': False
         })
 
+        tkinter.Label(self, text="Players", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
+
         self.start_game_player_order = StartGamePlayerOrderFrame(self, game)
         self.start_game_player_order.pack()
-
-        tkinter.Label(self, text="Players", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
-        defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
-        self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
-        for (entry, var), default in zip(self.player_entries_vars, defaults):
-            var.set(default)
-            entry.config(textvariable=var)
-            entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
 
         tkinter.Label(self, text="Board", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         for option in TkinterOptionWrapper(self.options):
@@ -609,20 +603,35 @@ class SetupGameToolbarFrame(tkinter.Frame):
         def get_color(var):
             return var.get().split(' ')[1]
 
-        self.game.start([Player(i, get_name(var), get_color(var))
-                         for i, (_, var) in enumerate(self.player_entries_vars, 1)])
+        players=list()
+        for (spinner, var),(entry,evar) in zip (self.start_game_player_order.player_order_vars,self.start_game_player_order.player_entries_vars):
+            P=Player(int(var.get()),get_name(evar), get_color(evar ))
+            players.append(P)
 
+        players.sort(key=lambda p: p.seat)
+
+        self.game.start(players)
 
 class StartGamePlayerOrderFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
-        super(StartGamePlayerOrderFrame, self).__init__()
+        super(StartGamePlayerOrderFrame, self).__init__(master)
         self.master = master
         self.game = game
 
-        self.game.observers.add(self)
+        defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
+        self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
+        for (entry, var), default in zip(self.player_entries_vars, defaults):
+            var.set(default)
+            entry.config(textvariable=var)
+            entry.grid(row=defaults.index(default), column=1)
 
-        tkinter.Button(self, text="A Button").pack()
+        values = ['1','2','3','4']
+        self.player_order_vars = [(tkinter.Spinbox(self, values=values), tkinter.StringVar()) for i in range(len(values))]
+        for (entry, var),val in zip(self.player_order_vars, values):
+            var.set(val)
+            entry.config(textvariable=var)
+            entry.grid(row=int(val)-1, column=2)
 
 
 class GameToolbarFrame(tkinter.Frame):

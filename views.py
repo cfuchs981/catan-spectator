@@ -569,6 +569,7 @@ class SetupGameToolbarFrame(tkinter.Frame):
             entry.config(textvariable=var)
             entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
 
+
         tkinter.Label(self, text="Board", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         for option in TkinterOptionWrapper(self.options):
             option.callback()
@@ -728,7 +729,24 @@ class RollFrame(tkinter.Frame):
         self.twelve = tkinter.Button (self.largenumbers, command=lambda:self.on_roll(12), text='12')
         self.twelve.grid (row=2, column=2)
 
+        self.bind_all('2', self.roll_event_HO(2))
+        self.bind_all('3', self.roll_event_HO(3))
+        self.bind_all('4', self.roll_event_HO(4))
+        self.bind_all('5', self.roll_event_HO(5))
+        self.bind_all('6', self.roll_event_HO(6))
+        self.bind_all('7', self.roll_event_HO(7))
+        self.bind_all('8', self.roll_event_HO(8))
+        self.bind_all('9', self.roll_event_HO(9))
+        self.bind_all('0', self.roll_event_HO(10))
+        self.bind_all('-', self.roll_event_HO(11))
+        self.bind_all('=', self.roll_event_HO(12))
+
         self.set_states()
+
+    def roll_event_HO(self, roll):
+        def roll_event(event):
+            self.on_roll(roll)
+        return roll_event
 
     def notify(self, observable):
         self.set_states()

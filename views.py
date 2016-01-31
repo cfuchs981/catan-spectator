@@ -610,7 +610,6 @@ class SetupGameToolbarFrame(tkinter.Frame):
                          for i, (_, var) in enumerate(self.player_entries_vars, 1)])
 
 
-
 class GameToolbarFrame(tkinter.Frame):
 
     def __init__(self, master, game, *args, **kwargs):
@@ -956,6 +955,8 @@ class EndTurnFrame(tkinter.Frame):
         self.label = tkinter.Label(self, text='--')
         self.end_turn = tkinter.Button(self, text='End Turn', state=tkinter.DISABLED, command=self.on_end_turn)
 
+        self.bind_all('<space>', self.on_end_turn)
+
         self.set_states()
 
         self.label.pack()
@@ -970,8 +971,9 @@ class EndTurnFrame(tkinter.Frame):
         else:
             self.end_turn.configure(state=tkinter.DISABLED)
 
-    def on_end_turn(self):
-        self.game.end_turn()
+    def on_end_turn(self, event):
+        if self.game.state.can_end_turn():
+            self.game.end_turn()
 
 
 class EndGameFrame(tkinter.Frame):

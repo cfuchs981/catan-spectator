@@ -771,7 +771,8 @@ class RollFrame(tkinter.Frame):
 
     def roll_event_HO(self, roll):
         def roll_event(event):
-            self.on_roll(roll)
+            if self.game.state.can_roll():
+                self.on_roll(roll)
         return roll_event
 
     def notify(self, observable):

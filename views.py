@@ -820,18 +820,18 @@ class BuildFrame(tkinter.Frame):
         self.game.observers.add(self)
 
         self.label = tkinter.Label(self, text="Build", anchor=tkinter.W)
-        self.road = tkinter.Button(self, text="Road", command=self.on_buy_road)
-        self.settlement = tkinter.Button(self, text="Settlement", command=self.on_buy_settlement)
-        self.city = tkinter.Button(self, text="City", command=self.on_buy_city)
-        self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_buy_dev_card)
+        self.road = tkinter.Button(self, text="Road", command=self.on_buy_road, anchor=tkinter.W)
+        self.settlement = tkinter.Button(self, text="Settlement", command=self.on_buy_settlement, anchor=tkinter.E)
+        self.city = tkinter.Button(self, text="City", command=self.on_buy_city, anchor=tkinter.W)
+        self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_buy_dev_card, anchor=tkinter.E)
 
         self.set_states()
 
-        self.label.pack(fill=tkinter.X)
-        self.road.pack(fill=tkinter.X, expand=True)
-        self.settlement.pack(fill=tkinter.X, expand=True)
-        self.city.pack(fill=tkinter.X, expand=True)
-        self.dev_card.pack(fill=tkinter.X, expand=True)
+        self.label.grid(row=1, column=1, sticky=tkinter.W)
+        self.road.grid(row=2, column=1, sticky=tkinter.EW)
+        self.settlement.grid(row=2, column=2, sticky=tkinter.EW)
+        self.city.grid(row=3, column=1, sticky=tkinter.EW)
+        self.dev_card.grid(row=3, column=2, sticky=tkinter.EW)
 
     def notify(self, observable):
         self.set_states()

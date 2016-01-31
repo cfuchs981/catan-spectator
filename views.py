@@ -699,6 +699,9 @@ class UndoRedoFrame(tkinter.Frame):
 
         self.set_states()
 
+        self.bind_all('<Left>', lambda e: self.on_undo())
+        self.bind_all('<Right>', lambda e: self.on_redo())
+
     def notify(self, observable):
         self.set_states()
 

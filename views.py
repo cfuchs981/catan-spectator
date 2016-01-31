@@ -698,24 +698,58 @@ class RollFrame(tkinter.Frame):
         self.game = game
         self.game.observers.add(self)
 
-        self.roll = tkinter.StringVar()
-        self.spinner = tkinter.Spinbox(self, values=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), textvariable=self.roll)
-        self.button = tkinter.Button(self, text="Roll", command=self.on_roll)
+        self.smallnumbers = tkinter.Frame (self)
+        self.smallnumbers.pack (side='left')
+        self.mediumnumbers = tkinter.Frame (self)
+        self.mediumnumbers.pack (side='left', fill=tkinter.Y)
+        self.largenumbers = tkinter.Frame (self,)
+        self.largenumbers.pack (side='left')
+
+        self.two = tkinter.Button (self.smallnumbers, command=lambda:self.on_roll(2), text= '2')
+        self.two.grid (row=1, column=1, sticky=tkinter.NSEW)
+        self.three = tkinter.Button (self.smallnumbers, command=lambda:self.on_roll(3), text= '3')
+        self.three.grid (row=1, column=2, sticky=tkinter.NSEW)
+        self.four = tkinter.Button (self.smallnumbers, command=lambda:self.on_roll(4), text= '4')
+        self.four.grid (row=2, column=1, sticky=tkinter.NSEW)
+        self.five = tkinter.Button (self.smallnumbers, command=lambda:self.on_roll(5), text= '5')
+        self.five.grid (row=2, column=2, sticky=tkinter.NSEW)
+
+        self.six = tkinter.Button (self.mediumnumbers, command=lambda:self.on_roll(6), text= '6')
+        self.six.pack (side='left', expand=True)
+        self.seven = tkinter.Button (self.mediumnumbers, command=lambda:self.on_roll(7), text= '7')
+        self.seven.pack (side='left', expand=True)
+        self.eight = tkinter.Button (self.mediumnumbers, command=lambda:self.on_roll(8), text= '8')
+        self.eight.pack (side='left', expand=True)
+        self.nine = tkinter.Button (self.largenumbers, command=lambda:self.on_roll(9), text= '9')
+        self.nine.grid (row=1, column =1)
+        self.ten = tkinter.Button (self.largenumbers, command=lambda:self.on_roll(10), text= '10')
+        self.ten.grid (row=1, column=2)
+        self.eleven = tkinter.Button (self.largenumbers, command=lambda:self.on_roll(11), text='11')
+        self.eleven.grid (row=2, column =1)
+        self.twelve = tkinter.Button (self.largenumbers, command=lambda:self.on_roll(12), text='12')
+        self.twelve.grid (row=2, column=2)
 
         self.set_states()
-
-        self.spinner.pack(side=tkinter.LEFT)
-        self.button.pack(side=tkinter.RIGHT)
 
     def notify(self, observable):
         self.set_states()
 
     def set_states(self):
-        self.spinner.configure(state=can_do[self.game.state.can_roll()])
-        self.button.configure(state=can_do[self.game.state.can_roll()])
+        self.two.configure(state=can_do[self.game.state.can_roll()])
+        self.three.configure(state=can_do[self.game.state.can_roll()])
+        self.four.configure(state=can_do[self.game.state.can_roll()])
+        self.five.configure(state=can_do[self.game.state.can_roll()])
+        self.six.configure(state=can_do[self.game.state.can_roll()])
+        self.seven.configure(state=can_do[self.game.state.can_roll()])
+        self.eight.configure(state=can_do[self.game.state.can_roll()])
+        self.nine.configure(state=can_do[self.game.state.can_roll()])
+        self.ten.configure(state=can_do[self.game.state.can_roll()])
+        self.eleven.configure(state=can_do[self.game.state.can_roll()])
+        self.twelve.configure(state=can_do[self.game.state.can_roll()])
 
-    def on_roll(self):
-        self.game.roll(self.roll.get())
+
+    def on_roll(self, roll):
+        self.game.roll(roll)
         self.set_states()
 
 

@@ -561,6 +561,9 @@ class SetupGameToolbarFrame(tkinter.Frame):
             'hex_number_selection': False
         })
 
+        self.start_game_player_order = StartGamePlayerOrderFrame(self, game)
+        self.start_game_player_order.pack()
+
         tkinter.Label(self, text="Players", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         defaults = ('yurick green', 'josh blue', 'zach orange', 'ross red')
         self.player_entries_vars = [(tkinter.Entry(self), tkinter.StringVar()) for i in range(len(defaults))]
@@ -568,7 +571,6 @@ class SetupGameToolbarFrame(tkinter.Frame):
             var.set(default)
             entry.config(textvariable=var)
             entry.pack(side=tkinter.TOP, fill=tkinter.BOTH)
-
 
         tkinter.Label(self, text="Board", anchor=tkinter.W).pack(side=tkinter.TOP, fill=tkinter.X)
         for option in TkinterOptionWrapper(self.options):
@@ -609,6 +611,18 @@ class SetupGameToolbarFrame(tkinter.Frame):
 
         self.game.start([Player(i, get_name(var), get_color(var))
                          for i, (_, var) in enumerate(self.player_entries_vars, 1)])
+
+
+class StartGamePlayerOrderFrame(tkinter.Frame):
+
+    def __init__(self, master, game, *args, **kwargs):
+        super(StartGamePlayerOrderFrame, self).__init__()
+        self.master = master
+        self.game = game
+
+        self.game.observers.add(self)
+
+        tkinter.Button(self, text="A Button").pack()
 
 
 class GameToolbarFrame(tkinter.Frame):

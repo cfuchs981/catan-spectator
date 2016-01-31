@@ -29,3 +29,10 @@ relaunch:
 	python3 main.py $(OPTS) &>log/buffer.log & echo $$! > log/running.pid
 	cat log/running.pid
 	tail -f -n 30 log/buffer.log
+
+demo:
+	@mkdir -p log
+	-mv log/buffer.log log/spectator-launch-`date +"%Y-%m-%d_%H-%M-%S"`.log
+	-cat log/running.pid | xargs kill
+	python3 main.py $(OPTS_DEMO) &>log/buffer.log & echo $$! > log/running.pid
+	cat log/running.pid

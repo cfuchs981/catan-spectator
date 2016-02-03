@@ -43,8 +43,6 @@ class LogFrame(tkinter.Frame):
         self.redraw()
 
     def redraw(self):
-        if len(self.game.catanlog.players) < 3:
-            return
         self.log.delete(1.0, tkinter.END)
         logs = self.game.catanlog.dump()
         self.log.configure(height=max(LOG_MIN_HEIGHT,min(LOG_MAX_HEIGHT,len(logs))))

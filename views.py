@@ -601,14 +601,16 @@ class SetupGameToolbarFrame(tkinter.Frame):
         def get_color(var):
             return var.get().split(' ')[1]
 
-        players=list()
-        for (spinner, var),(entry,evar) in zip (self.start_game_player_order.player_order_vars,self.start_game_player_order.player_entries_vars):
-            P=Player(int(var.get()),get_name(evar), get_color(evar ))
-            players.append(P)
+        players = list()
+        for (spinner, var), (entry, evar) in zip(self.start_game_player_order.player_order_vars,
+                                                 self.start_game_player_order.player_entries_vars):
+            p = Player(int(var.get()),get_name(evar), get_color(evar ))
+            players.append(p)
 
         players.sort(key=lambda p: p.seat)
 
         self.game.start(players)
+
 
 class StartGamePlayerOrderFrame(tkinter.Frame):
 

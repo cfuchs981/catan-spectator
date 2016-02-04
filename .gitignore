@@ -42,3 +42,4 @@ ignore
 log/running.pid
 log
 *.iml
+.eggs

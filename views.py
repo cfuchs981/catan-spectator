@@ -969,14 +969,15 @@ class PlayDevCardFrame(tkinter.Frame):
 
     def on_monopoly(self):
         logging.debug('play dev card: monopoly clicked, resource={}'.format(self.monopoly_choice.get()))
-        self.game.play_monopoly(self.monopoly_choice.get())
+        self.game.play_monopoly(Terrain(self.monopoly_choice.get()))
 
     def on_year_of_plenty(self):
         logging.debug('play dev card: year of plenty clicked, resources=({} and {})'.format(
             self.year_of_plenty_choice1.get(),
             self.year_of_plenty_choice2.get()
         ))
-        self.game.play_year_of_plenty(self.year_of_plenty_choice1.get(), self.year_of_plenty_choice2.get())
+        self.game.play_year_of_plenty(Terrain(self.year_of_plenty_choice1.get()),
+                                      Terrain(self.year_of_plenty_choice2.get()))
 
     def on_road_builder(self):
         logging.debug('play dev card: road builder clicked')

@@ -59,10 +59,10 @@ def main():
                         level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='log a game of catan')
-    parser.add_argument('--terrain', help='random|preset|empty|debug, default empty')
-    parser.add_argument('--numbers', help='random|preset|empty|debug, default empty')
+    parser.add_argument('--terrain', help='random|preset|empty|debug, default random')
+    parser.add_argument('--numbers', help='random|preset|empty|debug, default preset')
     parser.add_argument('--ports', help='random|preset|empty|debug, default preset')
-    parser.add_argument('--pieces', help='random|preset|empty|debug, default empty')
+    parser.add_argument('--pieces', help='random|preset|empty|debug, default preset')
     parser.add_argument('--players', help='random|preset|empty|debug, default preset')
     parser.add_argument('--pregame', help='on|off, default on')
 

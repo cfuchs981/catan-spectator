@@ -1,7 +1,7 @@
 import functools
 import logging
 import tkinter as tk
-from catan.board import PortType, Terrain
+from catan.board import PortType, Terrain, Port
 from catan.trading import CatanTrade
 
 can_do = {
@@ -182,7 +182,7 @@ class WithWhichPortFrame(tk.Frame):
 
     def on_port(self, port_type):
         logging.debug('trade: port_type={} selected'.format(port_type))
-        self.master.trade.set_getter(port_type)
+        self.master.trade.set_getter(Port(1, 'OO', port_type))
         self.master.set_frame(WhichResourcesFrame(self.master))
 
     def can_make_trade(self):
@@ -245,34 +245,24 @@ class WhichResourcesInputFrame(tk.Frame):
 
     def set_states(self):
         getter = self.trade().getter()
-        num_giving = self.trade().num_giving()
-        getting_types = [getting_type.value for _, getting_type in self.trade().getting()]
-        for btn in self.give_btns:
-            if getter == PortType.any4:
-                btn.configure(state=can_do[num_giving < 4])
-            elif getter == PortType.any3:
-                btn.configure(state=can_do[num_giving < 3])
-            elif getter in PortType:
-                btn.configure(state=can_do[num_giving < 2 and btn['text'] == getter.value])
-
         num_getting = self.trade().num_getting()
         giving_types = [giving_type.value for _, giving_type in self.trade().giving()]
         for btn in self.get_btns:
-            if getter in PortType:
+            if hasattr(getter, 'type') in PortType:
                 btn.configure(state=can_do[num_getting < 1
-                                           and btn['text'] != getter.value
+                                           and btn['text'] != getter.type.value
                                            and btn['text'] not in giving_types])
 
     def on_give(self, terrain):
         getter = self.trade().getter()
-        if getter == PortType.any4:
-            num = 4
-        elif getter == PortType.any3:
-            num = 3
-        elif getter in PortType:
-            num = 2
-        else:
-            num = 1
+        num = 1
+        if hasattr(getter, 'type'):
+            if getter.type == PortType.any4:
+                num = 4
+            elif getter.type == PortType.any3:
+                num = 3
+            elif getter.type in PortType:
+                num = 2
         self.trade().give(terrain, num=num)
         self.master.notify()
 

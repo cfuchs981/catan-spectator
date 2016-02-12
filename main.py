@@ -13,7 +13,8 @@ class CatanSpectator(tkinter.Frame):
     def __init__(self, options=None, *args, **kwargs):
         super(CatanSpectator, self).__init__()
         self.options = options or dict()
-        board = Board(terrain=self.options.get('terrain'),
+        board = Board(board=self.options.get('board'),
+                      terrain=self.options.get('terrain'),
                       numbers=self.options.get('numbers'),
                       ports=self.options.get('ports'),
                       pieces=self.options.get('pieces'),
@@ -59,6 +60,7 @@ def main():
                         level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='log a game of catan')
+    parser.add_argument('--board', help="'eg w w h b s o w w b ... 2 None 9 3 4 6 ...'")
     parser.add_argument('--terrain', help='random|preset|empty|debug, default random')
     parser.add_argument('--numbers', help='random|preset|empty|debug, default preset')
     parser.add_argument('--ports', help='random|preset|empty|debug, default preset')
@@ -68,6 +70,7 @@ def main():
 
     args = parser.parse_args()
     options = {
+        'board': args.board,
         'terrain': args.terrain,
         'numbers': args.numbers,
         'ports': args.ports,

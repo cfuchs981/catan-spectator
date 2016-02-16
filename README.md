@@ -47,6 +47,30 @@ Make targets:
 ### Demo
 ![Demo](/doc/gifs/demo4.gif)
 
+### Hotkeys
+
+| Key | Action |
+| ---| ------ |
+| 2 | roll 2 |
+| 3 | roll 3 |
+| 4 | roll 4 |
+| 5 | roll 5 |
+| 6 | roll 6 |
+| 7 | roll 7 |
+| 8 | roll 8 |
+| 9 | roll 9 |
+| 0 | roll 10 |
+| - | roll 11 |
+| = | roll 12 |
+| r | buy road |
+| s | buy settlement |
+| c | buy city |
+| d | buy dev card |
+| k | play knight |
+| left arrow | undo |
+| right arrow | redo |
+| space bar | end turn |
+
 ### File Format
 
 <!-- remember to update this section in sync with "File Format" in github.com/rosshamish/catan-py/README.md -->

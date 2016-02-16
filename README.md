@@ -83,7 +83,7 @@ They look like this:
 green rolls 6
 blue buys settlement, builds at (1 NW)
 orange buys city, builds at (1 SE)
-red plays dev card: monopoly on ore
+red plays monopoly on ore
 ```
 
 ### Todo
@@ -110,7 +110,6 @@ Nice to have
 - [ ] ui: port images instead of colored triangles
 - [ ] ui: piece images instead of colored polygons
 - [x] ui: number images instead of text (or avoid contrast issues otherwise)
-- [ ] ui: roll frame: up on 12 goes to 2
 - [ ] ui+game+states+robber: steal dropdown has “nil” option always, for in case it goes on a person with no cards and no steal happens. Name it something obvious, don’t use an empty string.
 
 ### Attribution

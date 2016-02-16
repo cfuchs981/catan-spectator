@@ -60,7 +60,8 @@ def main():
                         level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='log a game of catan')
-    parser.add_argument('--board', help="'eg w w h b s o w w b ... 2 None 9 3 4 6 ...'")
+    parser.add_argument('--board', help="""string with space-separated short-codes for terrain and numbers,
+                                           e.g. 'w w h b s o w w b ... 2 None 9 3 4 6 ...'""")
     parser.add_argument('--terrain', help='random|preset|empty|debug, default random')
     parser.add_argument('--numbers', help='random|preset|empty|debug, default preset')
     parser.add_argument('--ports', help='random|preset|empty|debug, default preset')

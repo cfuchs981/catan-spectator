@@ -16,24 +16,27 @@ Todos are listed below.
 ```
 $ git clone https://github.com/rosshamish/catan-spectator
 $ cd catan-spectator
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 ### Usage
 
 ```
 $ python3 main.py --help
-usage: main.py [-h] [--terrain TERRAIN] [--numbers NUMBERS] [--ports PORTS]
-               [--pieces PIECES] [--players PLAYERS] [--pregame PREGAME]
+usage: main.py [-h] [--board BOARD] [--terrain TERRAIN] [--numbers NUMBERS]
+               [--ports PORTS] [--pieces PIECES] [--players PLAYERS]
+               [--pregame PREGAME]
 
 log a game of catan
 
 optional arguments:
   -h, --help         show this help message and exit
-  --terrain TERRAIN  random|preset|empty|debug, default empty
-  --numbers NUMBERS  random|preset|empty|debug, default empty
+  --board BOARD      string with space-separated short-codes for terrain and
+                     numbers, e.g. 'w w h b s o w w b ... 2 None 9 3 4 6 ...'
+  --terrain TERRAIN  random|preset|empty|debug, default random
+  --numbers NUMBERS  random|preset|empty|debug, default preset
   --ports PORTS      random|preset|empty|debug, default preset
-  --pieces PIECES    random|preset|empty|debug, default empty
+  --pieces PIECES    random|preset|empty|debug, default preset
   --players PLAYERS  random|preset|empty|debug, default preset
   --pregame PREGAME  on|off, default on
 ```

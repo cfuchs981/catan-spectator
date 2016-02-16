@@ -869,6 +869,11 @@ class BuildFrame(tkinter.Frame):
         self.city = tkinter.Button(self, text="City", command=self.on_buy_city, anchor=tkinter.W)
         self.dev_card = tkinter.Button(self, text="Dev Card", command=self.on_buy_dev_card, anchor=tkinter.E)
 
+        self.bind_all('r', lambda e: self.on_buy_road())
+        self.bind_all('s', lambda e: self.on_buy_settlement())
+        self.bind_all('c', lambda e: self.on_buy_city())
+        self.bind_all('d', lambda e: self.on_buy_dev_card())
+
         self.set_states()
 
         self.label.grid(row=1, column=1, sticky=tkinter.W)
@@ -914,6 +919,8 @@ class PlayDevCardFrame(tkinter.Frame):
         self.knight = tkinter.Button(self, text="Knight", command=self.on_knight)
         self.road_builder = tkinter.Button(self, text="Road Builder", command=self.on_road_builder)
         self.victory_point = tkinter.Button(self, text="Victory Point", command=self.on_victory_point)
+
+        self.bind_all('k', lambda e: self.on_knight())
 
         self.monopoly_frame = tkinter.Frame(self)
         self.monopoly = tkinter.Button(self.monopoly_frame, text="Monopoly", command=self.on_monopoly)

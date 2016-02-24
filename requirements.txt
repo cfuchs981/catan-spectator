@@ -1,5 +1,4 @@
-catan
-catanlog
-hexgrid
-undoredo
-Pillow==3.1.0
+catan ~= 0.4
+catanlog ~= 0.10
+hexgrid ~= 0.2
+undoredo ~= 0.1

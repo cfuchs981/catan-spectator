@@ -5,7 +5,11 @@ Transcribe games of Settlers of Catan for research purposes, replay purposes, br
 
 The UI is feature-complete, and can be used to log games.
 
-Packages written for this project: [`catan`](https://github.com/rosshamish/catan-py), [`catanlog`](https://github.com/rosshamish/catanlog), [`hexgrid`](https://github.com/rosshamish/hexgrid), [`undoredo`](https://github.com/rosshamish/undoredo).
+Related packages:
+* [`catan`](https://github.com/rosshamish/catan-py)
+* [`catanlog`](https://github.com/rosshamish/catanlog)
+* [`hexgrid`](https://github.com/rosshamish/hexgrid)
+* [`undoredo`](https://github.com/rosshamish/undoredo)
 
 Todos are listed below.
 

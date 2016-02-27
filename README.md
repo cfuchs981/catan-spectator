@@ -15,44 +15,48 @@ Todos are listed below.
 
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 
+### Demo
+![Demo](/doc/gifs/demo4.gif)
+
 ### Installation
 
+If you don't have brew, go to http://brew.sh and install it.
+
+If you don't have python3, do `$ brew install python3`
+
 ```
-$ git clone https://github.com/rosshamish/catan-spectator
-$ cd catan-spectator
-$ pip3 install -r requirements.txt
+$ pip3 install catan-spectator
 ```
 
 ### Usage
 
+Basic usage:
 ```
-$ python3 main.py --help
-usage: main.py [-h] [--board BOARD] [--terrain TERRAIN] [--numbers NUMBERS]
-               [--ports PORTS] [--pieces PIECES] [--players PLAYERS]
-               [--pregame PREGAME]
-
-log a game of catan
-
-optional arguments:
-  -h, --help         show this help message and exit
-  --board BOARD      string with space-separated short-codes for terrain and
-                     numbers, e.g. 'w w h b s o w w b ... 2 None 9 3 4 6 ...'
-  --terrain TERRAIN  random|preset|empty|debug, default random
-  --numbers NUMBERS  random|preset|empty|debug, default preset
-  --ports PORTS      random|preset|empty|debug, default preset
-  --pieces PIECES    random|preset|empty|debug, default preset
-  --players PLAYERS  random|preset|empty|debug, default preset
-  --pregame PREGAME  on|off, default on
+$ catan-spectator
 ```
 
-Make targets:
-- `make relaunch`: launch (or relaunch) the GUI
-- `make logs`: cat the python logs
-- `make tail`: tail the python logs
-- `make`: alias for relaunch && tail
+For a particular board layout:
+```
+$ catan-spectator --board 'o s w w o s s h b h w s w h h b o d b 5 2 8 10 9 8 5 3 4 6 3 6 10 12 11 9 11 None 4'
+```
 
-### Demo
-![Demo](/doc/gifs/demo4.gif)
+Terrain are referred to by their first letter in lowercase, except wheat, which is an h.
+Numbers are referred to by their corresponding digit, and "None" represents no number. Exactly nineteen terrain
+characters are expected, and exactly nineteen numbers are expected.
+
+| Terrain Name | Short Code |
+| --- | --- |
+| Wood | w |
+| Brick | b |
+| Wheat | h |
+| Sheep | s |
+| Ore | o |
+| Desert | d |
+
+For a full list of options:
+```
+$ catan-spectator --help
+```
 
 ### Hotkeys
 
@@ -93,7 +97,25 @@ orange buys city, builds at (1 SE)
 red plays monopoly on ore
 ```
 
-### Todo
+### Development
+
+```
+$ git clone https://github.com/rosshamish/catan-spectator
+$ cd catan-spectator
+$ pip3 install -r requirements.txt
+```
+
+```
+$ python3 main.py
+```
+
+Make targets:
+- `make relaunch`: launch (or relaunch) the GUI
+- `make logs`: cat the python logs
+- `make tail`: tail the python logs
+- `make`: alias for relaunch && tail
+
+##### Todo
 
 Need to have
 - [ ] views documented

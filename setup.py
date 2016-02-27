@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 with open("README.md", "r") as fp:
     long_description = fp.read()
@@ -6,11 +6,11 @@ with open("README.md", "r") as fp:
 with open('VERSION', 'r') as fp:
     version = fp.read()
 
-setup(name="catanlog",
+setup(name="catan-spectator",
       version=version,
       author="Ross Anderson",
       author_email="ross.anderson@ualberta.ca",
-      url="https://github.com/rosshamish/catanlog/",
+      url="https://github.com/rosshamish/catan-spectator/",
       download_url = 'https://github.com/rosshamish/catan-spectator/tarball/'+version,
       description='Transcribe games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.',
       long_description=long_description,
@@ -18,9 +18,20 @@ setup(name="catanlog",
       classifiers=[],
       license="GPLv3",
 
-      py_modules=["catanlog"],
+      entry_points={
+          'gui_scripts': [
+              'catan-spectator = main:main'
+          ]
+      },
+      py_modules=[
+          'views',
+          'views_trading',
+          'tkinterutils',
+      ],
       install_requires=[
-          'hexgrid',
-          'parse',
+          'catan ~= 0.4',
+          'catanlog ~= 0.10',
+          'hexgrid ~= 0.2',
+          'undoredo ~= 0.1',
       ],
       )

@@ -16,71 +16,54 @@ Todos are listed below.
 > Author: Ross Anderson ([rosshamish](https://github.com/rosshamish))
 
 ### Demo
-![Demo](/doc/gifs/demo4.gif)
-
-### Installation
-
-If you don't have brew, go to http://brew.sh and install it.
-
-If you don't have python3, do `$ brew install python3`
-
-```
-$ pip3 install catan-spectator
-```
+![Demo](/doc/gifs/v0.1.3-demo.mov.gif)
 
 ### Usage
 
+See http://rosshamish.github.io/catan-spectator
+
+### Development
+
+Clone, install dependencies:
+```
+$ git clone https://github.com/rosshamish/catan-spectator
+$ cd catan-spectator
+$ pip3 install -r requirements.txt
+```
+
 Basic usage:
 ```
-$ catan-spectator
+$ python3 main.py
 ```
 
-For a particular board layout:
+Full list of options:
 ```
-$ catan-spectator --board 'o s w w o s s h b h w s w h h b o d b 5 2 8 10 9 8 5 3 4 6 3 6 10 12 11 9 11 None 4'
-```
+$ python3 main.py --help
+usage: main.py [-h] [--board BOARD] [--terrain TERRAIN] [--numbers NUMBERS]
+               [--ports PORTS] [--pieces PIECES] [--players PLAYERS]
+               [--pregame PREGAME]
 
-Terrain are referred to by their first letter in lowercase, except wheat, which is an h.
-Numbers are referred to by their corresponding digit, and "None" represents no number. Exactly nineteen terrain
-characters are expected, and exactly nineteen numbers are expected.
+log a game of catan
 
-| Terrain Name | Short Code |
-| --- | --- |
-| Wood | w |
-| Brick | b |
-| Wheat | h |
-| Sheep | s |
-| Ore | o |
-| Desert | d |
-
-For a full list of options:
-```
-$ catan-spectator --help
+optional arguments:
+  -h, --help         show this help message and exit
+  --board BOARD      string with space-separated short-codes for terrain and
+                     numbers, e.g. 'w w h b s o w w b ... 2 None 9 3 4 6 ...'
+  --terrain TERRAIN  random|preset|empty|debug, default random
+  --numbers NUMBERS  random|preset|empty|debug, default preset
+  --ports PORTS      random|preset|empty|debug, default preset
+  --pieces PIECES    random|preset|empty|debug, default preset
+  --players PLAYERS  random|preset|empty|debug, default preset
+  --pregame PREGAME  on|off, default oncatan-spectator
 ```
 
-### Hotkeys
-
-| Key | Action |
-| ---| ------ |
-| 2 | roll 2 |
-| 3 | roll 3 |
-| 4 | roll 4 |
-| 5 | roll 5 |
-| 6 | roll 6 |
-| 7 | roll 7 |
-| 8 | roll 8 |
-| 9 | roll 9 |
-| 0 | roll 10 |
-| - | roll 11 |
-| = | roll 12 |
-| r | buy road |
-| s | buy settlement |
-| c | buy city |
-| d | buy dev card |
-| k | play knight |
-| left arrow | undo |
-| right arrow | redo |
-| space bar | end turn |
+Make targets:
+```
+- `make relaunch`: launch (or relaunch) the GUI
+- `make logs`: cat the python logs
+- `make tail`: tail the python logs
+- `make`: alias for relaunch && tailFor a particular board layout:
+```
 
 ### File Format
 
@@ -97,25 +80,7 @@ orange buys city, builds at (1 SE)
 red plays monopoly on ore
 ```
 
-### Development
-
-```
-$ git clone https://github.com/rosshamish/catan-spectator
-$ cd catan-spectator
-$ pip3 install -r requirements.txt
-```
-
-```
-$ python3 main.py
-```
-
-Make targets:
-- `make relaunch`: launch (or relaunch) the GUI
-- `make logs`: cat the python logs
-- `make tail`: tail the python logs
-- `make`: alias for relaunch && tail
-
-##### Todo
+### Todos
 
 Need to have
 - [ ] views documented

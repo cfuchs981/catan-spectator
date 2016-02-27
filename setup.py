@@ -24,6 +24,7 @@ setup(name="catan-spectator",
           ]
       },
       py_modules=[
+          'main',
           'views',
           'views_trading',
           'tkinterutils',

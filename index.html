@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>catan-spectator by rosshamish</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">catan-spectator</h1>
+      <h2 class="project-tagline">spectate and log catan games</h2>
+      <a href="https://github.com/rosshamish/catan-spectator" class="btn">View on GitHub</a>
+      <a href="https://github.com/rosshamish/catan-spectator/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/rosshamish/catan-spectator/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h2>
+<a id="catan-spectator" class="anchor" href="#catan-spectator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>catan-spectator</h2>
+
+<p>Transcribe games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.</p>
+
+<blockquote>
+<p>Author: Ross Anderson (<a href="https://github.com/rosshamish">rosshamish</a>)</p>
+</blockquote>
+
+<h3>
+<a id="demo" class="anchor" href="#demo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Demo</h3>
+
+<p><img src="/doc/gifs/demo4.gif" alt="Demo"></p>
+
+<h3>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h3>
+
+<p>If you don't have brew, go to <a href="http://brew.sh">http://brew.sh</a> and install it.</p>
+
+<p>If you don't have python3, do <code>$ brew install python3</code></p>
+
+<pre><code>$ pip3 install catan-spectator
+</code></pre>
+
+<h3>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h3>
+
+<p>Basic usage:</p>
+
+<pre><code>$ catan-spectator
+</code></pre>
+
+<p>For a particular board layout:</p>
+
+<pre><code>$ catan-spectator --board 'o s w w o s s h b h w s w h h b o d b 5 2 8 10 9 8 5 3 4 6 3 6 10 12 11 9 11 None 4'
+</code></pre>
+
+<p>Terrain are referred to by their first letter in lowercase, except wheat, which is an h.
+Numbers are referred to by their corresponding digit, and "None" represents no number. Exactly nineteen terrain
+characters are expected, and exactly nineteen numbers are expected.</p>
+
+<table>
+<thead>
+<tr>
+<th>Terrain Name</th>
+<th>Short Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wood</td>
+<td>w</td>
+</tr>
+<tr>
+<td>Brick</td>
+<td>b</td>
+</tr>
+<tr>
+<td>Wheat</td>
+<td>h</td>
+</tr>
+<tr>
+<td>Sheep</td>
+<td>s</td>
+</tr>
+<tr>
+<td>Ore</td>
+<td>o</td>
+</tr>
+<tr>
+<td>Desert</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
+
+<p>For a full list of options:</p>
+
+<pre><code>$ catan-spectator --help
+</code></pre>
+
+<h3>
+<a id="hotkeys" class="anchor" href="#hotkeys" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Hotkeys</h3>
+
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>roll 2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>roll 3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>roll 4</td>
+</tr>
+<tr>
+<td>5</td>
+<td>roll 5</td>
+</tr>
+<tr>
+<td>6</td>
+<td>roll 6</td>
+</tr>
+<tr>
+<td>7</td>
+<td>roll 7</td>
+</tr>
+<tr>
+<td>8</td>
+<td>roll 8</td>
+</tr>
+<tr>
+<td>9</td>
+<td>roll 9</td>
+</tr>
+<tr>
+<td>0</td>
+<td>roll 10</td>
+</tr>
+<tr>
+<td>-</td>
+<td>roll 11</td>
+</tr>
+<tr>
+<td>=</td>
+<td>roll 12</td>
+</tr>
+<tr>
+<td>r</td>
+<td>buy road</td>
+</tr>
+<tr>
+<td>s</td>
+<td>buy settlement</td>
+</tr>
+<tr>
+<td>c</td>
+<td>buy city</td>
+</tr>
+<tr>
+<td>d</td>
+<td>buy dev card</td>
+</tr>
+<tr>
+<td>k</td>
+<td>play knight</td>
+</tr>
+<tr>
+<td>left arrow</td>
+<td>undo</td>
+</tr>
+<tr>
+<td>right arrow</td>
+<td>redo</td>
+</tr>
+<tr>
+<td>space bar</td>
+<td>end turn</td>
+</tr>
+</tbody>
+</table>
+
+<h3>
+<a id="file-format" class="anchor" href="#file-format" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>File Format</h3>
+
+
+
+<p>catan-spectator writes game logs in the <code>.catan</code> format described by package <a href="https://github.com/rosshamish/catanlog"><code>catanlog</code></a>.</p>
+
+<p>They look like this:</p>
+
+<pre><code>green rolls 6
+blue buys settlement, builds at (1 NW)
+orange buys city, builds at (1 SE)
+red plays monopoly on ore
+</code></pre>
+
+<h3>
+<a id="attribution" class="anchor" href="#attribution" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Attribution</h3>
+
+<p>Codebase originally forked from <a href="https://github.com/fruitnuke/catan">fruitnuke/catan</a>, a catan board generator</p>
+
+<h3>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h3>
+
+<p>GPLv3</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/rosshamish/catan-spectator">catan-spectator</a> is maintained by <a href="https://github.com/rosshamish">rosshamish</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-35852559-5");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>

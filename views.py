@@ -1024,7 +1024,7 @@ class EndTurnFrame(tkinter.Frame):
         else:
             self.end_turn.configure(state=tkinter.DISABLED)
 
-    def on_end_turn(self, event):
+    def on_end_turn(self, event=None):
         if self.game.state.can_end_turn():
             self.game.end_turn()
 

@@ -248,7 +248,12 @@ footer {
   -webkit-font-smoothing:subpixel-antialiased;
 }
 
-@media print, screen and (max-width: 960px) {
+@media print, screen and (max-width: 1480px) {
+
+  img.demo {
+    width: 90%;
+    max-width: 800px;
+  }
 
   div.wrapper {
     width:auto;

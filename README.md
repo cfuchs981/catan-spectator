@@ -1,15 +1,12 @@
 catan-spectator
 ---------------
 
-Transcribe games of Settlers of Catan for research purposes, replay purposes, broadcast purposes, etc.
+A GUI for Mac and Windows for spectating and logging games of Settlers of Catan.
 
-The UI is feature-complete, and can be used to log games.
+Other projects can read log files and do useful things, i.e.
 
-Related packages:
-* [`catan`](https://github.com/rosshamish/catan-py)
-* [`catanlog`](https://github.com/rosshamish/catanlog)
-* [`hexgrid`](https://github.com/rosshamish/hexgrid)
-* [`undoredo`](https://github.com/rosshamish/undoredo)
+* teach a machine learning model: AI research, see http://github.com/rosshamish/goodcatan
+* semi-automated tournaments: draws, matchups, stats, tiebreakers computed from game logs.
 
 Todos are listed below.
 

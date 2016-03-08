@@ -3,10 +3,10 @@ catan-spectator
 
 A GUI for Mac and Windows for spectating and logging games of Settlers of Catan.
 
-Other projects can read log files and do useful things, i.e.
+Other projects can read game logs and do useful things, i.e.
 
-* teach a machine learning model: AI research, see http://github.com/rosshamish/goodcatan
 * semi-automated tournaments: draws, matchups, stats, tiebreakers computed from game logs.
+* machine learning: game outcome prediction, AI development
 
 Todos are listed below.
 

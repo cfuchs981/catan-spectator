@@ -19,8 +19,7 @@ class CatanSpectator(tkinter.Frame):
                       ports=self.options.get('ports'),
                       pieces=self.options.get('pieces'),
                       players=self.options.get('players'))
-        self.game = Game(board=board, pregame=self.options.get('pregame'))
-        self.game.catanlog._use_stdout = options.get('use_stdout')
+        self.game = Game(board=board, pregame=self.options.get('pregame'), use_stdout=self.options.get('use_stdout'))
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 

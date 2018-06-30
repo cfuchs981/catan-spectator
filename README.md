@@ -38,7 +38,7 @@ Full list of options:
 $ python3 main.py --help
 usage: main.py [-h] [--board BOARD] [--terrain TERRAIN] [--numbers NUMBERS]
                [--ports PORTS] [--pieces PIECES] [--players PLAYERS]
-               [--pregame PREGAME]
+               [--pregame PREGAME]  [--use_stdout]
 
 log a game of catan
 
@@ -52,6 +52,7 @@ optional arguments:
   --pieces PIECES    random|preset|empty|debug, default preset
   --players PLAYERS  random|preset|empty|debug, default preset
   --pregame PREGAME  on|off, default oncatan-spectator
+  --use_stdout       write to stdout
 ```
 
 Make targets:

@@ -19,7 +19,7 @@ class CatanSpectator(tkinter.Frame):
                       ports=self.options.get('ports'),
                       pieces=self.options.get('pieces'),
                       players=self.options.get('players'))
-        self.game = Game(board=board, pregame=self.options.get('pregame'))
+        self.game = Game(board=board, pregame=self.options.get('pregame'), use_stdout=self.options.get('use_stdout'))
         self.game.observers.add(self)
         self._in_game = self.game.state.is_in_game()
 
@@ -68,6 +68,7 @@ def main():
     parser.add_argument('--pieces', help='random|preset|empty|debug, default preset')
     parser.add_argument('--players', help='random|preset|empty|debug, default preset')
     parser.add_argument('--pregame', help='on|off, default on')
+    parser.add_argument('--use_stdout', help='write to stdout', action='store_true')
 
     args = parser.parse_args()
     options = {
@@ -78,6 +79,7 @@ def main():
         'pieces': args.pieces,
         'players': args.players,
         'pregame': args.pregame,
+        'use_stdout': args.use_stdout
     }
     logging.info('args=\n{}'.format(pprint.pformat(options)))
     app = CatanSpectator(options=options)
